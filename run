@@ -1,0 +1,164 @@
+#!/usr/bin/env lua
+
+local make = require('assets.make')
+local luaVersions = {"5.1","5.2","5.3","5.4"}
+local sepline = "*******************************"
+local sepline2= "-------------------------------"
+
+local luabin = {
+  ["5.1"] = make.whereis("lua%s","5.1","51"),
+  ["5.2"] = make.whereis("lua%s","5.2","52"),
+  ["5.3"] = make.whereis("lua%s","5.3","53"),
+  ["5.4"] = make.whereis("lua%s","5.4","54"),
+}
+
+function test_compile(luaver)
+  print(("Compiling for Lua %s"):format(luaver))
+  print(sepline)
+  make.exec("LUAROCKS_CONFIG=./assets/devconf.lua luarocks --tree ./out --lua-version %s build",luaver)
+end
+
+function test_lua(luaver)
+  local lbin  = luabin[luaver]
+  local lpath = ("./out/lib/lua/%s/?.lua"):format(luaver)
+  local cpath = ("./out/lib/lua/%s/?.so" ):format(luaver)
+
+  local p = io.popen("ls tests/*.lua 2> /dev/null","r")
+  if p == nil then return end
+
+  print(("\nTesting with Lua %s"):format(luaver))
+  print(sepline)
+  testnum = 0
+  local file = p:read()
+  while file do
+    testnum = testnum + 1
+    print(("\n %d | %s "):format(testnum, file))
+    print(sepline2)
+    make.exec(
+      [[ TZ=UTC+0 %s -e 'package.path=%q package.cpath=%q' %q ]],
+      lbin, lpath, cpath, file
+    )
+    file = p:read()
+  end
+end
+
+function docker_names()
+  local files = make.rexec("ls assets/*.dockerfile")
+  local names = {}
+  for i,dfile in ipairs(files) do
+    names[dfile:gsub("^.*/",""):gsub(".dockerfile$","")] = 1
+  end
+  return names
+end
+
+function docker_image(name)
+  name = name or "luawax_debian"
+  if make.OS ~= "Linux" then
+    print("This action requires a Linux machine host")
+    os.exit(1)
+  end
+  if not docker_names()[name] then
+    actions.dlist()
+    os.exit(1)
+  end
+
+  local name = make.rexec("docker images | grep %q | awk '{print $1}'",name)[1]
+  if not name then
+    print(("Try build first with:\n\n\t./run dbuild %s\n"):format(arg[2]))
+    os.exit(1)
+  end
+end
+
+
+--
+-- Public actions
+-- Below functions are used as actions called directly from Ex:
+-- ./run dlist
+
+local actions = {}
+
+function actions.clean()
+  print("Cleaning project")
+  make.exec("rm -rf ./out src/c/*.o src/c/*/*.o wax")
+  make.exec("rm -rf ./lua ./luarocks ./lua_modules ./.luarocks")
+end
+
+
+function actions.test()
+  for i,luaver in ipairs(luaVersions) do
+    if (i % 2) == 0 then print "\27[37;40m\n" else print "\27[37;0m\n" end
+    test_compile(luaver)
+    test_lua(luaver)
+  end
+  print("\27[0m")
+end
+
+
+function actions.sparse()
+  local cmd = table.concat {
+    [[ sparse -Wsparse-error ]],
+    [[ -Wno-declaration-after-statement ]],
+    [[ -Wsparse-all ]],
+    [[ -I/usr/include/lua%s ]],
+    [[ -I./src ]],
+    [[ -I./src/lib ]],
+    [[ src/*c 2>&1 | grep -v "unknown attribute\|note: in included file" | tee /dev/stderr | wc -l ]]
+  }
+  print("\nRunning sparse")
+  print(sepline)
+  for _,luaver in ipairs(luaVersions) do
+    print (("\n - Targeting C for Lua %s"):format(luaver))
+    if (make.rexec(cmd:format(luaver)))[1] ~= "0" then
+      os.exit(1)
+    end
+  end
+  print("")
+  print(sepline,"\nSparsed OK! :)\n")
+end
+
+
+function actions.dlist()
+  print("\nAvailable docker confs:\n")
+  for name,_ in pairs(docker_names()) do print(name) end
+end
+
+
+function actions.dbuild()
+  local img = docker_image(arg[2])
+  if img then
+    make.rexec([[docker rmi "%s:latest"]],img)
+    make.exec([[docker build -t "%s:latest" -f "assets/%s.dockerfile" .]], imgname, imgname)
+  else
+    actions.dlist()
+  end
+end
+
+
+docker_run_cmd = [[docker run -ti --rm --mount=type=bind,source=%q,target=/devel %q %s]]
+function actions.drun()
+  local img = docker_image(arg[2])
+
+  local runcmd = docker_run_cmd:format(make.PWD, img, "bash")
+  os.execute(runcmd)
+end
+
+
+function actions.dtest()
+  local strgetimg = "docker images | grep %q | awk '{print $1}'"
+  local strcmd    = [[bash -c "cd /devel && TERM=%q ./run test || exit 1; ./run clean"]]
+  local strnotimg = "Try build first with:\n\n\t./run dbuild %s\n"
+
+  local imgname = arg[2] or "luawax_debian"
+
+  if imgname and docker_names()[imgname] then
+    imgname = make.rexec(strgetimg, imgname)[1]
+    if not imgname then
+      print(strnotimg:format(arg[2]))
+      os.exit(1)
+    end
+    local cmd = strcmd:format(make.TERM) -- run inside docker
+    make.exec(docker_run_cmd:format(make.PWD, imgname, cmd))
+  end
+end
+
+make.run(actions)
