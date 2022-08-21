@@ -19,7 +19,7 @@ local wax = {
 
 
 do
---| ### wax.user.id( [username: string] ) : number | nil
+--@ wax.user.id( [username: string] ) : number | nil
 --{ Obtains the user id specified by the `username` argument.
 --| If called without arguments, retrieves the current system user id.
 --| Returns the user id number on success or nil otherwise
@@ -39,7 +39,7 @@ end
 
 
 do
---| ### wax.user.name( [userid: number] ) : string | nil
+--@ wax.user.name( [userid: number] ) : string | nil
 --{ Obtains the name of the user specified the `userid` argument
 --| If called without arguments, retrieves the current system user id.
 --| Returns the user name string on success or nil otherwise
@@ -58,7 +58,7 @@ end
 
 
 do
---| ### wax.user.home( [user: number|string] ) : string | nil
+--@ wax.user.home( [user: number|string] ) : string | nil
 --{ Obtains the user home directory.
 --| If called with user argument of type number, retrieves by user id.
 --| If called with user argument of type string, retrieves by user name.
@@ -82,7 +82,7 @@ end
 
 
 do
---| ### wax.user.shell( [user: number|string] ) : string
+--@ wax.user.shell( [user: number|string] ) : string
 --{ Obtains the user shell binary path.
 --| If called with user argument of type number, retrieves by user id.
 --| If called with user argument of type string, retrieves by user name.
@@ -109,7 +109,7 @@ end
 
 
 do
---| ### wax.user.groups( [user: number|string] ) : { number, }
+--@ wax.user.groups( [user: number|string] ) : { number, }
 --{ Obtains the list of the groups the the user belongs to.
 --| If called with user argument of type number, retrieves by user id.
 --| If called with user argument of type string, retrieves by user name.
