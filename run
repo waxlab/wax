@@ -20,7 +20,7 @@ end
 
 function test_lua(luaver)
   local lbin  = luabin[luaver]
-  local lpath = ("./out/lib/lua/%s/?.lua"):format(luaver)
+  local lpath = ("./out/share/lua/%s/?.lua;./out/share/lua/%s/?/init.lua"):format(luaver,luaver)
   local cpath = ("./out/lib/lua/%s/?.so" ):format(luaver)
 
   local p = io.popen("ls tests/*.lua 2> /dev/null","r")
@@ -32,14 +32,17 @@ function test_lua(luaver)
   local file = p:read()
   while file do
     testnum = testnum + 1
-    print(("\n %d | %s "):format(testnum, file))
-    print(sepline2)
+    print(("\nTEST %s "):format(file))
     make.exec(
       [[ TZ=UTC+0 %s -e 'package.path=%q package.cpath=%q' %q ]],
       lbin, lpath, cpath, file
     )
     file = p:read()
   end
+  print( "\n".. sepline2
+       , "\n".. ("Total: %d tests"):format(testnum)
+       , "\n".. sepline2
+       , "\n\n\n")
 end
 
 function docker_names()
@@ -86,11 +89,9 @@ end
 
 function actions.test()
   for i,luaver in ipairs(luaVersions) do
-    if (i % 2) == 0 then print "\27[37;40m\n" else print "\27[37;0m\n" end
     test_compile(luaver)
     test_lua(luaver)
   end
-  print("\27[0m")
 end
 
 

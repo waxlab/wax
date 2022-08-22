@@ -1,8 +1,3 @@
---   Wax Project -- Axa Lua Development  --
---     Copyright 2022 Thadeu de Paula    --
---     https://github.com/axa-dev/wax    --
---       Licensed under MIT License      --
-
 --| ## wax.user
 --| Module with user information
 --|

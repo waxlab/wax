@@ -10,7 +10,7 @@ function help(actions)
   end
 end
 
---| make.rexec( string command, table values) : table result, number exitstatus
+--@ make.rexec( string command, table values) : table result, number exitstatus
 --| Execute command and returns its contents on a table and its numeric exit
 function make.rexec(cmd, ...)
   local cs = {...}
@@ -20,8 +20,8 @@ function make.rexec(cmd, ...)
 
   local proc = io.popen(cmd..';echo $?')
   local lp, lc
+  local r = {}
   if proc then
-    local r = {}
     while true do
       lp = lc
       lc = proc:read()
@@ -43,7 +43,7 @@ function make.rexec(cmd, ...)
 
 end
 
---| make.exec(string command, table values)
+--@ make.exec(string command, table values)
 --| Execute command and if it has errors abort Lua script
 function make.exec(cmd, ...)
   local cs = {...}
