@@ -1,3 +1,5 @@
+![Wax](https://repository-images.githubusercontent.com/527150563/54826065-7702-4e11-ae78-e691569ea58f)
+
 # Wax
 
 Wax is a multi module project that aims to bring a wider range of tools
