@@ -1,4 +1,4 @@
-![Wax](https://repository-images.githubusercontent.com/527150563/54826065-7702-4e11-ae78-e691569ea58f)
+![Wax](https://repository-images.githubusercontent.com/527150563/25981ea3-4df3-4c7e-b496-6c66ee7a5574)
 
 # Wax
 
