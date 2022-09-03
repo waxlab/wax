@@ -23,7 +23,7 @@ function test_lua(luaver)
   local lpath = ("./out/share/lua/%s/?.lua;./out/share/lua/%s/?/init.lua"):format(luaver,luaver)
   local cpath = ("./out/lib/lua/%s/?.so" ):format(luaver)
 
-  local p = io.popen("ls tests/*.lua 2> /dev/null","r")
+  local p = io.popen("find deva -name '*.lua' 2> /dev/null","r")
   if p == nil then return end
 
   print(("\nTesting with Lua %s"):format(luaver))
@@ -80,6 +80,7 @@ end
 
 local actions = {}
 
+actions.clean_help = 'Remove compile and test stage artifacts'
 function actions.clean()
   print("Cleaning project")
   make.exec("rm -rf ./out src/c/*.o src/c/*/*.o wax")
@@ -87,6 +88,13 @@ function actions.clean()
 end
 
 
+actions.deva_help = 'Retrieve the list of documented items'
+function actions.deva()
+  os.execute[[cat $(find deva -name '*.lua') | grep '\--@'|cut -d' ' -f2- 2> /dev/null]]
+end
+
+
+actions.test_help = 'Compile, and run Lua deva files'
 function actions.test()
   for i,luaver in ipairs(luaVersions) do
     test_compile(luaver)
@@ -95,6 +103,7 @@ function actions.test()
 end
 
 
+actions.sparse_help = "Run semantic parser for C"
 function actions.sparse()
   local cmd = table.concat {
     [[ sparse -Wsparse-error ]],
@@ -118,12 +127,14 @@ function actions.sparse()
 end
 
 
+actions.dlist_help = "List available docker confs"
 function actions.dlist()
   print("\nAvailable docker confs:\n")
   for name,_ in pairs(docker_names()) do print(name) end
 end
 
 
+actions.dbuild_help = "Build Docker instance for tests"
 function actions.dbuild()
   local img = docker_image(arg[2])
   if img then
@@ -134,7 +145,7 @@ function actions.dbuild()
   end
 end
 
-
+actions.drun_help = "Run command on Docker test instance"
 docker_run_cmd = [[docker run -ti --rm --mount=type=bind,source=%q,target=/devel %q %s]]
 function actions.drun()
   local img = docker_image(arg[2])
@@ -144,6 +155,7 @@ function actions.drun()
 end
 
 
+actions.dtest_help = "Run Lua deva files through the Docker instance"
 function actions.dtest()
   local strgetimg = "docker images | grep %q | awk '{print $1}'"
   local strcmd    = [[bash -c "cd /devel && TERM=%q ./run test || exit 1; ./run clean"]]

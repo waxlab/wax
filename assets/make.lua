@@ -2,11 +2,15 @@ local make = {}
 
 unpack = unpack or table.unpack
 
+local DEBUG = os.getenv('DEBUG')
+
 
 function help(actions)
   print("Available actions:")
-  for action,_ in pairs(actions) do
-    print(action)
+  for action,v in pairs(actions) do
+    if type(v) == 'function'
+      then print(action, actions[action..'_help'] or '')
+    end
   end
 end
 
@@ -51,7 +55,7 @@ function make.exec(cmd, ...)
     cmd = cmd:format(unpack(cs))
   end
 
-  print("EXEC "..cmd)
+  if DEBUG then print("EXEC "..cmd) end
   local proc = io.popen(cmd..';echo $?')
   local prev, curr = nil, nil
   if proc then

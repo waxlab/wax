@@ -2,8 +2,10 @@
 
 # Wax
 
-Wax is a multi module project that aims to bring a wider range of tools
-beyond the own Lua standard library.
+Wax is a Lua package containing a set of modules to extend the Lua standard
+library for multipurpose programming. It intends to inforce good practices
+and less boilerplate code, while not building up to a dependency or abstraction
+hell.
 
 By now, it is fully supported under Linux and the major BSD representants
 (FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
@@ -77,6 +79,6 @@ To enter on docker and test:
 
     `lua ./run drun`
 
-Observe than `./run drun` expects that the instance have bash installed.
+Observe than `./run drun` expects that the instance has bash installed.
 
 

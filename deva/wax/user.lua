@@ -136,5 +136,3 @@ do
 --}
 end
 
-
-print("\n*** wax.user OK! *** ".._VERSION.." ***");

@@ -1,14 +1,10 @@
-/*************************************************\
-||                                               ||
-||        LUME - Lua Macros Extended             ||
-||                                               ||
-||    Copyright (C)  2022 Thadeu A C de Paula    ||
-||                                               ||
-|| This program is free software under the terms ||
-|| of the GNU General Public License - version 3 ||
-|| as published in  https://www.gnu.org/licenses ||
-||                                               ||
-\*************************************************/
+/*
+** Wax
+** A waxing Lua Standard Library
+**
+** Copyright (C) 2022 Thadeu A C de Paula
+** (https://github.com/luawax/wax)
+*/
 
 #include <lua.h>
 #include <lauxlib.h>
