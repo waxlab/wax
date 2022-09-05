@@ -10,6 +10,13 @@ hell.
 By now, it is fully supported under Linux and the major BSD representants
 (FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
 
+You can read a
+[short list of available functions in the Wiki](
+https://codeberg.org/wax/wax/wiki
+) or dive in the full examples within the Lua files inside deva folder.
+
+In future these tests will be used to generate the full wiki documentation.
+
 
 ## Quickstart
 

@@ -7,7 +7,7 @@ source = {
 }
 
 description = {
-  homepage = "https://github.com/luawax/wax",
+  homepage = "https://codeberg.org/wax/wax",
   license = "MIT"
 }
 

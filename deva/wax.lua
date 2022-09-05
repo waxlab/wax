@@ -16,7 +16,7 @@
 
 local wax = require "wax"
 do
---| @ wax.similar( t1: any, t2: any )
+--@ wax.similar( t1: any, t2: any )
 --| Checks if t1 and t2 have similar contents.
 --| It checks recursively on tables instead of just copare the tables with `==`.
 --| For other types the comparison is just like `==`; It is useful specially
