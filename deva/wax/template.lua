@@ -209,7 +209,8 @@ local bookChapters = {
 
 -- Create a template instance from a string
 tpl = template.load[=[
-# Index
+Index
+=====
 ]] for n, chapter in ipairs(data) do --[[
   * [{{chapter.name}}]({{slugify(chapter.name)}}.md)
 ]] end ]=]
@@ -219,7 +220,8 @@ tpl:assign('slugify',function(s) return string.lower(s):gsub('%W','-') end)
 
 local res = tpl(bookChapters)
 assert(res == [[
-# Index
+Index
+=====
   * [Tripping to Proxima Centauri](tripping-to-proxima-centauri.md)
   * [Has Great Attractor a Black Hole?](has-great-attractor-a-black-hole-.md)
   * [To the Shapley Cluster and Beyond](to-the-shapley-cluster-and-beyond.md)

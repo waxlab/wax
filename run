@@ -93,6 +93,16 @@ function actions.deva()
   os.execute[[cat $(find deva -name '*.lua') | grep '\--@'|cut -d' ' -f2- 2> /dev/null]]
 end
 
+actions.devamd_help = 'Retrieve the list of documented items in markdown'
+function actions.devamd()
+  os.execute[[
+    for i in $(find deva -name '*.lua'); do
+      grep -A1 '^\(--@\|--{ #\|--| #\)' $i ;
+    done | sed 's/^--@\s*\(\([^(]\+\).*\)\s*$/\n###### \2\n\n`\1`\n/g;s/^--[}{|]\?\s*//g'
+  ]]
+end
+
+
 
 actions.test_help = 'Compile, and run Lua deva files'
 function actions.test()
