@@ -292,6 +292,7 @@ end
 do
 --@ template.load(tplstr: string) : WaxTemplate
 --{ Create a `WaxTemplate` instance from the `tplstr` string argument.
+
 --}
 end
 

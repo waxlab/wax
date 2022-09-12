@@ -411,57 +411,39 @@ static int wax_path_mkdir(lua_State *L) {
 }
 
 
-static int _wax_mkdirp(const char *path, int mode) {
-  int  pathlen = strlen(path);
-  char spath[PATH_MAX];
-  int  seps[PATH_MAX/2];
-  _wax_pathsanitize((char *)path, spath);
-  char sep     = DIRSEP[0];
-
-  int  sepn    = 0;   /* How many separators in the path */
-  int  status  = 0;   /* exit status -1 | 0 */
-  int  pl      = 0;   /* parent level */
+static int _wax_mkdirp(const char *inpath, int mode) {
   struct stat sb;
+  int test = 1;
+  char path[PATH_MAX];
+  int  plen;
+  char sep     = DIRSEP[0];      /* is "/" or "\" ? */
 
-  /* map the position of separators */
-  seps[0]=0;
-  for (; pathlen > 0; pathlen--) {
-    if (spath[pathlen] == '/') seps[sepn++] = pathlen;
-  }
+  _wax_pathsanitize((char *)inpath, path);
+  plen = strlen(path);
 
-  /* find an existent ancestor (right to left search) */
-  for ( ; pl < sepn; pl++) {
-    spath[ seps[pl] ] = '\0';
-    if (stat(spath, &sb) == 0) {
-      if (! S_ISDIR(sb.st_mode)) {
-        errno = ENOTDIR;
-        goto error;
+  /* map the position of separators, rtl */
+  for (int i=1; i<=plen; i++) {
+    if (i< plen) {
+      if (path[i] != sep) continue;
+      path[i] = '\0';
+    }
+    if (test) {
+      if (stat(path, &sb) == 0) { /* if exists */
+        if (S_ISDIR(sb.st_mode)) goto cont;
+        errno=ENOTDIR;
+        return 0;
       }
-
-      goto create;
+      test = 0; /* from here will start create */
     }
-    if (errno != ENOENT) goto error;
+    if (mkdir(path, mode) == -1) return -1;
+    cont : path[i] = sep;
   }
-
-  /* from the existent ancestor (left) creates children (right) */
-  create :
-    for (; pl >= 0; pl--) {
-      spath[seps[pl]] = sep;
-      if (mkdir(spath, mode) == -1) goto error;
-    }
-    goto returns;
-
-  error :
-    status = -1;
-    goto returns;
-
-  returns :
-    return status;
+  return 0; /* 0 is success like in mkdir */
 }
 
 
 static int wax_path_mkdirs(lua_State *L) {
-  lume_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)));
+  lume_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }

@@ -1,22 +1,16 @@
-local make = {}
+-- Simple functions to handle basic system commands usually used
+-- via shell scripts;
+
+
+local sh = {}
 
 unpack = unpack or table.unpack
 
 local DEBUG = os.getenv('DEBUG')
 
-
-function help(actions)
-  print("Available actions:")
-  for action,v in pairs(actions) do
-    if type(v) == 'function'
-      then print(action, actions[action..'_help'] or '')
-    end
-  end
-end
-
---@ make.rexec( string command, table values) : table result, number exitstatus
+--@ sh.rexec( string command, table values) : table result, number exitstatus
 --| Execute command and returns its contents on a table and its numeric exit
-function make.rexec(cmd, ...)
+function sh.rexec(cmd, ...)
   local cs = {...}
   if #cs > 0 then
     cmd = cmd:format(unpack(cs))
@@ -47,9 +41,9 @@ function make.rexec(cmd, ...)
 
 end
 
---@ make.exec(string command, table values)
+--@ sh.exec(string command, table values)
 --| Execute command and if it has errors abort Lua script
-function make.exec(cmd, ...)
+function sh.exec(cmd, ...)
   local cs = {...}
   if #cs > 0 then
     cmd = cmd:format(unpack(cs))
@@ -81,7 +75,7 @@ function make.exec(cmd, ...)
 end
 
 
-function make.whereis(cmd, ...)
+function sh.whereis(cmd, ...)
   local targets = {}
   local cs = {...}
   if #cs > 0 then
@@ -92,7 +86,7 @@ function make.whereis(cmd, ...)
     targets[1] = cmd
   end
 
-  for _,v in ipairs(make.PATH) do
+  for _,v in ipairs(sh.PATH) do
     for _,w in ipairs(targets) do
       local f = v .. '/' .. w
       local fh = io.open(f,'r')
@@ -104,7 +98,7 @@ function make.whereis(cmd, ...)
   end
 end
 
-function make.getpath()
+function sh.getpath()
   local path = {}
   local syspath = os.getenv("PATH")
   local P=1;
@@ -115,16 +109,9 @@ function make.getpath()
   return path
 end
 
-function make.run(actions)
-  if arg[1] and type(actions[arg[1]]) == "function" then
-    actions[arg[1]]()
-  else
-    help(actions)
-  end
-end
-make.PATH = make.getpath()
-make.OS = make.rexec("uname -s")[1];
-make.SED = make.whereis("%ssed","","g")
-make.PWD = make.rexec("realpath .")[1];
-make.TERM = os.getenv("TERM") or ""
-return make
+sh.PATH = sh.getpath()
+sh.OS = sh.rexec("uname -s")[1];
+sh.SED = sh.whereis("%ssed","","g")
+sh.PWD = sh.rexec("realpath .")[1];
+sh.TERM = os.getenv("TERM") or ""
+return sh

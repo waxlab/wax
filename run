@@ -1,29 +1,35 @@
 #!/usr/bin/env lua
+--| It is an automation system for development and code publishing
+--|
 
-local make = require('assets.make')
+local sh = require('etc.build.sh')
 local luaVersions = {"5.1","5.2","5.3","5.4"}
 local sepline = "*******************************"
 local sepline2= "-------------------------------"
+local devadir = "./doctest"
+local testdir = "./doctest"
 
 local luabin = {
-  ["5.1"] = make.whereis("lua%s","5.1","51"),
-  ["5.2"] = make.whereis("lua%s","5.2","52"),
-  ["5.3"] = make.whereis("lua%s","5.3","53"),
-  ["5.4"] = make.whereis("lua%s","5.4","54"),
+  ["5.1"] = sh.whereis("lua%s","5.1","51"),
+  ["5.2"] = sh.whereis("lua%s","5.2","52"),
+  ["5.3"] = sh.whereis("lua%s","5.3","53"),
+  ["5.4"] = sh.whereis("lua%s","5.4","54"),
 }
+
+local action = {} -- public actions
 
 function test_compile(luaver)
   print(("Compiling for Lua %s"):format(luaver))
   print(sepline)
-  make.exec("LUAROCKS_CONFIG=./assets/devconf.lua luarocks --tree ./out --lua-version %s build",luaver)
+  sh.exec("luarocks --tree ./tree --lua-version %s make ./etc/rockspec/wax-latest-1.rockspec",luaver)
 end
 
 function test_lua(luaver)
   local lbin  = luabin[luaver]
-  local lpath = ("./out/share/lua/%s/?.lua;./out/share/lua/%s/?/init.lua"):format(luaver,luaver)
-  local cpath = ("./out/lib/lua/%s/?.so" ):format(luaver)
+  local lpath = ("./tree/share/lua/%s/?.lua;./tree/share/lua/%s/?/init.lua"):format(luaver,luaver)
+  local cpath = ("./tree/lib/lua/%s/?.so" ):format(luaver)
 
-  local p = io.popen("find deva -name '*.lua' 2> /dev/null","r")
+  local p = io.popen("find "..testdir.." -name '*.lua' 2> /dev/null","r")
   if p == nil then return end
 
   print(("\nTesting with Lua %s"):format(luaver))
@@ -33,7 +39,7 @@ function test_lua(luaver)
   while file do
     testnum = testnum + 1
     print(("\nTEST %s "):format(file))
-    make.exec(
+    sh.exec(
       [[ TZ=UTC+0 %s -e 'package.path=%q package.cpath=%q' %q ]],
       lbin, lpath, cpath, file
     )
@@ -46,7 +52,7 @@ function test_lua(luaver)
 end
 
 function docker_names()
-  local files = make.rexec("ls assets/*.dockerfile")
+  local files = sh.rexec("ls etc/docker/*.dockerfile")
   local names = {}
   for i,dfile in ipairs(files) do
     names[dfile:gsub("^.*/",""):gsub(".dockerfile$","")] = 1
@@ -56,16 +62,16 @@ end
 
 function docker_image(name)
   name = name or "luawax_debian"
-  if make.OS ~= "Linux" then
+  if sh.OS ~= "Linux" then
     print("This action requires a Linux machine host")
     os.exit(1)
   end
   if not docker_names()[name] then
-    actions.dlist()
+    action.dlist()
     os.exit(1)
   end
 
-  local name = make.rexec("docker images | grep %q | awk '{print $1}'",name)[1]
+  local name = sh.rexec("docker images | grep %q | awk '{print $1}'",name)[1]
   if not name then
     print(("Try build first with:\n\n\t./run dbuild %s\n"):format(arg[2]))
     os.exit(1)
@@ -78,34 +84,38 @@ end
 -- Below functions are used as actions called directly from Ex:
 -- ./run dlist
 
-local actions = {}
-
-actions.clean_help = 'Remove compile and test stage artifacts'
-function actions.clean()
+--| * clean      Remove compile and test stage artifacts
+function action.clean()
   print("Cleaning project")
-  make.exec("rm -rf ./out src/c/*.o src/c/*/*.o wax")
-  make.exec("rm -rf ./lua ./luarocks ./lua_modules ./.luarocks")
+  sh.exec("rm -rf ./tree ./wax ./out ./lua ./luarocks ./lua_modules ./.luarocks")
+  sh.exec("rm -rf ./lua ./luarocks ./lua_modules ./.luarocks")
+  sh.exec("find ./src -name '*.o' -delete")
 end
 
 
-actions.deva_help = 'Retrieve the list of documented items'
-function actions.deva()
-  os.execute[[cat $(find deva -name '*.lua') | grep '\--@'|cut -d' ' -f2- 2> /dev/null]]
+--| * deva       Retrieve the list of documented items
+function action.deva()
+  cmd = ([[
+    cat $(find %s -name '*.lua') \
+    | grep '\--@'|cut -d' ' -f2- 2> /dev/null
+  ]]):format(devadir)
+  os.execute(cmd)
 end
 
-actions.devamd_help = 'Retrieve the list of documented items in markdown'
-function actions.devamd()
-  os.execute[[
-    for i in $(find deva -name '*.lua'); do
+
+--| * devamd     Retrieve list of code signatures in markdown
+function action.devamd()
+  cmd = ([[
+    for i in $(find %s -name '*.lua'); do
       grep -A1 '^\(--@\|--{ #\|--| #\)' $i ;
     done | sed 's/^--@\s*\(\([^(]\+\).*\)\s*$/\n###### \2\n\n`\1`\n/g;s/^--[}{|]\?\s*//g'
-  ]]
+  ]]):format(devadir)
+  os.execute(cmd)
 end
 
 
-
-actions.test_help = 'Compile, and run Lua deva files'
-function actions.test()
+--| * test       Compile, and run Lua deva files
+function action.test()
   for i,luaver in ipairs(luaVersions) do
     test_compile(luaver)
     test_lua(luaver)
@@ -113,8 +123,8 @@ function actions.test()
 end
 
 
-actions.sparse_help = "Run semantic parser for C"
-function actions.sparse()
+--| * sparse     Run semantic parser for C
+function action.sparse()
   local cmd = table.concat {
     [[ sparse -Wsparse-error ]],
     [[ -Wno-declaration-after-statement ]],
@@ -128,7 +138,7 @@ function actions.sparse()
   print(sepline)
   for _,luaver in ipairs(luaVersions) do
     print (("\n - Targeting C for Lua %s"):format(luaver))
-    if (make.rexec(cmd:format(luaver)))[1] ~= "0" then
+    if (sh.rexec(cmd:format(luaver)))[1] ~= "0" then
       os.exit(1)
     end
   end
@@ -137,36 +147,37 @@ function actions.sparse()
 end
 
 
-actions.dlist_help = "List available docker confs"
-function actions.dlist()
+--| * dlist      List available Docker confs
+function action.dlist()
   print("\nAvailable docker confs:\n")
   for name,_ in pairs(docker_names()) do print(name) end
 end
 
 
-actions.dbuild_help = "Build Docker instance for tests"
-function actions.dbuild()
+--| * dbuild     Build Docker instance for tests
+function action.dbuild()
   local img = docker_image(arg[2])
   if img then
-    make.rexec([[docker rmi "%s:latest"]],img)
-    make.exec([[docker build -t "%s:latest" -f "assets/%s.dockerfile" .]], imgname, imgname)
+    sh.rexec([[docker rmi "%s:latest"]],img)
+    sh.exec([[docker build -t "%s:latest" -f "etc/docker/%s.dockerfile" .]], imgname, imgname)
   else
-    actions.dlist()
+    action.dlist()
   end
 end
 
-actions.drun_help = "Run command on Docker test instance"
+
+--| * drun       Run command on Docker test instance
 docker_run_cmd = [[docker run -ti --rm --mount=type=bind,source=%q,target=/devel %q %s]]
-function actions.drun()
+function action.drun()
   local img = docker_image(arg[2])
 
-  local runcmd = docker_run_cmd:format(make.PWD, img, "bash")
+  local runcmd = docker_run_cmd:format(sh.PWD, img, "bash")
   os.execute(runcmd)
 end
 
 
-actions.dtest_help = "Run Lua deva files through the Docker instance"
-function actions.dtest()
+--| * dtest      Run Lua deva files through the Docker test instance
+function action.dtest()
   local strgetimg = "docker images | grep %q | awk '{print $1}'"
   local strcmd    = [[bash -c "cd /devel && TERM=%q ./run test || exit 1; ./run clean"]]
   local strnotimg = "Try build first with:\n\n\t./run dbuild %s\n"
@@ -174,14 +185,34 @@ function actions.dtest()
   local imgname = arg[2] or "luawax_debian"
 
   if imgname and docker_names()[imgname] then
-    imgname = make.rexec(strgetimg, imgname)[1]
+    imgname = sh.rexec(strgetimg, imgname)[1]
     if not imgname then
       print(strnotimg:format(arg[2]))
       os.exit(1)
     end
-    local cmd = strcmd:format(make.TERM) -- run inside docker
-    make.exec(docker_run_cmd:format(make.PWD, imgname, cmd))
+    local cmd = strcmd:format(sh.TERM) -- run inside docker
+    sh.exec(docker_run_cmd:format(sh.PWD, imgname, cmd))
   end
 end
 
-make.run(actions)
+--| * install    Install the rockspec for all Lua versions
+function action.install(rockspec)
+  assert(rockspec, 'You need to specify a rockspec to install')
+  local cmd = 'luarocks --lua-version %q make %q'
+  for k,_ in pairs(luabin) do
+    os.execute(cmd:format(k, rockspec))
+  end
+end
+
+if action[arg[1]] then
+  action[arg[1]]( (table.unpack or unpack)(arg,2) )
+else
+  local f = io.open(arg[0])
+  repeat
+    line = f:read()
+    if line and line:find('^%-%-[|{}]%s?') == 1 then
+        print(line:sub(5))
+    end
+  until not line
+  f:close()
+end

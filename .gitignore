@@ -4,6 +4,7 @@
 /.luarocks
 /wax
 /out
+/tree
 **/*.o
 **/*.so
 

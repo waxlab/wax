@@ -330,7 +330,7 @@ do
 --@ wax.path.getmod(path: string) : string | (nil, string)
 --{ Returns the integer representation of the mode or nil and an error string
 --| To understand the octal representation of mode, see the use of
---| `format()` below and tha explanation of octal return on `wax.path.chmode()`
+--| `format()` below and tha explanation of octal return on `wax.path.chmod()`
   if user.name() ~= "root" then
     -- depending on OS root can be 700 or 750
     assert( path.getmod(user.home()) == "755" )
@@ -499,9 +499,10 @@ end
 
 
 do
---@ wax.path.mkdir(path: string) : boolean [, string]
+--@ wax.path.mkdir(path: string, mode: string) : boolean [, string]
 --{ Create a new directory and returns true or returns false with error string.
 --| If you need to create nested subdirectories see `wax.path.mkdirs()`
+--| The `mode` parameter is a string like "777".
   local testSubDir = path.build(testdir,"Sub","Dir")
   local mode = "777";
   local masked = ("%03o"):format( tonumber(mode,8) - tonumber(path.umask(),8));
@@ -531,11 +532,11 @@ do
 end
 
 do
---@ wax.path.mkdirs(path: string) : boolean [, string]
+--@ wax.path.mkdirs(path: string, mode: string) : boolean [, string]
 --{ Make all missing directories in path string and returns true.
 --| When not possible, returns a descriptive string.ocal ds = "%s"..path.dirsep.."%s"
+--| The `mode` parameter is a string like "777".
 
---  local relDir = os.execute {".."}
   local uncle = path.build("..","uncleDir")
   local cousin = path.build(uncle,"cousin")
   assert(path.mkdirs(cousin,"777"))

@@ -117,3 +117,10 @@
 #define lume_failboolean(L,condition) \
   lume_failboolean_m(L, condition, strerror(errno))
 
+/*
+** Other polyfills for oldies
+*/
+#if ( LUA_VERSION_NUM < 502 )
+  #define lua_rawlen(L, i) lua_objlen(L,i)
+#endif
+
