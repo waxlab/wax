@@ -38,6 +38,6 @@ local install_vars
 
 build = {
   type = 'command',
-  build_command   = build_vars .. '$(LUA) etc/build/make.lua build',
-  install_command = install_vars .. '$(LUA) etc/build/make.lua install',
+  build_command   = build_vars .. '$(LUA) etc/run/make.lua build',
+  install_command = install_vars .. '$(LUA) etc/run/make.lua install',
 }

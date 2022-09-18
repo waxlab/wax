@@ -1,3 +1,6 @@
+rockspec = 'wax-latest-1.rockspec'
+
+
 bin = { }
 
 -- clib paths have are relative to `./src/`
