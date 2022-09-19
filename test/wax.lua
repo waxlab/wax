@@ -99,6 +99,6 @@ do
 --@ wax.scriptfile()
 --{ Returns the full path for the current script file
 --| where it was called.
-  assert(wax.scriptfile():match('doctest/wax.lua$'))
+  assert(wax.scriptfile():match('test/wax.lua$'))
 --}
 end

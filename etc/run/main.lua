@@ -1,6 +1,17 @@
 #!/usr/bin/env lua
 --| It is an automation system for development and code publishing
 --|
+--| * clean      Remove compile and test stage artifacts
+--| * dockbuild  Build Docker instance for tests
+--| * docklist   List available Docker confs
+--| * dockrun    Run command on Docker test instance
+--| * docktest   Run Lua deva files through the Docker test instance
+--| * docmd      Retrieve list of code signatures in markdown
+--| * help       Retrieve the list of documented items
+--| * install    Install the rockspec for all Lua versions
+--| * remove     Uninstall the rockspec for all Lua versions
+--| * sparse     Run semantic parser for C
+--| * test       Compile, and run Lua deva files
 
 local command = {}
 local sh = require 'etc.run.sh'
@@ -8,8 +19,8 @@ local config = require 'etc.run.config'
 local luaVersions = {"5.1","5.2","5.3","5.4"}
 local sepline = "*******************************"
 local sepline2= "-------------------------------"
-local devadir = "./doctest"
-local testdir = "./doctest"
+local docdir  = "./test"
+local testdir = "./test"
 
 local luabin = {
   ["5.1"] = sh.whereis("lua%s","5.1","51"),
@@ -68,13 +79,13 @@ function docker_image(name)
     os.exit(1)
   end
   if not docker_names()[name] then
-    command.dlist()
+    command.docklist()
     os.exit(1)
   end
 
   local name = sh.rexec("docker images | grep %q | awk '{print $1}'",name)[1]
   if not name then
-    print(("Try build first with:\n\n\t./run dbuild %s\n"):format(arg[2]))
+    print(("Try build first with:\n\n\t./run dockbuild %s\n"):format(arg[2]))
     os.exit(1)
   end
 end
@@ -83,9 +94,8 @@ end
 --
 -- Public actions
 -- Below functions are used as actions called directly from Ex:
--- ./run dlist
+-- ./run docklist
 
---| * clean      Remove compile and test stage artifacts
 function command.clean()
   print("Cleaning project")
   sh.exec("rm -rf ./tree ./wax ./out ./lua ./luarocks ./lua_modules ./.luarocks")
@@ -94,28 +104,25 @@ function command.clean()
 end
 
 
---| * deva       Retrieve the list of documented items
-function command.deva()
+function command.help()
   cmd = ([[
     cat $(find %s -name '*.lua') \
-    | grep '\--@'|cut -d' ' -f2- 2> /dev/null
-  ]]):format(devadir)
+    | grep '\--@'|cut -d' ' -f2- 2> /dev/null | fzf
+  ]]):format(docdir)
   os.execute(cmd)
 end
 
 
---| * devamd     Retrieve list of code signatures in markdown
-function command.devamd()
+function command.docmd()
   cmd = ([[
     for i in $(find %s -name '*.lua'); do
       grep -A1 '^\(--@\|--{ #\|--| #\)' $i ;
     done | sed 's/^--@\s*\(\([^(]\+\).*\)\s*$/\n###### \2\n\n`\1`\n/g;s/^--[}{|]\?\s*//g'
-  ]]):format(devadir)
+  ]]):format(docdir)
   os.execute(cmd)
 end
 
 
---| * test       Compile, and run Lua deva files
 function command.test()
   for i,luaver in ipairs(luaVersions) do
     test_compile(luaver)
@@ -124,7 +131,6 @@ function command.test()
 end
 
 
---| * sparse     Run semantic parser for C
 function command.sparse()
   local cmd = table.concat {
     [[ sparse -Wsparse-error ]],
@@ -148,28 +154,25 @@ function command.sparse()
 end
 
 
---| * dlist      List available Docker confs
-function command.dlist()
+function command.docklist()
   print("\nAvailable docker confs:\n")
   for name,_ in pairs(docker_names()) do print(name) end
 end
 
 
---| * dbuild     Build Docker instance for tests
-function command.dbuild()
+function command.dockbuild()
   local img = docker_image(arg[2])
   if img then
     sh.rexec([[docker rmi "%s:latest"]],img)
     sh.exec([[docker build -t "%s:latest" -f "etc/docker/%s.dockerfile" .]], imgname, imgname)
   else
-    command.dlist()
+    command.docklist()
   end
 end
 
 
---| * drun       Run command on Docker test instance
 docker_run_cmd = [[docker run -ti --rm --mount=type=bind,source=%q,target=/devel %q %s]]
-function command.drun()
+function command.dockrun()
   local img = docker_image(arg[2])
 
   local runcmd = docker_run_cmd:format(sh.PWD, img, "bash")
@@ -177,11 +180,10 @@ function command.drun()
 end
 
 
---| * dtest      Run Lua deva files through the Docker test instance
-function command.dtest()
+function command.docktest()
   local strgetimg = "docker images | grep %q | awk '{print $1}'"
   local strcmd    = [[bash -c "cd /devel && TERM=%q ./run test || exit 1; ./run clean"]]
-  local strnotimg = "Try build first with:\n\n\t./run dbuild %s\n"
+  local strnotimg = "Try build first with:\n\n\t./run dockbuild %s\n"
 
   local imgname = arg[2] or "luawax_debian"
 
@@ -196,7 +198,6 @@ function command.dtest()
   end
 end
 
---| * install    Install the rockspec for all Lua versions
 function command.install()
   local cmd = 'luarocks --lua-version %q make %q'
   for k,_ in pairs(luabin) do
@@ -204,7 +205,6 @@ function command.install()
   end
 end
 
---| * remove     Uninstall the rockspec for all Lua versions
 function command.remove()
   local cmd = 'luarocks --lua-version %q remove %q'
   for k,_ in pairs(luabin) do

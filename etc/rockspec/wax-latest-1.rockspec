@@ -2,7 +2,7 @@ package = "wax"
 version = "latest-1"
 
 source = {
-  url = "git://github.com/luawax/wax",
+  url = "git+https://github.com/luawax/wax",
   tag = "latest"
 }
 

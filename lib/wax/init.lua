@@ -55,7 +55,6 @@ if luaver == '5.1' then
 
   function wax.loadfile(filename, envt)
     local fn, err = loadfile(filename)
-    print('AQUI ó', fn, err)
     if err then return fn, err end
     if envt then return setfenv(fn, envt) end
     return fn
