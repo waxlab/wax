@@ -5,7 +5,6 @@ do
   local validkey = { string='[%q]', number='[%s]', boolean='[%s]' }
   local validval = { string='%q', number='%s', boolean='%s', table=1 }
 
---@ wax.table.tostring(t: table) : string
   function table_tostring(t)
     local p, res = {nil,'=',nil}, {}
     local ktype, kfmt ,vfmt
@@ -38,7 +37,6 @@ do
     return cat(res,'',1,3)
   end
 
---@ wax.table.tostring(t: table) : string
   function table_tochunk(t)
     local kt, vfmt
     local p = {nil,'=',nil}

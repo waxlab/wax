@@ -13,12 +13,13 @@
 --| ## Functions
 
 local wax = require "wax"
+--@ wax.similar( t1: any, t2: any ) **
 do
---@ wax.similar( t1: any, t2: any )
 --{ Checks if t1 and t2 have similar contents.
 --| It checks recursively on tables instead of just copare the tables with `==`.
 --| For other types the comparison is just like `==`; It is useful specially
 --| for assertions.
+--| TODO: This function is to be placed in a test module.
 
   -- Behaves like `==` for numbers, strings, booleans, userdata and functions.
   assert( wax.similar("hi", "hi") )

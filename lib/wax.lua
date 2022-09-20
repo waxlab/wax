@@ -11,7 +11,7 @@ local luaver = _VERSION:gsub('.* ([%d.]*)$','%1')
 end
 
 
---@ wax.similar()
+-- TODO: To be moved to wax.test.almostEqual
 do
   local similar, simtable
 
