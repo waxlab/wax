@@ -13,13 +13,16 @@
 --| ## Functions
 
 local wax = require "wax"
---@ wax.similar( t1: any, t2: any ) **
-do
---{ Checks if t1 and t2 have similar contents.
+
+
+--$ wax.similar( t1: any, t2: any ) **
+--| Checks if t1 and t2 have similar contents.
 --| It checks recursively on tables instead of just copare the tables with `==`.
 --| For other types the comparison is just like `==`; It is useful specially
 --| for assertions.
 --| TODO: This function is to be placed in a test module.
+do
+--{
 
   -- Behaves like `==` for numbers, strings, booleans, userdata and functions.
   assert( wax.similar("hi", "hi") )
@@ -60,9 +63,10 @@ do
 end
 
 
+--$ wax.load(chunk: string, envt: table)
+--| Load the string chunk `chunk` as a function using `envt` table as environment
 do
---@ wax.load(chunk: string, envt: table)
---{ Load the string chunk `chunk` as a function using `envt` table as environment
+--{
   local env = {}
   local fn, err = wax.load([[myvar = { key = "value" }]], env )
   assert(fn() == nil, err == nil)  -- Function does not return anything
@@ -74,10 +78,11 @@ do
 end
 
 
+--$ wax.loadfile(filename: string, envt: table)
+--| Does the same as the `wax.load` but loading from a file instead.
 do
 local luafile = require 'wax.path'.getcwd()..'/etc/example/luafile.lua'
---@ wax.loadfile(filename: string, envt: table)
---{ Does the same as the `wax.load` but loading from a file instead.
+--{
   local env = {}
   local fn, err = wax.loadfile(luafile, env)
   assert(fn() == 'returned value')
@@ -86,9 +91,10 @@ local luafile = require 'wax.path'.getcwd()..'/etc/example/luafile.lua'
 end
 
 
+--$ wax.senfenv(fn: function, envt: table)
+--| Set the `envt` table as environment for the function `fn`
 do
---@ wax.senfenv(fn: function, envt: table)
---{ Set the `envt` table as environment for the function `fn`
+--{
 local function fn() return value end
 wax.setfenv(fn,{value=10})
 assert(fn() == 10)
@@ -96,10 +102,11 @@ assert(fn() == 10)
 end
 
 
-do
---@ wax.scriptfile()
---{ Returns the full path for the current script file
+--$ wax.scriptfile()
+--| Returns the full path for the current script file
 --| where it was called.
+do
+--{
   assert(wax.scriptfile():match('test/wax.lua$'))
 --}
 end

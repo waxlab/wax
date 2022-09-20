@@ -28,9 +28,10 @@
 --|
 
 
---@ wax.arg.parse( [arg: list [, pos: number] ] ): table
---{ parses the argument list and returns a table as in "result table" described
+--$ wax.arg.parse( [arg: list [, pos: number] ] ): table
+--| parses the argument list and returns a table as in "result table" described
 --| above.
+--{
 local wax = require "wax"
 local argparse = require "wax.arg".parse
 

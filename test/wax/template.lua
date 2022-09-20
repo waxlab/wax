@@ -1,8 +1,8 @@
 --| # wax.template - Simple Lua embedded strings
 
+--| ## Basic usage
 do
---{ ## Basic usage
---| Suppose you have the following code:
+--{ Suppose you have the following code:
 
 local template = require "wax.template"
 
@@ -11,11 +11,12 @@ local revolutions = {
   {name = 'Jupiter', days=4333},
   {name = 'Saturn',  days=10759}
 }
+--}
 
 --| The most basic usage consists in replacing the template fields by its
 --| variable names, i.e, replacing the contents between `{{` and `}}` by its
 --| Lua value:
-
+--{
 local str = {}
 for _,v in ipairs(revolutions) do
   str[#str+1] = template.format('{{data.name}} year lasts {{data.days}} Earth days.',v)
@@ -25,11 +26,12 @@ assert(table.concat(str,'\n') == [[
 Mars year lasts 687 Earth days.
 Jupiter year lasts 4333 Earth days.
 Saturn year lasts 10759 Earth days.]])
+--}
 
 --| You can use all Lua values inside the template fields, even the return of
 --| function calls. A subset of Lua standard library can be used to process the
 --| field values as seen below:
-
+--{
 local str = {}
 for _,v in ipairs(revolutions) do
   str[#str+1] = template.format(
@@ -42,20 +44,20 @@ assert(table.concat(str,'\n') == [[
 MARS year = 1.9 Earth year.
 JUPITER year = 11.9 Earth year.
 SATURN year = 29.5 Earth year.]])
-
+--}
 --| Most of time may be better choose a simple `string.format` call.
 --| The basic usage of `wax.template` shines when you need transformations
 --| on data like math, table handling or string transformations or a great
 --| set of values that could make a `string.format` seems complex or difficult
 --| to understand.
---}
 end
 
+--| ## Lua as template
 do
---{ ## Lua as template
 --| Sometimes you may prefer to think in terms of "text processing" instead of
 --| string concatenation. This template module allows you to use the Lua
 --| simple block comments as template and replace it according the Lua logic.
+--{
 local template = require "wax.template"
 
 local revolutions = {
@@ -80,16 +82,17 @@ assert(res == [[
   (near 29.46 years).
 ]])
 
+--}
 --| It is a simple way to do the things quickly, but as your template complexity
 --| grows you should prefer to use a template file when possible.
---}
 end
 
+--| ## Backfilters
 do
---{ ## Backfilters
 --| When using templates is easy to be trapped into distortions due to some kind
 --| of identation, or incur ugly strategies to make text correct aligned.
 --| To cope with this, use template backfilters `**`, `*`, `++` and `+`
+--{
 local template = require "wax.template"
 
 -- Default behavior without backfilter: preserve and breaklines and spaces
@@ -138,8 +141,7 @@ assert(normalizer2 == [[hi]])
 --}
 end
 
-do
---{ ## Using files as templates
+--| ## Using files as templates
 --| There are many benefits, as your project grows, of having your templates
 --| in separated files.
 --|
@@ -185,11 +187,10 @@ do
 --| * when using a file for templates, you will need no other syntax than Lua,
 --|   and starting a file this way allows you to have syntax checkers, editors,
 --|   etc. working out of the box.
---}
-end
+--|
 
+--| ## Advanced usage
 do
---{ ## Advanced usage
 
 --| There is specific scenarios where you want to reuse the same template with
 --| different data, or having more control about the environment used by
@@ -198,6 +199,7 @@ do
 --| This control is achieved separating the moment of template parsing, from the
 --| environment assignment and finally the assembly with data through the
 --| `:format` function.
+--{
 
 local template = require "wax.template"
 
@@ -227,6 +229,8 @@ Index
   * [To the Shapley Cluster and Beyond](to-the-shapley-cluster-and-beyond.md)
 ]])
 
+--}
+end
 --| ### Observations
 --| * Once you load a template, you can have multiple calls with it.
 --| * You can write your own transformation functions inside the template,
@@ -239,15 +243,12 @@ Index
 --|   - all math library functions
 --|   - also the global functions `pairs``,``ipairs`,`next`,`tonumber`,
 --|   `tostring`,`type and `error`.
---}
-end
 
 local template = require "wax.template"
 local luaver = tonumber(({_VERSION:gmatch('(%d+%.%d+)$')()})[1])
-do
 
---{ ## Scoping
---|
+--| ## Scoping
+do
 --| Template is sandboxed. It can't see the outer environment neither change it
 --| as confirmed by tests below:
 
@@ -273,13 +274,13 @@ do
 --}
 end
 
---| ## Reference
+--| ## Functions
 
---| ### Module functions
-do
---@ template.format(t: string, data: any) : string
---{ Uses the string `t` as  template to apply the values contained in `data`.
+--$ wax.template.format(t: string, data: any) : string
+--| Uses the string `t` as  template to apply the values contained in `data`.
 --| Only the default `wax.template` subset of Lua functions are allowed.
+do
+--{
 assert(template.format([[{{data}}]],'hello') == 'hello')
 assert(template.format([[{{data.value}}]],{value="hello"}) == 'hello')
 
@@ -289,20 +290,22 @@ assert(template.format([[{{data()}}]],function() return value end) == 'hello')
 end
 
 
+--$ wax.template.load(tplstr: string) : WaxTemplate
+--| Create a `WaxTemplate` instance from the `tplstr` string argument.
 do
---@ template.load(tplstr: string) : WaxTemplate
---{ Create a `WaxTemplate` instance from the `tplstr` string argument.
+--{
 
 --}
 end
 
 
+--$ wax.template.loadfile(filename: string): WaxTemplate
+--| Create a `WaxTemplate` instance from the string contents of `filename`.
 do
---@ template.loadfile(filename: string): WaxTemplate
-templatefile = require 'wax.path'.getcwd()..'/etc/example/template.lua'
---{ Create a `WaxTemplate` instance from the string contents of `filename`.
 --| See the section "Template files" above to know the differences from
 --| template strings.
+templatefile = require 'wax.path'.getcwd()..'/etc/example/template.lua'
+--{
 local tpl = template.loadfile(templatefile)
 assert( tpl({'Tupã'}) == 'hello!\nTupã is a star on Crux' )
 assert( tpl({'Antares'}) == 'hello!\nAntares was not found in data' )
@@ -310,15 +313,13 @@ assert( tpl({'Antares'}) == 'hello!\nAntares was not found in data' )
 end
 
 
---| ### Class `WaxTemplate`
+--| ## Class `WaxTemplate`
 
-
+--$ WaxTemplate:assign(module: table)
+--| Takes the keys of the table parameter and adds to the environment.
+--| These values can be used accross template calls under the same instance.
 do
---@ WaxTemplate:assign(module: table)
---{ Takes the keys of the table parameter and adds to the environment with the
---| respective values. These values can be used accross template calls under the
---| same instance.
-
+--{
 local tpl = template.load[[The {{what}} {{thing}} in {{data[1]}} is {{top}} {{data[2]}}]]
 tpl:assign({ what='brightest', thing = 'star', top = 'alpha'})
 assert(tpl({'Virgo','Virginis'})
@@ -329,9 +330,10 @@ assert(tpl({'Crux','Crucis'})
 end
 
 
+--$ WaxTemplate:assign(name: string, value:)
+--| Assigns a `value` to the template environment `name` accross calls.
 do
---@ WaxTemplate:assign(name: string, value:)
---{ Assigns a `value` to the template environment `name` accross calls.
+--{
 local tpl = template.load[[This is {{what}} {{data}}]]
 tpl:assign('what', 'alpha')
 assert(tpl('Virginis') == 'This is alpha Virginis')
@@ -340,9 +342,7 @@ assert(tpl('Crucis') == 'This is alpha Crucis')
 end
 
 
-do
---@ WaxTemplate(data: string) : string
+--$ WaxTemplate(data: string) : string
 --| Apply the data values on template represented by the WaxTemplate instance,
 --| and fetches the resulting string. See above examples for `template.load`
 --| and `template.loadfile`
-end

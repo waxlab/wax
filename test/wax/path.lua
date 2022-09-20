@@ -37,7 +37,7 @@ end
 --|
 
 do
---@ wax.path.dirsep : string
+--$ wax.path.dirsep : string
 --{ Directory separator, that can change accordingly to the system.
 --| * BSD, Linux etc.: `"/"` (slash)
 --| * Windows:         `"\"` (backslash)
@@ -51,10 +51,11 @@ end
 --| ## Path handling
 --|
 
-do
---@ wax.path.real( path: string ) : string | (nil, string)
---{ Resolves the realpath of the `path` and returns true.
+--$ wax.path.real( path: string ) : string | (nil, string)
+--| Resolves the realpath of the `path` and returns true.
 --| When not possible, returns false and a descriptive string.
+do
+--{
   assert( path.real("/usr/bin/")       == "/usr/bin")
   assert( path.real("/usr/bin/../lib") == "/usr/lib")
 
@@ -63,9 +64,10 @@ do
 --}
 end
 
+--$ wax.path.dirname(path: string) : string
+--| Get the dir part of the path and return it.
 do
---@ wax.path.dirname(path: string) : string
---{ Get the dir part of the path and return it.
+--{
   assert( path.dirname("/usr/lib") == "/usr" )
   assert( path.dirname("/usr/"   ) == "/"    )
   assert( path.dirname("usr"     ) == "."    )
@@ -75,9 +77,10 @@ do
 --}
 end
 
+--$ wax.path.basename(path: string) : string
+--| Get the dir part of the path and return it.
 do
---@ wax.path.basename(path: string) : string
---{ Get the dir part of the path and return it.
+--{
   assert( path.basename("/usr/lib") == "lib" )
   assert( path.basename("/usr/"   ) == "usr" )
   assert( path.basename("usr"     ) == "usr" )
@@ -87,10 +90,10 @@ do
 --}
 end
 
+--$ wax.path.build(dir1 ... dirN: string) : string
+--| Receives a varible number of strings and builds a path from it
 do
---@ wax.path.build(dir1 ... dirN: string) : string
---{ Receives a varible number of strings and builds a path from it
---|
+--{
   --| Basic Usage:
 
   -- 1. concatenate correctly the path elements
@@ -123,11 +126,10 @@ do
 --}
 end
 
+--$ wax.path.stat(path: string) : table | (nil, string)
+--| Get information about path status
 do
---@ wax.path.stat(path: string) : table | (nil, string)
---{ Get information about path status
-
-
+--{
   --| Usage example
   local res, err
   res, err = path.stat( testfile )
@@ -181,10 +183,9 @@ do
 --}
 end
 
+--$ wax.path.utime(path: string, atime, mtime: number) : boolean [, string]
+--| Change file access and/or modification times.
 do
---@ wax.path.utime(path: string, atime, mtime: number) : boolean [, string]
---{ Change file access and/or modification times.
---|
 --| 1. it time is < 0, set it to now;
 --| 2. if time >= 0 set it to seconds since unixtime;
 --|
@@ -192,6 +193,7 @@ do
 --|
 --| Note: atime and mtime support fractions of seconds until nanoseconds limited
 --| only by the floating pointer precision of the number type in Lua.
+--{
 
   --| To see some examples, consider these times in seconds since Unix epoch
   local now = os.time(os.date("!*t"))
@@ -261,12 +263,11 @@ do
 --}
 end
 
-do
---@ wax.path.access(path: string, mode: string|integer) : boolean [,string]
---{ Checks if user is allowed to access a file in specific modes.
---| Returns true if user has acess. Or false and a descriptive 
+--$ wax.path.access(path: string, mode: string|integer) : boolean [,string]
+--| Checks if user is allowed to access a file in specific modes.
+--| Returns true if user has acess. Or false and a descriptive
 --| message otherwise.
---|
+do
 --| `mode: string` should be a combination of following letters:
 --| - `r`: read permission
 --| - `w`: write permission
@@ -279,6 +280,7 @@ do
 --|
 --| Note that this function has is more performatic when a number
 --| is specified on the `mode` argument.
+--{
 
   --| Example 1: Some common uses
   --| Some systems may have different permissions under root
@@ -290,7 +292,6 @@ do
     assert(path.access("/tmp","rwx")  == true)
     assert(path.access(user.home(),"rwx") == true)
   end
-
 
   --| Example 2: Different users, different privileges.
   if user.name() == "root" then
@@ -326,11 +327,12 @@ do
 --}
 end
 
+--$ wax.path.getmod(path: string) : string | (nil, string)
+--| Returns the integer representation of the mode or nil and an error string
+--| To understand the octal representation of mode, see the use of `format()`
+--| below and tha explanation of octal return on `wax.path.chmod()`
 do
---@ wax.path.getmod(path: string) : string | (nil, string)
---{ Returns the integer representation of the mode or nil and an error string
---| To understand the octal representation of mode, see the use of
---| `format()` below and tha explanation of octal return on `wax.path.chmod()`
+--{
   if user.name() ~= "root" then
     -- depending on OS root can be 700 or 750
     assert( path.getmod(user.home()) == "755" )
@@ -340,15 +342,14 @@ do
 --}
 end
 
-do
---@ wax.path.chmod(path: string, mode: string]) : boolean [, string]
---{ Works as the system chmod. The number passed to mode should be
+--$ wax.path.chmod(path: string, mode: string]) : boolean [, string]
+--| Works as the system chmod. The number passed to mode should be
 --| an integer number prefixed with "0" to constitute a octal representation
 --|
 --| Returns true on success or false and a descriptive error string.
 --| To understand below tests, use this legend as reference:
---|
---|```
+do
+--| ```
 --|  ________ octal indicator
 --| |  ______ user
 --| | |  ____ group
@@ -358,7 +359,7 @@ do
 --|   | | |__ 4 =  4   0   0
 --|   | |____ 6 =  4   2   0
 --|   |______ 7 =  4   2   1
---|```
+--{ ```
   local perm
 
   perm = "755" -- (rwx,r-x,r-x)
@@ -383,9 +384,10 @@ do
 --}
 end
 
+--$ wax.path.chown(path: string, user: string|int): boolean | (nil, string)
+--| Change path ownership. Group is optional.
 do
---@ wax.path.chown(path: string, user: string|int): boolean | (nil, string)
---{ Change path ownership. Group is optional.
+--{
   local testuser = "testuser"
 
   io.open(testfile,"w"):close()
@@ -409,10 +411,11 @@ end
 --| ## Directory handling
 --|
 
-do
---@ wax.path.getcwd() : string | (nil, string)
---{ Get the current working directory path.
+--$ wax.path.getcwd() : string | (nil, string)
+--| Get the current working directory path.
 --| When not possible, returns nil and a descriptive string
+do
+--{
   local curdir, newdir, destdir
   curdir = path.getcwd()
 
@@ -433,9 +436,10 @@ do
 end
 
 
+--$ wax.path.isdir(path: string) : boolean [, string]
+--| If path is directory returns true or returns false with error string
 do
---@ wax.path.isdir(path: string) : boolean [, string]
---{ If path is directory returns true or returns false with error string
+--{
   -- When path exists and is a file
   assert(path.isdir(testdir) == true)
 
@@ -448,9 +452,10 @@ do
 end
 
 
+--$ wax.path.exists(path: string) : boolean
+--| Checks if path exists and returns true or returns false with error string
 do
---@ wax.path.exists(path: string) : boolean
---{ Checks if path exists and returns true or returns false with error string
+--{
   assert(path.exists("/") == true)
   assert(path.exists("/home") == true)
   assert(path.exists(testfile) == true)
@@ -461,7 +466,7 @@ end
 
 
 do
---@ wax.path.umask([mask: string]) : string
+--$ wax.path.umask([mask: string]) : string
 --{ Set a new mask and returns the old one.
 --| When called without argument, returns the current umask.
 
@@ -484,10 +489,11 @@ do
 end
 
 
-do
---@ wax.path.chdir(path: string) : boolean [, string]
---{ Changes current working dir.
+--$ wax.path.chdir(path: string) : boolean [, string]
+--| Changes current working dir.
 --| returns true on success or false and descriptive string
+do
+--{
   local curdir = path.getcwd()
   local home = path.real( user.home() )
   assert(path.chdir(home) == true)
@@ -498,11 +504,12 @@ do
 end
 
 
-do
---@ wax.path.mkdir(path: string, mode: string) : boolean [, string]
---{ Create a new directory and returns true or returns false with error string.
+--$ wax.path.mkdir(path: string, mode: string) : boolean [, string]
+--| Create a new directory and returns true or returns false with error string.
 --| If you need to create nested subdirectories see `wax.path.mkdirs()`
 --| The `mode` parameter is a string like "777".
+do
+--{
   local testSubDir = path.build(testdir,"Sub","Dir")
   local mode = "777";
   local masked = ("%03o"):format( tonumber(mode,8) - tonumber(path.umask(),8));
@@ -531,11 +538,12 @@ do
 --}
 end
 
-do
---@ wax.path.mkdirs(path: string, mode: string) : boolean [, string]
---{ Make all missing directories in path string and returns true.
+--$ wax.path.mkdirs(path: string, mode: string) : boolean [, string]
+--| Make all missing directories in path string and returns true.
 --| When not possible, returns a descriptive string.ocal ds = "%s"..path.dirsep.."%s"
 --| The `mode` parameter is a string like "777".
+do
+--{
 
   local uncle = path.build("..","uncleDir")
   local cousin = path.build(uncle,"cousin")
@@ -575,9 +583,10 @@ do
 --}
 end
 
+--$ wax.path.rmdir(path: string) : boolean [, string]
+--| Remove directory if it is not empty.
 do
---@ wax.path.rmdir(path: string) : boolean [, string]
---{ Remove directory if it is not empty.
+--{
   local dirParent = path.build( path.getcwd(), "rmdirParent" )
   local dirChild  = path.build( dirParent,"rmdirChild" )
   assert(path.mkdirs(dirChild,"777"))
@@ -600,10 +609,11 @@ do
 end
 
 
-do
---@ wax.path.list(directory: string) : iterator, userdata
---{ Open an iterator to list for filesystem entries inside
+--$ wax.path.list(directory: string) : iterator, userdata
+--| Open an iterator to list for filesystem entries inside
 --| the specified directory.
+do
+--{
 
   --| Example 1: Basic usage
   if path.isdir("/") then
@@ -642,12 +652,12 @@ do
   else
     assert(ok == false and type(iter) == "string")
   end
-end
 --}
+end
 
+--$ wax.path.listex(pathexp: string) : function, userdata
+--| List for filesystem entries using word expansions
 do
---@ wax.path.listex(pathexp: string) : function, userdata
---{ List for filesystem entries using word expansions
 --| The usage is very similar of shell `ls` command.
 --| Don't be confused with Lua patterns or RegExps.
 --|
@@ -662,6 +672,7 @@ do
 --| * `/tmp/*.lua` matches any file or directory with name ended in `.lua`
 --| * `/tmp/[a-c]*.lua` matches any file started with "a", "b" or "c" followed
 --| by any ammount of characters ended with ".lua" string
+--{
 
   --| Example 1.
   --| Basic usage
@@ -713,7 +724,7 @@ os.exit(0)
 --|
 
 do
---@ wax.path.islink(path: string) : boolean
+--$ wax.path.islink(path: string) : boolean
 --{ checks if the path exists and is a link
   assert(path.islink("/somelink") == true)
 
@@ -732,37 +743,41 @@ do
 end
 
 do
---@ wax.path.makeLink(orig, dest: string) : boolean [, string]
+--$ wax.path.makeLink(orig, dest: string) : boolean [, string]
 --{ Creates a new link from `orig` to `dest` and return true.
 --| When not possible returns false and a descriptive string.
 assert(path.makeLink());
 --}
 end
 
---@ wax.path.linkStat(path: string) : table | (nil, string)
---{ Get the stat for links returning a table.
+--$ wax.path.linkStat(path: string) : table | (nil, string)
+--| Get the stat for links returning a table.
 --| When not possible, returns nil and a descriptive string.
-  assert(path.linkStat())
+do
+--{
+  assert(path.linkStat("/"))
 --}
+end
 
 --|
 --| ## Regular files handling
 --|
 
+--$ wax.path.isfile(path: string) : boolean
+--| Check if path is a regular file and is reachable.
 do
---@ wax.path.isfile(path: string) : boolean
---{ Check if path is a regular file and is reachable.
---| Note that "reachable" doen't means "writable".
---| If script has not access to path resolution, the function also
---| return a error string.
+--| Note that "reachable" doesn't means "writable". If script has not access to
+--| path resolution, the function also returns an error string.
+--{
   assert(path.isfile(testfile))
 --}
 end
 
-do
---@ wax.path.unlink(path: string) : boolean [, string]
---{ Removes a file or link and returns true.
+--$ wax.path.unlink(path: string) : boolean [, string]
+--| Removes a file or link and returns true.
 --| When it is not possible, returns false and a descriptive string.
+do
+--{
   assert(path.unlink())
 --}
 end
@@ -773,17 +788,18 @@ end
 --| Named pipes or FIFO's are special files used for comunications between
 --| applications.
 
+--$ wax.path.ispipe(path: string) : boolean
 do
---@ wax.path.ispipe(path: string) : boolean
 --{ Check if the file is a pipe (FIFO)
   assert(path.ispipe("/pipe"))
 --}
 end
 
+--$ wax.path.makePipe(path: string) : boolean [, string]
+--| Create a new named pipe file (FIFO) and return true on success or false and
+--| a descriptive string on error.
 do
---@ wax.path.makePipe(path: string) : boolean [, string]
---{ Create a new named pipe file (FIFO) and return true.
---| When not possible returns false and a descriptive string.
+--{
 assert(path.makepipe())
 --}
 end
@@ -793,25 +809,23 @@ end
 --| ## Others
 --|
 
-do
---@ wax.path.ischardev(path: string) : boolean
---{ Checks if the file is a character device.
+--$ wax.path.ischardev(path: string) : boolean
+--| Checks if the file is a character device.
 --| These are special files used to send data for devices like
 --| printer, screen, speakers, mouse, keyboard etc.
+do
+--{
 assert(path.ischardev("/dev/tty"))
 --}
 end
 
-do
---@ wax.path.isblockdev(path: string) : boolean
---{ Checks if the file is a block device.
+--$ wax.path.isblockdev(path: string) : boolean
+--| Checks if the file is a block device.
 --| These are special files used to manage physical data storage
 --| like USB, SD, HDD etc.
+do
+--{
   assert(path.isblockdev("/dev/sda"))
 --}
 end
 
-
-print("\n_______ wax.path ".._VERSION..": OK!");
-
--- vim: foldmethod=marker foldmarker=--{,--} foldenable

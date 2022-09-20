@@ -13,12 +13,12 @@ local wax = {
 }
 
 
+--$ wax.user.id( [username: string] ) : number | nil
+--| Obtains the user id specified by the `username` argument.
 do
---@ wax.user.id( [username: string] ) : number | nil
---{ Obtains the user id specified by the `username` argument.
 --| If called without arguments, retrieves the current system user id.
 --| Returns the user id number on success or nil otherwise
-
+--{
   local uid = wax.user.id()
   assert( type(uid) == "number")
   assert( uid >= 0 )
@@ -33,11 +33,12 @@ do
 end
 
 
+--$ wax.user.name( [userid: number] ) : string | nil
+--| Obtains the name of the user specified the `userid` argument
 do
---@ wax.user.name( [userid: number] ) : string | nil
---{ Obtains the name of the user specified the `userid` argument
 --| If called without arguments, retrieves the current system user id.
 --| Returns the user name string on success or nil otherwise
+--{
   if wax.user.id() == 0 then
     assert( wax.user.name() == "root" )
     assert( wax.user.name(2000) == "testuser" )
@@ -52,12 +53,13 @@ do
 end
 
 
+--$ wax.user.home( [user: number|string] ) : string | nil
+--| Obtains the user home directory.
 do
---@ wax.user.home( [user: number|string] ) : string | nil
---{ Obtains the user home directory.
 --| If called with user argument of type number, retrieves by user id.
 --| If called with user argument of type string, retrieves by user name.
 --| Returns the user home directory name on success or nil otherwise
+--{
   local homedir = wax.user.home()
   assert( type(homedir) == "string" and #homedir > 0)
 
@@ -76,12 +78,13 @@ do
 end
 
 
+--$ wax.user.shell( [user: number|string] ) : string
+--| Obtains the user shell binary path.
 do
---@ wax.user.shell( [user: number|string] ) : string
---{ Obtains the user shell binary path.
 --| If called with user argument of type number, retrieves by user id.
 --| If called with user argument of type string, retrieves by user name.
 --| Returns the shell path string (ex. "/bin/bash") on success or nil otherwise
+--{
   local sh = wax.user.shell()
   assert( type(sh) == "string" )
   assert( #sh > 0 )
@@ -103,12 +106,13 @@ do
 end
 
 
+--$ wax.user.groups( [user: number|string] ) : { number, }
+--| Obtains the list of the groups the the user belongs to.
 do
---@ wax.user.groups( [user: number|string] ) : { number, }
---{ Obtains the list of the groups the the user belongs to.
 --| If called with user argument of type number, retrieves by user id.
 --| If called with user argument of type string, retrieves by user name.
 --| Returns a list with group ids on success or nil otherwise
+--{
   local groups
 
   groups = wax.user.groups()
