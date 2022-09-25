@@ -1,15 +1,5 @@
 --| # wax - Wax Lua package core functionalities
 
---| ## Wax limits global variables.
-
---| When the wax module is required, the global table `_G` is set to read-only.
---| This means that when trying to set a new global variable by ommiting the
---| `local` keyword an error is thrown.
---| There some huge benefits, as global variables are not garbage collected and
---| you have to access only predefined variables (global or upvalues) and set
---| variables only locally.
---| Global variables can still be set, but only using `rawset` against `_G`.
-
 --| ## Functions
 
 local wax = require "wax"

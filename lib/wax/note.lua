@@ -2,7 +2,9 @@ local note = {}
 
 function note.self(ctx)
   ctx = ctx and ctx+2 or 2
-  local f = io.open(arg[0])
+  local src = debug.getinfo(ctx)
+  if src then src = src.short_src end
+  local f = io.open(src)
   if f then
     local t = {}
     repeat

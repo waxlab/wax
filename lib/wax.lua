@@ -1,15 +1,6 @@
 local wax = {}
 local luaver = _VERSION:gsub('.* ([%d.]*)$','%1')
 
--- A hardener to misusage of global variables.
--- They still can be set, but only through rawset on _G.
-  if luaver ~= "5.1" then
-  setmetatable(_G, {
-    __index = function() return nil end,
-    __newindex = function(_,n) error(('cant set global %q'):format(n),2) end
-  })
-end
-
 
 -- TODO: To be moved to wax.test.almostEqual
 do
