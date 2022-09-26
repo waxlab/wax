@@ -12,9 +12,7 @@
 #include <sys/types.h>
 #include <grp.h>
 #include <pwd.h>
-#include "lib/defs.h"
 #include "user.h"
-
 
 static int wax_user_id(lua_State *L) {
   if (!lua_gettop(L)) {

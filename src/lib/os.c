@@ -9,12 +9,11 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "lauxlib.h"
-#include "lib/defs.h"
 #include "lua.h"
-#include "os.h"
 #include "unistd.h"
 #include "string.h"
 #include "errno.h"
+#include "os.h"
 
 
 /* int execvp(const char *file, char *const argv[]); */

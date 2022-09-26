@@ -6,9 +6,5 @@
 ** (https://github.com/luawax/wax)
 */
 
-#include "defs.h"
-
-int unimplemented(lua_State *L, ...) {
-  lua_pushnil(L);
-  return 1;
-}
+#include "../macros.h"
+int luaopen_wax_user(lua_State *L);

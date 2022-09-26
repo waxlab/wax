@@ -6,4 +6,5 @@
 ** (https://github.com/luawax/wax)
 */
 
+#include "../macros.h"
 int luaopen_wax_os(lua_State *L);
