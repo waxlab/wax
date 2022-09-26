@@ -1,8 +1,11 @@
 local make, help = {},{}
 local DEBUG = os.getenv('DEBUG')
-local OBJ_EXTENSION = os.getenv('OBJ_EXTENSION')
-local LIB_EXTENSION = os.getenv('LIB_EXTENSION')
+local OBJ_EXTENSION = os.getenv 'OBJ_EXTENSION'
+local LIB_EXTENSION = os.getenv 'LIB_EXTENSION'
+local SINGLE_MODULE = os.getenv 'SINGLE_MODULE'
+local LUA_VERSION = os.getenv 'LUA_VERSION'
 local config = require 'etc.run.config'
+local outdir = LUA_VERSION and 'out/'..LUA_VERSION or 'out'
 
 -----------------------------------------------------------
 -- HELPERS ------------------------------------------------
@@ -54,11 +57,11 @@ do
     end
 
     if config.clib and #config.clib > 0 then
-      x( 'cp -rf%s out/lib/* %q', verbose, env('INST_LIBDIR') )
+      x( 'cp -rf%s %s/lib/* %q', verbose, outdir, env('INST_LIBDIR') )
     end
 
     if config.cbin and #config.cbin > 0 then
-      x( 'cp -rf%s out/bin/* %q', verbose, env('INST_BINDIR') )
+      x( 'cp -rf%s %s/bin/* %q', verbose, outdir, env('INST_BINDIR') )
     end
   end
 end
@@ -67,7 +70,7 @@ end
 -- CLEAN --------------------------------------------------
 -----------------------------------------------------------
 function make.clean()
-  x('rm -rf ./out ./tmp ./src/*.o')
+  x('rm -rf ./out* ./tmp ./src/*.o')
 end
 
 
@@ -134,13 +137,13 @@ do
   end
 
   function cc.libout(item)
-    local path = 'out/lib/'..item[1]:gsub('%.','/') -- 'wax.x' to 'wax/x'
+    local path = outdir..'/lib/'..item[1]:gsub('%.','/') -- 'wax.x' to 'wax/x'
     x('mkdir -p %q', path:gsub('/[^/]*$',''))
     local libfile = path..'.'..LIB_EXTENSION
     return libfile;
   end
 
-  function cc.binout(o) return 'out/bin/'..o[1] end
+  function cc.binout(o) return outdir..'/bin/'..o[1] end
 
 
   local
@@ -148,24 +151,29 @@ do
     local cmd_obj   = '@cc @debug @flags @incdir @srcout'
     local cmd_shobj = '@cc @sharedflag -o @libout @src'
     if config.clib and #config.clib > 0 then
-      x('mkdir -p out/lib')
+      x('mkdir -p %s/lib', outdir)
       for _,item in ipairs(config.clib) do
-        for s, src in ipairs(item[2]) do
-          -- compile each .c to .o
-          x((cmd_obj:gsub('@(%w+)', function(p) return cc[p](src) end)))
-          -- replace the name from .c to .o
-          item[2][s] = src:gsub('[^.]$',OBJ_EXTENSION)
+        if not SINGLE_MODULE or SINGLE_MODULE == item[1] then
+          for s, src in ipairs(item[2]) do
+            -- compile each .c to .o
+            x((cmd_obj:gsub('@(%w+)', function(p) return cc[p](src) end)))
+            -- replace the name from .c to .o
+            item[2][s] = src:gsub('[^.]$',OBJ_EXTENSION)
+          end
+          x((cmd_shobj:gsub('@(%w+)',function(p) return cc[p](item) end)))
+          if SINGLE_MODULE then return true end
         end
-        x((cmd_shobj:gsub('@(%w+)',function(p) return cc[p](item) end)))
       end
+      if SINGLE_MODULE then return false end
     end
+    return true
   end
 
   local
   function cbin(config)
     local cmd = '@cc @debug @incdir @flags @src -o @binout'
     if config.cbin and #config.cbin > 0 then
-      x('mkdir -p out/bin')
+      x('mkdir -p %s/bin', outdir)
       for _,o in ipairs(config.cbin) do
         x((cmd:gsub('@(%w+)',function(p) return cc[p](o) end)))
       end
@@ -174,7 +182,7 @@ do
 
   help.build = "Compile C code"
   function make.build ()
-    clib(config)
+    if not clib(config) then print('MODULE NOT FOUND') os.exit(1) end
     cbin(config)
   end
 end

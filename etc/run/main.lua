@@ -17,8 +17,6 @@ local command = {}
 local sh = require 'etc.run.sh'
 local config = require 'etc.run.config'
 local luaVersions = {"5.1","5.2","5.3","5.4"}
-local sepline = "*******************************"
-local sepline2= "-------------------------------"
 local docdir  = "./test"
 local testdir = "./test"
 
@@ -30,37 +28,45 @@ local luabin = {
 }
 
 
-function test_compile(luaver)
-  print(("Compiling for Lua %s"):format(luaver))
-  print(sepline)
-  sh.exec("luarocks --tree ./tree --lua-version %s make %s",luaver,config.rockspec)
+function test_compile(luaver, module)
+  print(("\n╒═══╡ Compiling for Lua %s"):format(luaver))
+  if (module) then
+    sh.exec("SINGLE_MODULE=%q LUA_VERSION=%q luarocks --tree ./tree --lua-version %s make %s",module, luaver, luaver, config.rockspec)
+  else
+    sh.exec("LUA_VERSION=%q luarocks --tree ./tree --lua-version %s make %s",luaver,luaver,config.rockspec)
+  end
 end
 
-function test_lua(luaver)
+function test_lua(luaver,module)
   local lbin  = luabin[luaver]
   local lpath = ("./tree/share/lua/%s/?.lua;./tree/share/lua/%s/?/init.lua"):format(luaver,luaver)
   local cpath = ("./tree/lib/lua/%s/?.so" ):format(luaver)
+  local cmd = ('find %q -name "*.lua" 2>/dev/null'):format(testdir)
+  if module then
+    cmd = ("%s| grep '^%s/%s$'"):format(cmd, testdir, module:gsub('%.', '/')..'.lua')
+  end
 
-  local p = io.popen("find "..testdir.." -name '*.lua' 2> /dev/null","r")
+  local p = io.popen(cmd:format(testdir, module),"r")
   if p == nil then return end
 
-  print(("\nTesting with Lua %s"):format(luaver))
-  print(sepline)
+  print(("╞═══╡ Testing with Lua %s\n│"):format(luaver))
   testnum = 0
   local file = p:read()
   while file do
     testnum = testnum + 1
-    print(("\nTEST %s "):format(file))
+    io.stdout:write(("├╶╶╶ %s\n"):format(
+      file:gsub('./test/','')
+          :gsub('%.lua$', '')
+          :gsub('/','.')))
     sh.exec(
       [[ TZ=UTC+0 %s -e 'package.path=%q package.cpath=%q' %q ]],
       lbin, lpath, cpath, file
     )
     file = p:read()
   end
-  print( "\n".. sepline2
-       , "\n".. ("Total: %d tests"):format(testnum)
-       , "\n".. sepline2
-       , "\n\n\n")
+  io.stdout:write(
+    ("│\n╰╶╶╶ %d tests\n\n\n"):format(testnum)
+  )
 end
 
 function docker_names()
@@ -124,9 +130,10 @@ end
 
 
 function command.test()
+  local module = arg[2]
   for i,luaver in ipairs(luaVersions) do
-    test_compile(luaver)
-    test_lua(luaver)
+    test_compile(luaver, module)
+    test_lua(luaver, module)
   end
 end
 
@@ -142,15 +149,13 @@ function command.sparse()
     [[ src/lib/*c 2>&1 | grep -v "unknown attribute\|note: in included file" | tee /dev/stderr | wc -l ]]
   }
   print("\nRunning sparse")
-  print(sepline)
   for _,luaver in ipairs(luaVersions) do
     print (("\n - Targeting C for Lua %s"):format(luaver))
     if (sh.rexec(cmd:format(luaver)))[1] ~= "0" then
       os.exit(1)
     end
   end
-  print("")
-  print(sepline,"\nSparsed OK! :)\n")
+  print("\nSparsed OK! :)\n")
 end
 
 

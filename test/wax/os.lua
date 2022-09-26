@@ -12,7 +12,7 @@ wax.os = require 'wax.os'
 --{ Replaces the current process by a new one.
 do
 --{
-wax.os.exec('bash',{"-c", "ls -la /dev/null", ">/dev/null"} )
+wax.os.exec('bash',{"-c", "ls -la /dev/null > /dev/null 2>&1"} )
 os.exit(1) -- Will not trigger this error unless wax.os.exec has an error
 --}
 end

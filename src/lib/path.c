@@ -19,7 +19,6 @@
 #include <fcntl.h>     /* for AT_* constants on utime */
 #include <dirent.h>
 #include <glob.h>
-#include "lua.h"
 #include "path.h"
 
 

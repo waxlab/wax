@@ -8,6 +8,18 @@ unpack = unpack or table.unpack
 
 local DEBUG = os.getenv('DEBUG')
 
+--$ sh.screensize() : number, number
+--| Get the screen rows,columns in chars defaulting to 25, 80
+function sh.screensize()
+  local p,s = io.popen('stty size')
+  if p then
+    s = p:read() p:close()
+    return s:match('(%d+) (%d+)')
+  end
+  return 25,80
+end
+
+
 --$ sh.rexec(command: string, ...: string) : table, number
 --| Execute command and returns its contents on a table and its numeric exit
 function sh.rexec(cmd, ...)
@@ -50,6 +62,7 @@ function sh.exec(cmd, ...)
   end
 
   if DEBUG then print("EXEC "..cmd) end
+  local _,cols = sh.screensize()
   local proc = io.popen(cmd..';echo $?')
   local prev, curr = nil, nil
   if proc then
@@ -58,7 +71,9 @@ function sh.exec(cmd, ...)
       curr  = proc:read()
       if curr then
         if prev then
-          print(' | '..prev)
+          for i = 0, prev:len(), cols do
+            io.stdout:write('│    '..prev:sub(i, i-6+cols)..'\n')
+          end
         end
       else
         if prev ~= "0" then
