@@ -145,6 +145,7 @@ function command.sparse()
     [[ -Wsparse-all ]],
     [[ -I/usr/include/lua%s ]],
     [[ -I./src ]],
+    [[ -I./src/ext ]],
     [[ -I./src/lib ]],
     [[ src/lib/*c 2>&1 | grep -v "unknown attribute\|note: in included file" | tee /dev/stderr | wc -l ]]
   }

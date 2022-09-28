@@ -78,7 +78,7 @@ function sh.exec(cmd, ...)
       else
         if prev ~= "0" then
           print("\n\n//// Exit Status", prev,"\n\n")
-          prev = prev or 1
+          prev = tonumber(prev or 1)
           os.exit(prev)
         end
         return
