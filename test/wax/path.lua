@@ -36,12 +36,12 @@ end
 --| ## Constants
 --|
 
-do
 --$ wax.path.dirsep : string
---{ Directory separator, that can change accordingly to the system.
+--| Directory separator, that can change accordingly to the system.
 --| * BSD, Linux etc.: `"/"` (slash)
 --| * Windows:         `"\"` (backslash)
-
+do
+--{
   assert( path.dirsep == "/" or path.dirsep == "\\" )
 --}
 end
@@ -465,10 +465,11 @@ do
 end
 
 
-do
 --$ wax.path.umask([mask: string]) : string
---{ Set a new mask and returns the old one.
+--| Set a new mask and returns the old one.
 --| When called without argument, returns the current umask.
+do
+--{
 
   -- Sets the umask to 777 and retrieves current mask
   local curmask = path.umask("777")
@@ -723,9 +724,10 @@ os.exit(0)
 --| ## Symbolic links handling
 --|
 
-do
 --$ wax.path.islink(path: string) : boolean
---{ checks if the path exists and is a link
+--| checks if the path exists and is a link
+do
+--{
   assert(path.islink("/somelink") == true)
 
   local ok, errstr
@@ -742,10 +744,11 @@ do
 --}
 end
 
-do
 --$ wax.path.makeLink(orig, dest: string) : boolean [, string]
---{ Creates a new link from `orig` to `dest` and return true.
+--| Creates a new link from `orig` to `dest` and return true.
 --| When not possible returns false and a descriptive string.
+do
+--{
 assert(path.makeLink());
 --}
 end
