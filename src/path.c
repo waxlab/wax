@@ -3,7 +3,7 @@
 ** A waxing Lua Standard Library
 **
 ** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/luawax/wax)
+** (https://github.com/waxlab/wax)
 */
 
 #include <stdlib.h>    /* realpath */
@@ -33,7 +33,7 @@
 static int _wax_checkmode(lua_State *L, int arg) {
   char *e;
   int mode = strtol(luaL_checkstring(L,arg), &e, 8);
-  lume_error(L, e[0] != '\0', "invalid octal");
+  waxM_error(L, e[0] != '\0', "invalid octal");
   return mode;
 }
 
@@ -48,7 +48,7 @@ static int _wax_checkpermstring(lua_State *L, int arg) {
       case 'w' : mode |= W_OK; break;
       case 'x' : mode |= X_OK; break;
       default:
-        lume_error(L,1,"Mode character different of 'r','w' or 'x'");
+        waxM_error(L,1,"Mode character different of 'r','w' or 'x'");
     }
   }
   return mode;
@@ -124,7 +124,7 @@ static int wax_path_basename(lua_State *L) {
 
 static int wax_path_real(lua_State *L) {
   char out[PATH_MAX];
-  lume_failnil(L, realpath(luaL_checkstring(L, 1), out) == NULL);
+  waxM_failnil(L, realpath(luaL_checkstring(L, 1), out) == NULL);
   lua_pushstring(L,out);
   return 1;
 }
@@ -177,7 +177,7 @@ static int wax_path_build(lua_State *L) {
 static int isStatMode(lua_State *L, unsigned int sm) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
-  lume_failboolean(L, stat(path, &sb) == -1);
+  waxM_failboolean(L, stat(path, &sb) == -1);
   lua_pushboolean(L, (sb.st_mode & S_IFMT) == sm);
   return 1;
 }
@@ -186,39 +186,39 @@ static int isStatMode(lua_State *L, unsigned int sm) {
 static int wax_path_stat(lua_State *L) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
-  lume_failnil(L, stat(path, &sb) == -1);
+  waxM_failnil(L, stat(path, &sb) == -1);
 
   char tstr[30];
 
   lua_createtable(L,0,16);
 
   sprintf(tstr, "%lu", (unsigned long int) sb.st_dev);
-  lume_setfield_ss(L, "dev",     tstr);
+  waxM_setfield_ss(L, "dev",     tstr);
 
   sprintf(tstr, "%lu", (unsigned long int) sb.st_rdev);
-  lume_setfield_ss(L, "rdev",    tstr);
+  waxM_setfield_ss(L, "rdev",    tstr);
 
   sprintf(tstr, "%03o", sb.st_mode & 0777);
-  lume_setfield_ss(L, "mode",    tstr);
+  waxM_setfield_ss(L, "mode",    tstr);
 
-  lume_setfield_si(L, "ino",     sb.st_ino);
+  waxM_setfield_si(L, "ino",     sb.st_ino);
 
-  lume_setfield_ss(L, "type",    _wax_filetype(sb.st_mode));
+  waxM_setfield_ss(L, "type",    _wax_filetype(sb.st_mode));
 
-  lume_setfield_si(L, "nlink",   sb.st_nlink);
-  lume_setfield_si(L, "uid",     sb.st_uid);
-  lume_setfield_si(L, "gid",     sb.st_gid);
-  lume_setfield_si(L, "size",    sb.st_size);
-  lume_setfield_si(L, "blksize", sb.st_blksize);
-  lume_setfield_si(L, "blocks",  sb.st_blocks);
-  lume_setfield_si(L, "atime",   sb.st_atim.tv_sec);
-  lume_setfield_si(L, "ctime",   sb.st_ctim.tv_sec);
-  lume_setfield_si(L, "mtime",   sb.st_mtim.tv_sec);
+  waxM_setfield_si(L, "nlink",   sb.st_nlink);
+  waxM_setfield_si(L, "uid",     sb.st_uid);
+  waxM_setfield_si(L, "gid",     sb.st_gid);
+  waxM_setfield_si(L, "size",    sb.st_size);
+  waxM_setfield_si(L, "blksize", sb.st_blksize);
+  waxM_setfield_si(L, "blocks",  sb.st_blocks);
+  waxM_setfield_si(L, "atime",   sb.st_atim.tv_sec);
+  waxM_setfield_si(L, "ctime",   sb.st_ctim.tv_sec);
+  waxM_setfield_si(L, "mtime",   sb.st_mtim.tv_sec);
 
   /* Some systems doesn't support these below. In that case, they are 0 */
-  lume_setfield_si(L, "atimens", sb.st_atim.tv_nsec);
-  lume_setfield_si(L, "ctimens", sb.st_ctim.tv_nsec);
-  lume_setfield_si(L, "mtimens", sb.st_mtim.tv_nsec);
+  waxM_setfield_si(L, "atimens", sb.st_atim.tv_nsec);
+  waxM_setfield_si(L, "ctimens", sb.st_ctim.tv_nsec);
+  waxM_setfield_si(L, "mtimens", sb.st_mtim.tv_nsec);
 
   return 1;
 }
@@ -282,7 +282,7 @@ static int wax_path_utime(lua_State *L) {
     }
   }
 
-  lume_failboolean(L, utimensat(AT_FDCWD, path, update, 0) < 0);
+  waxM_failboolean(L, utimensat(AT_FDCWD, path, update, 0) < 0);
   lua_pushboolean(L, 1);
   return 1;
 }
@@ -311,7 +311,7 @@ static int wax_path_access(lua_State *L) {
     return 0;
   }
 
-  lume_failboolean(L, access(path,mode) < 0);
+  waxM_failboolean(L, access(path,mode) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -319,7 +319,7 @@ static int wax_path_access(lua_State *L) {
 
 static int wax_path_getmod(lua_State *L) {
   struct stat sb;
-  lume_failnil(L, stat(luaL_checkstring(L,1), &sb) < 0);
+  waxM_failnil(L, stat(luaL_checkstring(L,1), &sb) < 0);
 
   char mode[4];
   sprintf(mode, "%03o", sb.st_mode & 0777);
@@ -330,7 +330,7 @@ static int wax_path_getmod(lua_State *L) {
 
 
 static int wax_path_chmod(lua_State *L) {
-  lume_failboolean(L, chmod(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
+  waxM_failboolean(L, chmod(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -342,7 +342,7 @@ static int wax_path_chown(lua_State *L) {
   int uargtype = lua_type(L,2);
   if (uargtype == LUA_TSTRING) {
     struct passwd *p = getpwnam(luaL_checkstring(L,2));
-    lume_failboolean(L, p == NULL);
+    waxM_failboolean(L, p == NULL);
     uid = p->pw_uid;
   } else if (uargtype == LUA_TNUMBER) {
     uid = luaL_checkinteger(L,2);
@@ -350,7 +350,7 @@ static int wax_path_chown(lua_State *L) {
     luaL_error(L,"expected string or number as 2ng arg");
   }
 
-  lume_failboolean(L, chown(path, uid, -1) < 0);
+  waxM_failboolean(L, chown(path, uid, -1) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -365,7 +365,7 @@ static int wax_path_ispipe(lua_State *L)     { return isStatMode(L, S_IFIFO); }
 
 
 static int wax_path_exists(lua_State *L) {
-  lume_failboolean(L, access(luaL_checkstring(L,1), F_OK) < 0);
+  waxM_failboolean(L, access(luaL_checkstring(L,1), F_OK) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -389,21 +389,21 @@ static int wax_path_umask(lua_State *L) {
 
 static int wax_path_getcwd(lua_State *L) {
   char cwd[PATH_MAX + 1];
-  lume_failnil(L, getcwd(cwd,PATH_MAX) == NULL);
+  waxM_failnil(L, getcwd(cwd,PATH_MAX) == NULL);
   lua_pushstring(L,cwd);
   return 1;
 }
 
 
 static int wax_path_chdir(lua_State *L) {
-  lume_failboolean(L, chdir(luaL_checkstring(L,1)) < 0);
+  waxM_failboolean(L, chdir(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
 static int wax_path_mkdir(lua_State *L) {
-  lume_failboolean(L, mkdir(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
+  waxM_failboolean(L, mkdir(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -441,21 +441,21 @@ static int _wax_mkdirp(const char *inpath, int mode) {
 
 
 static int wax_path_mkdirs(lua_State *L) {
-  lume_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
+  waxM_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
 static int wax_path_rmdir(lua_State *L) {
-  lume_failboolean(L, rmdir(luaL_checkstring(L,1)) < 0);
+  waxM_failboolean(L, rmdir(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
 static int wax_path_unlink(lua_State *L) {
-  lume_failboolean(L, unlink(luaL_checkstring(L,1)) < 0);
+  waxM_failboolean(L, unlink(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -633,10 +633,10 @@ static const luaL_Reg wax_path[] = {
 
 int luaopen_wax_path(lua_State *L) {
 
-  lume_newuserdata_mt(L, listex_mt, wax_path_listex_mt);
-  lume_newuserdata_mt(L, list_mt,   wax_path_list_mt);
+  waxM_newuserdata_mt(L, listex_mt, wax_path_listex_mt);
+  waxM_newuserdata_mt(L, list_mt,   wax_path_list_mt);
 
-  lume_export(L, "wax.path", wax_path);
+  waxM_export(L, "wax.path", wax_path);
   lua_pushstring(L, DIRSEP);
   lua_setfield(L, -2, "dirsep");
   return 1;

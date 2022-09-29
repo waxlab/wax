@@ -3,7 +3,7 @@
 ** A waxing Lua Standard Library
 **
 ** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/luawax/wax)
+** (https://github.com/waxlab/wax)
 */
 
 #include <stddef.h>
@@ -47,6 +47,6 @@ static const luaL_Reg wax_os[] = {
 
 
 int luaopen_wax_os(lua_State *L) {
-  lume_export(L, "wax.os", wax_os);
+  waxM_export(L, "wax.os", wax_os);
   return 1;
 }

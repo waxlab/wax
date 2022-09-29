@@ -3,8 +3,8 @@
 ** A waxing Lua Standard Library
 **
 ** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/luawax/wax)
+** (https://github.com/waxlab/wax)
 */
 
-#include "../macros.h"
+#include "waxm.h"
 int luaopen_wax_path(lua_State *L);

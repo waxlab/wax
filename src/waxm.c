@@ -1,12 +1,12 @@
 /*
-** Wax
+** Wax Macros
 ** A waxing Lua Standard Library
 **
 ** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/luawax/wax)
+** (https://github.com/waxlab/wax)
 */
 
-#include "macros.h"
+#include "waxm.h"
 
 int unimplemented(lua_State *L, ...) {
   lua_pushnil(L);

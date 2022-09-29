@@ -9,21 +9,21 @@ bin = { }
 -- ./src/macros
 clib = {
     { "wax.os", {
-        "macros.c",
-        "lib/os.c" } },
+        "waxm.c",
+        "os.c" } },
 
     { "wax.path", {
-        "macros.c",
-        "lib/path.c" } },
+        "waxm.c",
+        "path.c" } },
 
     { "wax.user", {
-        "macros.c",
-        "lib/user.c" } },
+        "waxm.c",
+        "user.c" } },
 
     { "wax.json", {
-        "macros.c",
+        "waxm.c",
         "ext/json/cJSON.c",
-        "lib/json.c" } },
+        "json.c" } },
 }
 
 cbin = {

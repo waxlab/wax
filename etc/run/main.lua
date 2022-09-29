@@ -147,7 +147,7 @@ function command.sparse()
     [[ -I./src ]],
     [[ -I./src/ext ]],
     [[ -I./src/lib ]],
-    [[ src/lib/*c 2>&1 | grep -v "unknown attribute\|note: in included file" | tee /dev/stderr | wc -l ]]
+    [[ src/*c 2>&1 | grep -v "unknown attribute\|note: in included file" | tee /dev/stderr | wc -l ]]
   }
   print("\nRunning sparse")
   for _,luaver in ipairs(luaVersions) do

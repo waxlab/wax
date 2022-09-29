@@ -3,7 +3,7 @@
 ** A waxing Lua Standard Library
 **
 ** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/luawax/wax)
+** (https://github.com/waxlab/wax)
 */
 
 
@@ -126,7 +126,7 @@ static int wax_user_groups(lua_State *L) {
 
   lua_createtable(L,gnum,0);
   for (int i=1; i <= gnum; i++) {
-    lume_setfield_ii(L,i,gids[i-1]);
+    waxM_setfield_ii(L,i,gids[i-1]);
   }
   return 1;
 }
@@ -143,6 +143,6 @@ static const luaL_Reg wax_user[] = {
 
 
 int luaopen_wax_user(lua_State *L) {
-  lume_export(L, "wax.user", wax_user);
+  waxM_export(L, "wax.user", wax_user);
   return 1;
 }
