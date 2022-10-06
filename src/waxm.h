@@ -18,11 +18,12 @@
 #include <lauxlib.h>
 
 
-
 /* Abstraction over Lua versions for module exports */
 #if ( LUA_VERSION_NUM < 502 )
-  #define waxM_export(L,n,t) luaL_register(L,n,t);
+  #define waxM_rawlen lua_objlen
+  #define waxM_export luaL_register
 #else
+  #define waxM_rawlen lua_rawlen
   #define waxM_export(L,n,t) luaL_newlib(L,t);
 #endif
 
@@ -80,7 +81,6 @@
     lua_setfield((lua_State),-2,"__index"); \
     luaL_setfuncs((lua_State), (funcs), 0);
 #endif
-
 
 
 /*
