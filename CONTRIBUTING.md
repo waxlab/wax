@@ -47,10 +47,9 @@ multiple vertical splits. 80 columns and 2 spaces as indentation give the
 reader/developer possibility to improve its work editing a source and its
 testings or even reading documentation.
 
-* It widens the device use possibilite, giving accessibility to develop and
-and read the code even in mobile or older devices.
+* It widens the device use possibilities, giving accessibility to develop and
+and read the code even in mobile (ex: Termux) or older devices.
 
 * It enforces the code simplicity. It is paradoxal, but it keep your code
-vertical, easy to read and simple to understand.
-
-
+vertical, at the same time that reinforce the functions to be smaller,
+easy to read and simple to understand.

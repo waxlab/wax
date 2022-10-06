@@ -140,21 +140,25 @@ end
 
 function command.sparse()
   local cmd = table.concat {
-    [[ sparse -Wsparse-error ]],
-    [[ -Wno-declaration-after-statement ]],
-    [[ -Wsparse-all ]],
-    [[ -I/usr/include/lua%s ]],
-    [[ -I./src ]],
-    [[ -I./src/ext ]],
-    [[ -I./src/lib ]],
-    [[ src/*c 2>&1 | grep -v "unknown attribute\|note: in included file" | tee /dev/stderr | wc -l ]]
+    [[ for i in src/*c ; do ]],
+      [[echo sparsing "$i" ; ]],
+      [[sparse -Wsparse-error ]],
+        [[ -Wno-declaration-after-statement ]],
+        [[ -Wsparse-all ]],
+        [[ -I/usr/include/lua%s ]],
+        [[ -I./src ]],
+        [[ -I./src/ext ]],
+        [[ -I./src/lib ]],
+        [[ "$i" 2>&1 | ]],
+          [[ grep -v "unknown attribute\|note: in included file" | ]],
+          [[ tee /dev/stderr; ]],
+    [[ done ]]
   }
   print("\nRunning sparse")
   for _,luaver in ipairs(luaVersions) do
-    print (("\n - Targeting C for Lua %s"):format(luaver))
-    if (sh.rexec(cmd:format(luaver)))[1] ~= "0" then
-      os.exit(1)
-    end
+    print (("\n╒═══╡ Lua %s"):format(luaver))
+    sh.exec(cmd:format(luaver))
+    print ("╰╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶╶")
   end
   print("\nSparsed OK! :)\n")
 end
