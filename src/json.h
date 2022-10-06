@@ -9,4 +9,6 @@
 #include "waxm.h"
 #define CJSON_NESTING_LIMIT INT_MAX
 #include "ext/json/cJSON.h"
+
 int luaopen_wax_json(lua_State *L);
+

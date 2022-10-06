@@ -1,9 +1,12 @@
---   Wax Project -- Axa Lua Development  --
---     Copyright 2022 Thadeu de Paula    --
---     https://github.com/axa-dev/wax    --
---       Licensed under MIT License      --
+--| # wax.path
+--| This module contains filesystem related functions to list,
+--| retrieve info of files as well as filename handling helpers
 
+--| ## Basic usage
+--{
 local path = require("wax.path")
+--}
+
 local user = require("wax.user")
 local lua = tonumber(_VERSION:gsub('%D',''), 10)
 
@@ -20,17 +23,6 @@ do
     fh:close()
   end
 end
-
---| # wax.path
---| This module contains filesystem related functions to list,
---| retrieve info of files as well as filename handling helpers
---|
---| **Compatibility**
---| All functions are tested in a Linux environment and should work
---| flawlessly under any modern Posix compliant system.
---| Windows is not presently not supported and most of functions
---| should return nil.
---|
 
 --|
 --| ## Constants
