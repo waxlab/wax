@@ -56,17 +56,18 @@ supported (See "Using under Windows" section).
 
 ## Versioning
 
-As Lua starts from index 1, our versioning also does.
-Stability is a matter of tests, so every module under this project
-should have its tests well documented and passed before become release.
+The versioning uses a mix of year and features. So is really easy to
+understand what is going on.
 
-Examples:
+```
+1.10-5
+|  | '--- 5th correction of 1.10
+|  '----- 10th feature implemented
+'-------- 1st year of module.
+```
 
-* wax-1.0-0 - A version
-* wax-1.0-2 - The same as above but some performance or bugs corrected.
-* wax-1.1-0 - Implements new features
-
-* wax-scm-1 - "Nightly"
+The development version should be got directly from the repository
+under the `dev` branch.
 
 
 ## Running tests under multiple Linuxes
