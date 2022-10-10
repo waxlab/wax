@@ -1,9 +1,9 @@
 package = "wax"
-version = "0.9-0"
+version = "0.9-1"
 
 source = {
   url = "git+https://github.com/waxlab/wax",
-  tag = "v0.9-0"
+  tag = "v0.9-1"
 }
 
 description = {

@@ -12,9 +12,9 @@ clib = {
         "waxm.c",
         "os.c" } },
 
-    { "wax.path", {
+    { "wax.fs", {
         "waxm.c",
-        "path.c" } },
+        "fs.c" } },
 
     { "wax.user", {
         "waxm.c",

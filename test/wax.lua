@@ -71,7 +71,7 @@ end
 --$ wax.loadfile(filename: string, envt: table)
 --| Does the same as the `wax.load` but loading from a file instead.
 do
-local luafile = require 'wax.path'.getcwd()..'/etc/example/luafile.lua'
+local luafile = require 'wax.fs'.getcwd()..'/etc/example/luafile.lua'
 --{
   local env = {}
   local fn, err = wax.loadfile(luafile, env)

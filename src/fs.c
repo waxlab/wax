@@ -6,20 +6,7 @@
 ** (https://github.com/waxlab/wax)
 */
 
-#include <stdlib.h>    /* realpath */
-#include <sys/param.h> /* pmax Posix */
-#include <sys/stat.h>  /* stat */
-#include <limits.h>    /* pmax */
-#include <libgen.h>    /* dirname, basename */
-#include <string.h>
-#include <errno.h>
-#include <math.h>      /* for floor() use */
-#include <unistd.h>
-#include <pwd.h>       /* for getpwnam */
-#include <fcntl.h>     /* for AT_* constants on utime */
-#include <dirent.h>
-#include <glob.h>
-#include "path.h"
+#include "fs.h"
 
 
 #ifdef PLAT_WINDOWS
@@ -65,7 +52,7 @@ static char *_wax_filetype(int st_mode) {
 }
 
 
-static char *_wax_pathsanitize(char *path, char *res) {
+static char *_wax_fssanitize(char *path, char *res) {
   int p=0;  /* index counter for path chars */
   int r=-1; /* index counter for result chars */
   int pl = strlen(path);
@@ -102,7 +89,7 @@ static char *_wax_pathsanitize(char *path, char *res) {
 ** Path resolution
 */
 
-static int wax_path_getcwdname(lua_State *L) {
+static int wax_fs_getcwdname(lua_State *L) {
   char path[PATH_MAX];
   const char *arg1 = luaL_checkstring(L,1);
   memcpy(path, arg1, strlen(arg1)+1);
@@ -112,7 +99,7 @@ static int wax_path_getcwdname(lua_State *L) {
 }
 
 
-static int wax_path_basename(lua_State *L) {
+static int wax_fs_basename(lua_State *L) {
   char path[PATH_MAX];
   const char *arg1 = luaL_checkstring(L,1);
   memcpy(path, arg1, strlen(arg1)+1);
@@ -122,7 +109,7 @@ static int wax_path_basename(lua_State *L) {
 }
 
 
-static int wax_path_real(lua_State *L) {
+static int wax_fs_realpath(lua_State *L) {
   char out[PATH_MAX];
   waxM_failnil(L, realpath(luaL_checkstring(L, 1), out) == NULL);
   lua_pushstring(L,out);
@@ -130,7 +117,7 @@ static int wax_path_real(lua_State *L) {
 }
 
 
-static int wax_path_build(lua_State *L) {
+static int wax_fs_build(lua_State *L) {
   luaL_checkstring(L,1);
 
   int plen=0, nlen=0, r=1, waxerr=0;
@@ -155,7 +142,7 @@ static int wax_path_build(lua_State *L) {
   }
 
   char res[PATH_MAX];
-  _wax_pathsanitize(path, res);
+  _wax_fssanitize(path, res);
   lua_pushstring(L,res);
   r = 1;
   goto end;
@@ -183,7 +170,7 @@ static int isStatMode(lua_State *L, unsigned int sm) {
 }
 
 
-static int wax_path_stat(lua_State *L) {
+static int wax_fs_stat(lua_State *L) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
   waxM_failnil(L, stat(path, &sb) == -1);
@@ -240,7 +227,7 @@ static struct timespec _wax_checktstable(lua_State *L, int arg){
 }
 
 
-static int wax_path_utime(lua_State *L) {
+static int wax_fs_utime(lua_State *L) {
   const char *path = luaL_checkstring(L,1);
   struct timespec update[2];
   double sec;
@@ -288,7 +275,7 @@ static int wax_path_utime(lua_State *L) {
 }
 
 
-static int wax_path_access(lua_State *L) {
+static int wax_fs_access(lua_State *L) {
   const char *path = luaL_checkstring(L,1);
   int mode = F_OK;
 
@@ -317,7 +304,7 @@ static int wax_path_access(lua_State *L) {
 }
 
 
-static int wax_path_getmod(lua_State *L) {
+static int wax_fs_getmod(lua_State *L) {
   struct stat sb;
   waxM_failnil(L, stat(luaL_checkstring(L,1), &sb) < 0);
 
@@ -329,14 +316,14 @@ static int wax_path_getmod(lua_State *L) {
 }
 
 
-static int wax_path_chmod(lua_State *L) {
+static int wax_fs_chmod(lua_State *L) {
   waxM_failboolean(L, chmod(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
-static int wax_path_chown(lua_State *L) {
+static int wax_fs_chown(lua_State *L) {
   int uid = -1;
   const char *path = luaL_checkstring(L, 1);
   int uargtype = lua_type(L,2);
@@ -356,22 +343,22 @@ static int wax_path_chown(lua_State *L) {
 }
 
 
-static int wax_path_isdir(lua_State *L)      { return isStatMode(L, S_IFDIR); }
-static int wax_path_isfile(lua_State *L)     { return isStatMode(L, S_IFREG); }
-static int wax_path_islink(lua_State *L)     { return isStatMode(L, S_IFLNK); }
-static int wax_path_isblockdev(lua_State *L) { return isStatMode(L, S_IFBLK); }
-static int wax_path_ischardev(lua_State *L)  { return isStatMode(L, S_IFCHR); }
-static int wax_path_ispipe(lua_State *L)     { return isStatMode(L, S_IFIFO); }
+static int wax_fs_isdir(lua_State *L)      { return isStatMode(L, S_IFDIR); }
+static int wax_fs_isfile(lua_State *L)     { return isStatMode(L, S_IFREG); }
+static int wax_fs_islink(lua_State *L)     { return isStatMode(L, S_IFLNK); }
+static int wax_fs_isblockdev(lua_State *L) { return isStatMode(L, S_IFBLK); }
+static int wax_fs_ischardev(lua_State *L)  { return isStatMode(L, S_IFCHR); }
+static int wax_fs_ispipe(lua_State *L)     { return isStatMode(L, S_IFIFO); }
 
 
-static int wax_path_exists(lua_State *L) {
+static int wax_fs_exists(lua_State *L) {
   waxM_failboolean(L, access(luaL_checkstring(L,1), F_OK) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
-static int wax_path_umask(lua_State *L) {
+static int wax_fs_umask(lua_State *L) {
   int omask;
   if ( lua_gettop(L) == 0 ) {
     omask = umask(0022);
@@ -387,7 +374,7 @@ static int wax_path_umask(lua_State *L) {
 }
 
 
-static int wax_path_getcwd(lua_State *L) {
+static int wax_fs_getcwd(lua_State *L) {
   char cwd[PATH_MAX + 1];
   waxM_failnil(L, getcwd(cwd,PATH_MAX) == NULL);
   lua_pushstring(L,cwd);
@@ -395,14 +382,14 @@ static int wax_path_getcwd(lua_State *L) {
 }
 
 
-static int wax_path_chdir(lua_State *L) {
+static int wax_fs_chdir(lua_State *L) {
   waxM_failboolean(L, chdir(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
-static int wax_path_mkdir(lua_State *L) {
+static int wax_fs_mkdir(lua_State *L) {
   waxM_failboolean(L, mkdir(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
@@ -416,7 +403,7 @@ static int _wax_mkdirp(const char *inpath, int mode) {
   int  plen;
   char sep     = DIRSEP[0];      /* is "/" or "\" ? */
 
-  _wax_pathsanitize((char *)inpath, path);
+  _wax_fssanitize((char *)inpath, path);
   plen = strlen(path);
 
   /* map the position of separators, rtl */
@@ -440,21 +427,21 @@ static int _wax_mkdirp(const char *inpath, int mode) {
 }
 
 
-static int wax_path_mkdirs(lua_State *L) {
+static int wax_fs_mkdirs(lua_State *L) {
   waxM_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
-static int wax_path_rmdir(lua_State *L) {
+static int wax_fs_rmdir(lua_State *L) {
   waxM_failboolean(L, rmdir(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
-static int wax_path_unlink(lua_State *L) {
+static int wax_fs_unlink(lua_State *L) {
   waxM_failboolean(L, unlink(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
@@ -465,7 +452,7 @@ static int wax_path_unlink(lua_State *L) {
 ** Directory entry listing
 */
 
-#define list_mt "wax_path_list_udata"
+#define list_mt "wax_fs_list_udata"
 
 typedef struct {
   DIR *handler;
@@ -473,7 +460,7 @@ typedef struct {
 } list_t;
 
 
-static int wax_path_list_iter(lua_State *L) {
+static int wax_fs_list_iter(lua_State *L) {
   list_t *data = luaL_checkudata(L, 1, list_mt);
   errno = 0;
   struct dirent *entry;
@@ -493,9 +480,9 @@ static int wax_path_list_iter(lua_State *L) {
 }
 
 
-static int wax_path_list_open(lua_State *L) {
+static int wax_fs_list_open(lua_State *L) {
   const char *path = luaL_checkstring(L,1);
-  lua_pushcfunction(L, wax_path_list_iter);
+  lua_pushcfunction(L, wax_fs_list_iter);
   list_t *data = lua_newuserdata(L, sizeof(list_t));
   data->handler = opendir(path);
   data->closed = 0;
@@ -511,7 +498,7 @@ static int wax_path_list_open(lua_State *L) {
 }
 
 
-static int wax_path_list_close(lua_State *L) {
+static int wax_fs_list_close(lua_State *L) {
   list_t *data = luaL_checkudata(L,1,list_mt);
   int res = 0;
 
@@ -525,12 +512,12 @@ static int wax_path_list_close(lua_State *L) {
 }
 
 
-static const luaL_Reg wax_path_list_mt[] = {
+static const luaL_Reg wax_fs_list_mt[] = {
   #if LUA_VERSION_NUM >= 504
-  {"__close", wax_path_list_close },
+  {"__close", wax_fs_list_close },
   #endif
-  {"__gc",  wax_path_list_close },
-  {"next",  wax_path_list_iter },
+  {"__gc",  wax_fs_list_close },
+  {"next",  wax_fs_list_iter },
   {NULL,    NULL             }
 };
 
@@ -539,7 +526,7 @@ static const luaL_Reg wax_path_list_mt[] = {
 ** Directory entry listing with word expansions
 */
 
-#define listex_mt "wax_path_listex_udata"
+#define listex_mt "wax_fs_listex_udata"
 
 typedef struct {
   glob_t handler;
@@ -547,7 +534,7 @@ typedef struct {
 } listex_t;
 
 
-static int wax_path_listex_iter(lua_State *L) {
+static int wax_fs_listex_iter(lua_State *L) {
   listex_t *data = luaL_checkudata(L, 1, listex_mt);
 
   if (data->pos >= data->handler.gl_pathc) return 0;
@@ -557,9 +544,9 @@ static int wax_path_listex_iter(lua_State *L) {
 }
 
 
-static int wax_path_listex_open(lua_State *L) {
+static int wax_fs_listex_open(lua_State *L) {
   const char *path = luaL_checkstring(L, 1);
-  lua_pushcfunction(L, wax_path_listex_iter);
+  lua_pushcfunction(L, wax_fs_listex_iter);
   listex_t *data = lua_newuserdata(L, sizeof(listex_t));
 
   /* We ignore errors just in listex */
@@ -572,19 +559,19 @@ static int wax_path_listex_open(lua_State *L) {
 }
 
 
-static int wax_path_listex_close(lua_State *L) {
+static int wax_fs_listex_close(lua_State *L) {
   listex_t *data = luaL_checkudata(L,1,listex_mt);
   globfree( &(data->handler) );
   return 0;
 }
 
 
-static const luaL_Reg wax_path_listex_mt[] = {
+static const luaL_Reg wax_fs_listex_mt[] = {
   #if LUA_VERSION_NUM >= 504
-  {"__close", wax_path_listex_close },
+  {"__close", wax_fs_listex_close },
   #endif
-  {"__gc",  wax_path_listex_close },
-  {"next",  wax_path_listex_iter },
+  {"__gc",  wax_fs_listex_close },
+  {"next",  wax_fs_listex_iter },
   {NULL,    NULL             }
 };
 
@@ -594,49 +581,49 @@ static const luaL_Reg wax_path_listex_mt[] = {
 ** Module exported functions
 */
 
-static const luaL_Reg wax_path[] = {
-  {"real",       wax_path_real             },
-  {"build",      wax_path_build            },
-  {"dirname",    wax_path_getcwdname       },
-  {"basename",   wax_path_basename         },
+static const luaL_Reg wax_fs[] = {
+  {"realpath",   wax_fs_realpath    },
+  {"build",      wax_fs_build       },
+  {"dirname",    wax_fs_getcwdname  },
+  {"basename",   wax_fs_basename    },
 
-  {"stat",       wax_path_stat             },
-  {"utime",      wax_path_utime            },
-  {"access",     wax_path_access           },
-  {"getmod",     wax_path_getmod           },
-  {"chmod",      wax_path_chmod            },
-  {"chown",      wax_path_chown            },
+  {"stat",       wax_fs_stat        },
+  {"utime",      wax_fs_utime       },
+  {"access",     wax_fs_access      },
+  {"getmod",     wax_fs_getmod      },
+  {"chmod",      wax_fs_chmod       },
+  {"chown",      wax_fs_chown       },
 
-  {"exists",     wax_path_exists           },
-  {"umask",      wax_path_umask            },
-  {"isblockdev", wax_path_isblockdev       },
-  {"ischardev",  wax_path_ischardev        },
-  {"isdir",      wax_path_isdir            },
-  {"isfile",     wax_path_isfile           },
-  {"ispipe",     wax_path_ispipe           },
-  {"islink",     wax_path_islink           },
+  {"exists",     wax_fs_exists      },
+  {"umask",      wax_fs_umask       },
+  {"isblockdev", wax_fs_isblockdev  },
+  {"ischardev",  wax_fs_ischardev   },
+  {"isdir",      wax_fs_isdir       },
+  {"isfile",     wax_fs_isfile      },
+  {"ispipe",     wax_fs_ispipe      },
+  {"islink",     wax_fs_islink      },
 
-  {"getcwd",     wax_path_getcwd           },
-  {"chdir",      wax_path_chdir            },
-  {"mkdir",      wax_path_mkdir            },
-  {"mkdirs",     wax_path_mkdirs           },
-  {"rmdir",      wax_path_rmdir            },
-  {"unlink",     wax_path_unlink           },
+  {"getcwd",     wax_fs_getcwd      },
+  {"chdir",      wax_fs_chdir       },
+  {"mkdir",      wax_fs_mkdir       },
+  {"mkdirs",     wax_fs_mkdirs      },
+  {"rmdir",      wax_fs_rmdir       },
+  {"unlink",     wax_fs_unlink      },
 
   /* Generators/Iterators */
-  {"list",       wax_path_list_open        },
-  {"listex",     wax_path_listex_open      },
+  {"list",       wax_fs_list_open   },
+  {"listex",     wax_fs_listex_open },
 
-  { NULL,        NULL                      }
+  { NULL,        NULL               }
 };
 
 
-int luaopen_wax_path(lua_State *L) {
+int luaopen_wax_fs(lua_State *L) {
 
-  waxM_newuserdata_mt(L, listex_mt, wax_path_listex_mt);
-  waxM_newuserdata_mt(L, list_mt,   wax_path_list_mt);
+  waxM_newuserdata_mt(L, listex_mt, wax_fs_listex_mt);
+  waxM_newuserdata_mt(L, list_mt,   wax_fs_list_mt);
 
-  waxM_export(L, "wax.path", wax_path);
+  waxM_export(L, "wax.fs", wax_fs);
   lua_pushstring(L, DIRSEP);
   lua_setfield(L, -2, "dirsep");
   return 1;

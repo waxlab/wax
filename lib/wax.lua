@@ -70,7 +70,7 @@ end
 
 
 function wax.scriptfile()
-  local realpath = require 'wax.path'.real
+  local realpath = require 'wax.fs'.realpath
   local s = debug.getinfo(2,'S')
   if s then return realpath(s.short_src) end
   return nil
