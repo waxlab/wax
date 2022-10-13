@@ -1,0 +1,54 @@
+#!/bin/bash
+
+TGT="$1"
+TGT=${TGT:-./}
+
+EDITOR="vim -c:{2} {1}"
+TOPDIR="$PWD"
+TMPFILE=$(mktemp "/tmp/view-$USER-XXXXXX")
+
+# Break execution and keep term clean
+quit() { rm -rf $TMPFILE ; echo -e "\e[0m" ; exit; }
+
+# Keep a sound terminal
+trap quit SIGINT
+
+while : ; do
+    COL=$(tput cols)
+    read pathindicator <<< $(sed 's/.*\(\(\/[^/]\+\)\{2\}\)$/\1/g' <<< $PWD)
+    [[ "$pathindicator" != "$PWD" ]] && pathindicator="…${pathindicator}"
+
+    # Smart orientation...
+    # useful with tiling WM's and Termux usage
+    #if [[ $COL -lt 200 ]]; then
+        prevwin='top,80%,border-bottom'
+    #else
+    #    prevwin='right,80%,border-left'
+    #fi
+    grep -Rn '^--\(\$\||\s*#\+\)' | sed 's/:--\(\$|\|\s*#\)\s*/:/g' |\
+        fzf \
+        --delimiter=: --margin=0 \
+        --color=16,bg:0,preview-bg:-1,gutter:0,pointer:2:bold,border:0,marker:2,prompt:2,hl:8:italic:reverse,hl+:7:italic:reverse,fg+:15,fg:7,query:15:regular,info:3,header:11:bold \
+        --keep-right --preview-window="${prevwin}" \
+        --info=inline --prompt=" $pathindicator > "\
+        --layout=reverse-list \
+        --bind "enter:execute($EDITOR)" \
+        --bind "ctrl-e:execute($EDITOR)" \
+        --bind "alt-up:preview-page-up" \
+        --bind "alt-down:preview-page-down" \
+        --bind "tab:execute(echo \"cd;{1}\" > \"${TMPFILE}\")+accept" \
+        --bind "backward-eof:execute(echo \"cd;..\" > \"${TMPFILE}\")+accept" \
+        --preview='bat --paging=always --line-range {2}: --highlight-line {2} --color=always --wrap=character --number {1} | less -R +e{2}'
+    [[ $? -eq 130 ]] && quit
+    read cmd <<< $(cut -d\; -f1  $TMPFILE)
+    read opt <<< $(cut -d\; -f2- $TMPFILE)
+
+    if [[ "$cmd" == "cd" ]]; then
+        if [[ "$opt" == ".." ]]; then
+            [[ "$TOPDIR" != "$PWD" ]] && cd ..
+        else
+            cd "$(cut -d\' -f2 <<< "$(dirname "$opt")")"
+        fi
+    fi
+done
+quit
