@@ -70,7 +70,7 @@ do
 end
 
 --$ wax.fs.basename(path: string) : string
---| Get the dir part of the path and return it.
+--| Get the filename part of the path and return it.
 do
 --{
   assert( fs.basename("/usr/lib") == "lib" )

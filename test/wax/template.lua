@@ -52,6 +52,7 @@ SATURN year = 29.5 Earth year.]])
 --| to understand.
 end
 
+
 --| ## Lua as template
 do
 --| Sometimes you may prefer to think in terms of "text processing" instead of
@@ -86,6 +87,7 @@ assert(res == [[
 --| It is a simple way to do the things quickly, but as your template complexity
 --| grows you should prefer to use a template file when possible.
 end
+
 
 --| ## Backfilters
 do
