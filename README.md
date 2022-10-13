@@ -44,8 +44,8 @@ You have a plenty of ways to contribute to this project:
 * Reporting well detailed bugs and with code demonstration of that.
 * Suggesting features with use examples.
 * Testing in different OSes POSIX compliant
-* Developing conditionals on code for use with Windows, by now not
-supported (See "Using under Windows" section).
+* Developing conditionals on code for use with Windows, by now not supported
+(See "Using under Windows" section).
 
 
 ## Development
@@ -56,8 +56,8 @@ supported (See "Using under Windows" section).
 
 ## Versioning
 
-The versioning uses a mix of year and features. So is really easy to
-understand what is going on.
+The versioning uses a mix of year and features. So is really easy to understand
+what is going on.
 
 ```
 1.10-5
@@ -66,14 +66,14 @@ understand what is going on.
 '-------- 1st year of module.
 ```
 
-The development version should be got directly from the repository
-under the `dev` branch.
+The development version should be got directly from the repository under the
+`dev` branch.
 
 
 ## Running tests under multiple Linuxes
 
-You can run the tests under other Linux flavors using Docker.
-The dockerfiles needed are found under the assets folder.
+You can run the tests under other Linux flavors using Docker. The dockerfiles
+needed are found under the assets folder.
 
 To list available dockerfiles:
 
@@ -90,3 +90,20 @@ To enter on docker and test:
 Observe than `./run drun` expects that the instance has bash installed.
 
 
+## Help and Documentation
+
+To see a list of functions in all modules of Wax package, you can clone this
+repository and execute the script at its root directory:
+
+    ./run help
+
+Also there is a simple navigation tool as script. To run it you need bash, fzf,
+grep and sed. Like before, head to the root directory of the wax and execute:
+
+    ./view
+
+Then you can filter while previewing the help and tests for the functions.
+
+The `run help` and `view` scripts are just a temporary improvisation to get the
+access to the documentation as a documentation extraction, conversion and a
+simple viewer for console should take its way to the project some day in future.
