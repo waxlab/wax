@@ -25,7 +25,7 @@ while : ; do
     #else
     #    prevwin='right,80%,border-left'
     #fi
-    grep -Rn '^--\(\$\||\s*#\+\)' | sed 's/:--\(\$|\|\s*#\)\s*/:/g' |\
+    grep -Rn '^--\$\|^--|\ #'  | sed 's/:--\(\$|\|\s*#\)\s*/:/g' |\
         fzf \
         --delimiter=: --margin=0 \
         --color=16,bg:0,preview-bg:-1,gutter:0,pointer:2:bold,border:0,marker:2,prompt:2,hl:8:italic:reverse,hl+:7:italic:reverse,fg+:15,fg:7,query:15:regular,info:3,header:11:bold \
