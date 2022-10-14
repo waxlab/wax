@@ -47,6 +47,11 @@ You have a plenty of ways to contribute to this project:
 * Developing conditionals on code for use with Windows, by now not supported
 (See "Using under Windows" section).
 
+## Join Community
+
+Join our channel at Matrix: [https://matrix.to/#/#wax-lua:matrix.org]
+created basically for announcements and discussions about the future of project.
+
 
 ## Development
 
