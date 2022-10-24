@@ -117,7 +117,7 @@ static int wax_fs_realpath(lua_State *L) {
 }
 
 
-static int wax_fs_build(lua_State *L) {
+static int wax_fs_buildpath(lua_State *L) {
   luaL_checkstring(L,1);
 
   int plen=0, nlen=0, r=1, waxerr=0;
@@ -583,7 +583,7 @@ static const luaL_Reg wax_fs_listex_mt[] = {
 
 static const luaL_Reg wax_fs[] = {
   {"realpath",   wax_fs_realpath    },
-  {"build",      wax_fs_build       },
+  {"buildpath",  wax_fs_buildpath   },
   {"dirname",    wax_fs_getcwdname  },
   {"basename",   wax_fs_basename    },
 

@@ -82,39 +82,39 @@ do
 --}
 end
 
---$ wax.fs.build(dir1 ... dirN: string) : string
---| Receives a varible number of strings and builds a path from it
+--$ wax.fs.buildpath(dir1 ... dirN: string) : string
+--| Receives a variable number of strings and builds a path from it
 do
 --{
   --| Basic Usage:
 
   -- 1. concatenate correctly the path elements
-  assert( fs.build("1nd","2nd","3rd") == "1nd/2nd/3rd" )
+  assert( fs.buildpath("1nd","2nd","3rd") == "1nd/2nd/3rd" )
 
   -- 2. clear strange paths
-  assert( fs.build("a//b////c/./d/") == "a/b/c/d")
+  assert( fs.buildpath("a//b////c/./d/") == "a/b/c/d")
 
   --| Expected behaviors
 
   -- 1. Doesn't normalizes parent `..` entries
-  assert( fs.build("a/../a")          == "a/../a" )
-  assert( fs.build("..", "a"  ,"b"  ) == "../a/b" )
+  assert( fs.buildpath("a/../a")          == "a/../a" )
+  assert( fs.buildpath("..", "a"  ,"b"  ) == "../a/b" )
 
   -- 2. remove rightmost pending separator
-  assert( fs.build("a/b/c/") == "a/b/c" )
+  assert( fs.buildpath("a/b/c/") == "a/b/c" )
 
   -- 3. remove duplicated separators
-  assert( fs.build("a//","/b/","/c/") == "a/b/c"    )
-  assert( fs.build("//a","b/c"      ) == "/a/b/c"   )
+  assert( fs.buildpath("a//","/b/","/c/") == "a/b/c"    )
+  assert( fs.buildpath("//a","b/c"      ) == "/a/b/c"   )
 
   -- 4. remove relative here dot `.` that is not the first char
-  assert( fs.build(".", "a", "b"     ) == "./a/b"    )
-  assert( fs.build(".", "a", ".", "b") == "./a/b"    )
-  assert( fs.build("./a"," b/", "./c") == "./a/ b/c" )
-  assert( fs.build("a", "..", "b"    ) == "a/../b"   )
-  assert( fs.build("./", "a/", "b/"  ) == "./a/b"    )
-  assert( fs.build("/./","a/","/b/"  ) == "/a/b"     )
-  assert( fs.build("/a/b/./c","/./d" ) == "/a/b/c/d" )
+  assert( fs.buildpath(".", "a", "b"     ) == "./a/b"    )
+  assert( fs.buildpath(".", "a", ".", "b") == "./a/b"    )
+  assert( fs.buildpath("./a"," b/", "./c") == "./a/ b/c" )
+  assert( fs.buildpath("a", "..", "b"    ) == "a/../b"   )
+  assert( fs.buildpath("./", "a/", "b/"  ) == "./a/b"    )
+  assert( fs.buildpath("/./","a/","/b/"  ) == "/a/b"     )
+  assert( fs.buildpath("/a/b/./c","/./d" ) == "/a/b/c/d" )
 --}
 end
 
@@ -503,14 +503,14 @@ end
 --| The `mode` parameter is a string like "777".
 do
 --{
-  local testSubDir = fs.build(testdir,"Sub","Dir")
+  local testSubDir = fs.buildpath(testdir,"Sub","Dir")
   local mode = "777";
   local masked = ("%03o"):format( tonumber(mode,8) - tonumber(fs.umask(),8));
 
   if fs.exists(testdir) then fs.rmdir(testdir) end
 
   -- Success example
-  local newdir = fs.build(testdir,"newdir")
+  local newdir = fs.buildpath(testdir,"newdir")
   assert(not fs.isdir(newdir))
   assert(fs.mkdir(newdir,mode) == true)
   assert(fs.isdir(newdir) == true)
@@ -538,8 +538,8 @@ end
 do
 --{
 
-  local uncle = fs.build("..","uncleDir")
-  local cousin = fs.build(uncle,"cousin")
+  local uncle = fs.buildpath("..","uncleDir")
+  local cousin = fs.buildpath(uncle,"cousin")
   assert(fs.mkdirs(cousin,"777"))
   assert(fs.isdir(cousin))
   assert(fs.rmdir(cousin))
@@ -558,12 +558,12 @@ do
   local unpack = unpack or table.unpack
 
   -- Create the entire path, wher each subfolder has a different glyph set
-  local mlangPath = fs.build(testdir, unpack(mlangPathParts))
+  local mlangPath = fs.buildpath(testdir, unpack(mlangPathParts))
   assert( fs.mkdirs(mlangPath,"777") )
 
   -- Cleanup the kitchen
   for i=#mlangPathParts, 1, -1 do
-    mlangPath = fs.build(testdir, unpack(mlangPathParts,1,i))
+    mlangPath = fs.buildpath(testdir, unpack(mlangPathParts,1,i))
     assert( fs.isdir(mlangPath) )
     assert( fs.rmdir(mlangPath) )
   end
@@ -580,8 +580,8 @@ end
 --| Remove directory if it is not empty.
 do
 --{
-  local dirParent = fs.build( fs.getcwd(), "rmdirParent" )
-  local dirChild  = fs.build( dirParent,"rmdirChild" )
+  local dirParent = fs.buildpath( fs.getcwd(), "rmdirParent" )
+  local dirChild  = fs.buildpath( dirParent,"rmdirChild" )
   assert(fs.mkdirs(dirChild,"777"))
 
   -- Error: Directory is not empty
