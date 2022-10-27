@@ -151,15 +151,3 @@
     const int PATH_MAX = MAXPATHLEN;
   #endif
 #endif
-
-
-
-/*
-** FUNCTIONS
-*/
-
-/* Use it when filling compatibility gaps on modules. */
-int unimplemented(lua_State *L, ...);
-
-
-
