@@ -6,7 +6,7 @@
 ** (https://github.com/waxlab/wax)
 */
 
-#include "waxm.h"
+#include "wax.h"
 #define CJSON_NESTING_LIMIT INT_MAX
 #include "ext/json/cJSON.h"
 

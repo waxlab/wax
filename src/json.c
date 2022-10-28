@@ -141,7 +141,7 @@ static cJSON *encode(lua_State *L, stack_s *S) {
   switch( lua_type(L, -1) ) {
     case LUA_TTABLE: {
       int len;
-      if ((len = waxM_rawlen(L,-1)) > 0)
+      if ((len = waxLua_rawlen(L,-1)) > 0)
         return enc_tlist(L, S, len);
       return enc_tdict(L, S);
     }
@@ -233,7 +233,7 @@ static const luaL_Reg wax_json[] = {
 
 
 int luaopen_wax_json(lua_State *L) {
-  waxM_export(L, "wax.json", wax_json);
+  waxLua_export(L, "wax.json", wax_json);
   lua_pushlightuserdata(L, (void *) &json_null_userdata);
   lua_setfield(L,-2, "null");
   return 1;

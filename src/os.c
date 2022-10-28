@@ -47,6 +47,6 @@ static const luaL_Reg wax_os[] = {
 
 
 int luaopen_wax_os(lua_State *L) {
-  waxM_export(L, "wax.os", wax_os);
+  waxLua_export(L, "wax.os", wax_os);
   return 1;
 }

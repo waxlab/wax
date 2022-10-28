@@ -20,7 +20,7 @@
 static int _wax_checkmode(lua_State *L, int arg) {
   char *e;
   int mode = strtol(luaL_checkstring(L,arg), &e, 8);
-  waxM_error(L, e[0] != '\0', "invalid octal");
+  waxLua_error(L, e[0] != '\0', "invalid octal");
   return mode;
 }
 
@@ -35,7 +35,7 @@ static int _wax_checkpermstring(lua_State *L, int arg) {
       case 'w' : mode |= W_OK; break;
       case 'x' : mode |= X_OK; break;
       default:
-        waxM_error(L,1,"Mode character different of 'r','w' or 'x'");
+        waxLua_error(L,1,"Mode character different of 'r','w' or 'x'");
     }
   }
   return mode;
@@ -111,7 +111,7 @@ static int wax_fs_basename(lua_State *L) {
 
 static int wax_fs_realpath(lua_State *L) {
   char out[PATH_MAX];
-  waxM_failnil(L, realpath(luaL_checkstring(L, 1), out) == NULL);
+  waxLua_failnil(L, realpath(luaL_checkstring(L, 1), out) == NULL);
   lua_pushstring(L,out);
   return 1;
 }
@@ -164,7 +164,7 @@ static int wax_fs_buildpath(lua_State *L) {
 static int isStatMode(lua_State *L, unsigned int sm) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
-  waxM_failboolean(L, stat(path, &sb) == -1);
+  waxLua_failboolean(L, stat(path, &sb) == -1);
   lua_pushboolean(L, (sb.st_mode & S_IFMT) == sm);
   return 1;
 }
@@ -173,39 +173,39 @@ static int isStatMode(lua_State *L, unsigned int sm) {
 static int wax_fs_stat(lua_State *L) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
-  waxM_failnil(L, stat(path, &sb) == -1);
+  waxLua_failnil(L, stat(path, &sb) == -1);
 
   char tstr[30];
 
   lua_createtable(L,0,16);
 
   sprintf(tstr, "%lu", (unsigned long int) sb.st_dev);
-  waxM_setfield_ss(L, "dev",     tstr);
+  waxLua_setfield_ss(L, "dev",     tstr);
 
   sprintf(tstr, "%lu", (unsigned long int) sb.st_rdev);
-  waxM_setfield_ss(L, "rdev",    tstr);
+  waxLua_setfield_ss(L, "rdev",    tstr);
 
   sprintf(tstr, "%03o", sb.st_mode & 0777);
-  waxM_setfield_ss(L, "mode",    tstr);
+  waxLua_setfield_ss(L, "mode",    tstr);
 
-  waxM_setfield_si(L, "ino",     sb.st_ino);
+  waxLua_setfield_si(L, "ino",     sb.st_ino);
 
-  waxM_setfield_ss(L, "type",    _wax_filetype(sb.st_mode));
+  waxLua_setfield_ss(L, "type",    _wax_filetype(sb.st_mode));
 
-  waxM_setfield_si(L, "nlink",   sb.st_nlink);
-  waxM_setfield_si(L, "uid",     sb.st_uid);
-  waxM_setfield_si(L, "gid",     sb.st_gid);
-  waxM_setfield_si(L, "size",    sb.st_size);
-  waxM_setfield_si(L, "blksize", sb.st_blksize);
-  waxM_setfield_si(L, "blocks",  sb.st_blocks);
-  waxM_setfield_si(L, "atime",   sb.st_atim.tv_sec);
-  waxM_setfield_si(L, "ctime",   sb.st_ctim.tv_sec);
-  waxM_setfield_si(L, "mtime",   sb.st_mtim.tv_sec);
+  waxLua_setfield_si(L, "nlink",   sb.st_nlink);
+  waxLua_setfield_si(L, "uid",     sb.st_uid);
+  waxLua_setfield_si(L, "gid",     sb.st_gid);
+  waxLua_setfield_si(L, "size",    sb.st_size);
+  waxLua_setfield_si(L, "blksize", sb.st_blksize);
+  waxLua_setfield_si(L, "blocks",  sb.st_blocks);
+  waxLua_setfield_si(L, "atime",   sb.st_atim.tv_sec);
+  waxLua_setfield_si(L, "ctime",   sb.st_ctim.tv_sec);
+  waxLua_setfield_si(L, "mtime",   sb.st_mtim.tv_sec);
 
   /* Some systems doesn't support these below. In that case, they are 0 */
-  waxM_setfield_si(L, "atimens", sb.st_atim.tv_nsec);
-  waxM_setfield_si(L, "ctimens", sb.st_ctim.tv_nsec);
-  waxM_setfield_si(L, "mtimens", sb.st_mtim.tv_nsec);
+  waxLua_setfield_si(L, "atimens", sb.st_atim.tv_nsec);
+  waxLua_setfield_si(L, "ctimens", sb.st_ctim.tv_nsec);
+  waxLua_setfield_si(L, "mtimens", sb.st_mtim.tv_nsec);
 
   return 1;
 }
@@ -269,7 +269,7 @@ static int wax_fs_utime(lua_State *L) {
     }
   }
 
-  waxM_failboolean(L, utimensat(AT_FDCWD, path, update, 0) < 0);
+  waxLua_failboolean(L, utimensat(AT_FDCWD, path, update, 0) < 0);
   lua_pushboolean(L, 1);
   return 1;
 }
@@ -298,7 +298,7 @@ static int wax_fs_access(lua_State *L) {
     return 0;
   }
 
-  waxM_failboolean(L, access(path,mode) < 0);
+  waxLua_failboolean(L, access(path,mode) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -306,7 +306,7 @@ static int wax_fs_access(lua_State *L) {
 
 static int wax_fs_getmod(lua_State *L) {
   struct stat sb;
-  waxM_failnil(L, stat(luaL_checkstring(L,1), &sb) < 0);
+  waxLua_failnil(L, stat(luaL_checkstring(L,1), &sb) < 0);
 
   char mode[4];
   sprintf(mode, "%03o", sb.st_mode & 0777);
@@ -317,7 +317,7 @@ static int wax_fs_getmod(lua_State *L) {
 
 
 static int wax_fs_chmod(lua_State *L) {
-  waxM_failboolean(L, chmod(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
+  waxLua_failboolean(L, chmod(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -329,7 +329,7 @@ static int wax_fs_chown(lua_State *L) {
   int uargtype = lua_type(L,2);
   if (uargtype == LUA_TSTRING) {
     struct passwd *p = getpwnam(luaL_checkstring(L,2));
-    waxM_failboolean(L, p == NULL);
+    waxLua_failboolean(L, p == NULL);
     uid = p->pw_uid;
   } else if (uargtype == LUA_TNUMBER) {
     uid = luaL_checkinteger(L,2);
@@ -337,7 +337,7 @@ static int wax_fs_chown(lua_State *L) {
     luaL_error(L,"expected string or number as 2ng arg");
   }
 
-  waxM_failboolean(L, chown(path, uid, -1) < 0);
+  waxLua_failboolean(L, chown(path, uid, -1) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -352,7 +352,7 @@ static int wax_fs_ispipe(lua_State *L)     { return isStatMode(L, S_IFIFO); }
 
 
 static int wax_fs_exists(lua_State *L) {
-  waxM_failboolean(L, access(luaL_checkstring(L,1), F_OK) < 0);
+  waxLua_failboolean(L, access(luaL_checkstring(L,1), F_OK) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -376,21 +376,21 @@ static int wax_fs_umask(lua_State *L) {
 
 static int wax_fs_getcwd(lua_State *L) {
   char cwd[PATH_MAX + 1];
-  waxM_failnil(L, getcwd(cwd,PATH_MAX) == NULL);
+  waxLua_failnil(L, getcwd(cwd,PATH_MAX) == NULL);
   lua_pushstring(L,cwd);
   return 1;
 }
 
 
 static int wax_fs_chdir(lua_State *L) {
-  waxM_failboolean(L, chdir(luaL_checkstring(L,1)) < 0);
+  waxLua_failboolean(L, chdir(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
 static int wax_fs_mkdir(lua_State *L) {
-  waxM_failboolean(L, mkdir(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
+  waxLua_failboolean(L, mkdir(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -428,21 +428,21 @@ static int _wax_mkdirp(const char *inpath, int mode) {
 
 
 static int wax_fs_mkdirs(lua_State *L) {
-  waxM_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
+  waxLua_failboolean(L, _wax_mkdirp(luaL_checkstring(L,1), _wax_checkmode(L,2)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
 static int wax_fs_rmdir(lua_State *L) {
-  waxM_failboolean(L, rmdir(luaL_checkstring(L,1)) < 0);
+  waxLua_failboolean(L, rmdir(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
 
 
 static int wax_fs_unlink(lua_State *L) {
-  waxM_failboolean(L, unlink(luaL_checkstring(L,1)) < 0);
+  waxLua_failboolean(L, unlink(luaL_checkstring(L,1)) < 0);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -620,10 +620,10 @@ static const luaL_Reg wax_fs[] = {
 
 int luaopen_wax_fs(lua_State *L) {
 
-  waxM_newuserdata_mt(L, listex_mt, wax_fs_listex_mt);
-  waxM_newuserdata_mt(L, list_mt,   wax_fs_list_mt);
+  waxLua_newuserdata_mt(L, listex_mt, wax_fs_listex_mt);
+  waxLua_newuserdata_mt(L, list_mt,   wax_fs_list_mt);
 
-  waxM_export(L, "wax.fs", wax_fs);
+  waxLua_export(L, "wax.fs", wax_fs);
   lua_pushstring(L, DIRSEP);
   lua_setfield(L, -2, "dirsep");
   return 1;
