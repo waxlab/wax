@@ -1,10 +1,10 @@
 /*
-** Wax
-** A waxing Lua Standard Library
-**
-** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/waxlab/wax)
-*/
+ * Wax
+ * A waxing Lua Standard Library
+ *
+ * Copyright (C) 2022 Thadeu A C de Paula
+ * (https://github.com/waxlab/wax)
+ */
 
 #include "wax.h"
 #include <stdlib.h>    /* realpath */
@@ -12,8 +12,6 @@
 #include <sys/stat.h>  /* stat */
 #include <limits.h>    /* pmax */
 #include <libgen.h>    /* dirname, basename */
-#include <string.h>
-#include <errno.h>
 #include <math.h>      /* for floor() use */
 #include <unistd.h>
 #include <pwd.h>       /* for getpwnam */

@@ -14,29 +14,21 @@
 
 #include <lua.h>
 #include <lauxlib.h>
-
-
-/* Abstraction over Lua versions for module exports */
-#if ( LUA_VERSION_NUM < 502 )
-  #define waxLua_rawlen lua_objlen
-  #define waxLua_export luaL_register
-#else
-  #define waxLua_rawlen lua_rawlen
-  #define waxLua_export(L,n,t) luaL_newlib(L,t);
-#endif
+#include <string.h>
+#include <errno.h>
 
 
 
 /* Internally used to push waxLua_field_** macros */
-#define _waxLua_pair(L,kt,k,vt,v) \
-  lua_push ## kt((L),(k)); \
-  lua_push ## vt((L),(v)); \
-  lua_settable((L),(-3));
+#define _waxLua_pair(lua_State, keytype, key, valtype, val) \
+  lua_push ## keytype((lua_State),(key)); \
+  lua_push ## valtype((lua_State),(val)); \
+  lua_settable((lua_State),(-3));
 
 /* Only for string keys */
-#define _waxLua_sethashtkey(L,k,vt,v) \
-  lua_push ## vt((L),(v)); \
-  lua_setfield(L, -2, k);
+#define _waxLua_sethashtkey(lua_State, key, valtype, val) \
+  lua_push ## valtype((lua_State),(val)); \
+  lua_setfield(L, -2, key);
 
 
 
@@ -50,15 +42,23 @@
  * t[10] = "hello"         waxLua_pair_is(L, 10, "hello");
  */
 
-#define waxLua_pair_sb(L,k,v) _waxLua_sethashtkey((L),(k),boolean,(v));
-#define waxLua_pair_si(L,k,v) _waxLua_sethashtkey((L),(k),integer,(v));
-#define waxLua_pair_sn(L,k,v) _waxLua_sethashtkey((L),(k),number,(v));
-#define waxLua_pair_ss(L,k,v) _waxLua_sethashtkey((L),(k),string,(v));
+#define waxLua_pair_sb(lua_State, key, val) \
+  _waxLua_sethashtkey((lua_State),(key),boolean,(val));
+#define waxLua_pair_si(lua_State, key, val) \
+  _waxLua_sethashtkey((lua_State),(key),integer,(val));
+#define waxLua_pair_sn(lua_State, key, val) \
+  _waxLua_sethashtkey((lua_State),(key),number, (val));
+#define waxLua_pair_ss(lua_State, key, val) \
+  _waxLua_sethashtkey((lua_State),(key),string, (val));
 
-#define waxLua_pair_in(L,k,v) _waxLua_pair((L),integer,(k),number,(v));
-#define waxLua_pair_ii(L,k,v) _waxLua_pair((L),integer,(k),integer,(v));
-#define waxLua_pair_is(L,k,v) _waxLua_pair((L),integer,(k),string,(v));
-#define waxLua_pair_ib(L,k,v) _waxLua_pair((L),integer,(k),boolean,(v));
+#define waxLua_pair_in(lua_State, key, val) \
+  _waxLua_pair((lua_State),integer,(key),number, (val));
+#define waxLua_pair_ii(lua_State, key, val) \
+  _waxLua_pair((lua_State),integer,(key),integer,(val));
+#define waxLua_pair_is(lua_State, key, val) \
+  _waxLua_pair((lua_State),integer,(key),string, (val));
+#define waxLua_pair_ib(lua_State, key, val) \
+  _waxLua_pair((lua_State),integer,(key),boolean,(val));
 
 
 
@@ -79,62 +79,75 @@
 
 
 /*
-** Error macro that throws lua error
-** Only can be catched with pcall
-*/
+ * ERROR MACROS
+ * Error macro that throws lua error
+ * Only can be catched with pcall
+ */
 
-#define waxLua_error(lua_State,message) \
-  lua_pushstring((lua_State),(message)); \
+#define waxLua_error(lua_State, msg) \
+  lua_pushstring((lua_State),(msg)); \
   lua_error(lua_State); \
   return 0;
 
 
-#define waxLua_assert(lua_State,condition,message) \
-  if (!(condition)) { \
-    waxLua_error(lua_State, message); \
+#define waxLua_assert(lua_State, cond, msg) \
+  if (!(cond)) { \
+    waxLua_error(lua_State, msg); \
   }
 
 
 
 /*
-** Fail macros
-** Make function return immediately condition is fullfilled and
-** return default fail values (boolean false or nil)
-*/
-#define waxLua_failnil_m(lua_State,condition,message) \
-  if ((condition)) {\
+ * FAIL MACROS
+ * Make function return immediately condition is fullfilled and
+ * return default fail values (boolean false or nil)
+ */
+#define waxLua_failnil_m(lua_State, cond, msg) \
+  if ((cond)) {\
     lua_pushnil((lua_State)); \
-    lua_pushstring((lua_State), (const char *)(message)); \
+    lua_pushstring((lua_State), (const char *)(msg)); \
     return 2; \
   }
 
 
-#define waxLua_failnil(L,condition) \
-  waxLua_failnil_m(L, condition, strerror(errno))
+#define waxLua_failnil(L, cond) \
+  waxLua_failnil_m(L, cond, strerror(errno))
 
 
-#define waxLua_failboolean_m(lua_State,condition,message) \
-  if ((condition)) {\
+#define waxLua_failboolean_m(lua_State, cond, msg) \
+  if ((cond)) {\
     lua_pushboolean(lua_State,0); \
-    lua_pushstring((lua_State), (const char *)(message)); \
+    lua_pushstring((lua_State), (const char *)(msg)); \
     return 2; \
   }
 
 
-#define waxLua_failboolean(L,condition) \
-  waxLua_failboolean_m(L, condition, strerror(errno))
+#define waxLua_failboolean(L, cond) \
+  waxLua_failboolean_m(L, cond, strerror(errno))
 
 /*
-** Other polyfills for oldies
-*/
+ * POLYFILL MACROS
+ * Abstraction over Lua versions
+ */
 #if ( LUA_VERSION_NUM < 502 )
-  #define lua_rawlen(L, i) lua_objlen(L,i)
+  #define waxLua_rawlen(lua_State, index) \
+    lua_objlen((lua_State), (index))
+
+  #define waxLua_export(lua_State, name, luaL_Reg) \
+    luaL_register((lua_State), (name), (luaL_Reg));
+#else
+  #define waxLua_rawlen(lua_State, index) \
+    lua_rawlen((lua_State), (index))
+
+  #define waxLua_export(lua_State, name, luaL_Reg) \
+    luaL_newlib((lua_State), (luaL_Reg))
+
 #endif
 
 
 /*
-** DEFINITIONS
-*/
+ * DEFINITIONS
+ */
 
 #if defined(_WIN32) || defined(WIN64)
   #define PLAT_WINDOWS

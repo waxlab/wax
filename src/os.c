@@ -1,18 +1,11 @@
 /*
-** Wax
-** A waxing Lua Standard Library
-**
-** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/waxlab/wax)
-*/
+ * Wax
+ * A waxing Lua Standard Library
+ *
+ * Copyright (C) 2022 Thadeu A C de Paula
+ * (https://github.com/waxlab/wax)
+ */
 
-#include <stddef.h>
-#include <stdio.h>
-#include "lauxlib.h"
-#include "lua.h"
-#include "unistd.h"
-#include "string.h"
-#include "errno.h"
 #include "os.h"
 
 
@@ -23,7 +16,7 @@ static int wax_os_exec(lua_State *L) {
   argv[0] = (char *) luaL_checkstring(L,1);
 
   if (lua_istable(L, 2)) {
-    for (idx=1; idx <= lua_rawlen(L,2); idx++) {
+    for (idx=1; idx <= waxLua_rawlen(L,2); idx++) {
       lua_rawgeti(L, 2, idx);
       argv[idx] = (char *) luaL_checkstring(L, -1);
     }
@@ -37,8 +30,8 @@ static int wax_os_exec(lua_State *L) {
 
 
 /*
-** Module exported functions
-*/
+ * Module exported functions
+ */
 
 static const luaL_Reg wax_os[] = {
   {"exec", wax_os_exec},

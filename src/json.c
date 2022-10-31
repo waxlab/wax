@@ -1,10 +1,10 @@
 /*
-** Wax
-** A waxing Lua Standard Library
-**
-** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/waxlab/wax)
-*/
+ * Wax
+ * A waxing Lua Standard Library
+ *
+ * Copyright (C) 2022 Thadeu A C de Paula
+ * (https://github.com/waxlab/wax)
+ */
 
 #include <stdlib.h>    /* realpath */
 #include <stdio.h>
@@ -17,8 +17,8 @@
 static int json_null_userdata = 0;
 
 /*
-** MACROS
-*/
+ * MACROS
+ */
 
 #define local_pushnumber(L,j) \
   if ((j)->valuedouble>(j->valueint)) { \
@@ -31,8 +31,8 @@ static int json_null_userdata = 0;
 
 
 /*
-** LUA STACK
-*/
+ * LUA STACK
+ */
 typedef struct { int used; int limit; } stack_s;
 
 static void stackAlloc(lua_State *L, stack_s *stack, int size) {
@@ -48,8 +48,8 @@ static void stackAlloc(lua_State *L, stack_s *stack, int size) {
 
 
 /*
-** DECODE
-*/
+ * DECODE
+ */
 
 static void
   decode    (lua_State*, cJSON*, stack_s*),
@@ -113,8 +113,8 @@ static void dec_arr(lua_State *L, cJSON *node, stack_s *stack, int len) {
 
 
 /*
-** ENCODE
-*/
+ * ENCODE
+ */
 
 static cJSON *encode    (lua_State*, stack_s*),
              *enc_tdict (lua_State*, stack_s*),
@@ -222,8 +222,8 @@ static cJSON *enc_tdict(lua_State *L, stack_s *S) {
 
 
 /*
-** Module
-*/
+ * Module
+ */
 
 static const luaL_Reg wax_json[] = {
   { "decode",     wax_json_decode },

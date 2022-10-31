@@ -1,10 +1,10 @@
 /*
-** Wax
-** A waxing Lua Standard Library
-**
-** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/waxlab/wax)
-*/
+ * Wax
+ * A waxing Lua Standard Library
+ *
+ * Copyright (C) 2022 Thadeu A C de Paula
+ * (https://github.com/waxlab/wax)
+ */
 
 #include "fs.h"
 
@@ -86,8 +86,8 @@ static char *_wax_fssanitize(char *path, char *res) {
 
 
 /*
-** Path resolution
-*/
+ * Path resolution
+ */
 
 static int wax_fs_getcwdname(lua_State *L) {
   char path[PATH_MAX];
@@ -164,8 +164,8 @@ static int wax_fs_buildpath(lua_State *L) {
 
 
 /*
-** Stat related functions
-*/
+ * Stat related functions
+ */
 static int isStatMode(lua_State *L, unsigned int sm) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
@@ -454,8 +454,8 @@ static int wax_fs_unlink(lua_State *L) {
 
 
 /*
-** Directory entry listing
-*/
+ * Directory entry listing
+ */
 
 #define list_mt "wax_fs_list_udata"
 
@@ -528,8 +528,8 @@ static const luaL_Reg wax_fs_list_mt[] = {
 
 
 /*
-** Directory entry listing with word expansions
-*/
+ * Directory entry listing with word expansions
+ */
 
 #define listex_mt "wax_fs_listex_udata"
 
@@ -583,8 +583,8 @@ static const luaL_Reg wax_fs_listex_mt[] = {
 
 
 /*
-** Module exported functions
-*/
+ * Module exported functions
+ */
 
 static const luaL_Reg wax_fs[] = {
   {"realpath",   wax_fs_realpath    },
