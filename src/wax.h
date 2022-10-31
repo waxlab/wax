@@ -1,17 +1,15 @@
-/*
-** Wax
-** A waxing Lua Standard Library
-**
-** Copyright (C) 2022 Thadeu A C de Paula
-** (https://github.com/waxlab/wax)
-*/
-
-/*
-** This header stores macros that simplifies Lua data handling.
-** Using these macros you will write less code, avoid common mistakes
-** and, even you have a specialized code, you can use these as
-** reference of how to deeper stuffs are done
-*/
+/* Wax
+ * A waxing Lua Standard Library
+ *
+ * Copyright (C) 2022 Thadeu A C de Paula
+ * (https://github.com/waxlab/wax)
+ *
+ *
+ * This header stores macros that simplifies Lua data handling.
+ * Using these macros you will write less code, avoid common mistakes
+ * and, even you have a specialized code, you can use these as
+ * reference of how to deeper stuffs are done
+ */
 
 
 #include <lua.h>
@@ -30,7 +28,7 @@
 
 
 /* Internally used to push waxLua_field_** macros */
-#define _waxLua_setfield(L,kt,k,vt,v) \
+#define _waxLua_pair(L,kt,k,vt,v) \
   lua_push ## kt((L),(k)); \
   lua_push ## vt((L),(v)); \
   lua_settable((L),(-3));
@@ -42,32 +40,29 @@
 
 
 
-/* waxLua_setfieldXY(x,y) add keys to tables where:
-** X represents the key type and its x value
-** Y represents the content type and its y value,
-**
-** Example Lua     ----->  Example Lume
-** t["hello"]=10           waxLua_setfield_si(L, "hello","10");
-** t[10] = "hello"         waxLua_setfield_is(L, 10, "hello");
-*/
-
-#define waxLua_setfield_sb(L,k,v) _waxLua_sethashtkey((L),(k),boolean,(v));
-#define waxLua_setfield_si(L,k,v) _waxLua_sethashtkey((L),(k),integer,(v));
-#define waxLua_setfield_sn(L,k,v) _waxLua_sethashtkey((L),(k),number,(v));
-#define waxLua_setfield_ss(L,k,v) _waxLua_sethashtkey((L),(k),string,(v));
-
-#define waxLua_setfield_in(L,k,v) _waxLua_setfield((L),integer,(k),number,(v));
-#define waxLua_setfield_ii(L,k,v) _waxLua_setfield((L),integer,(k),integer,(v));
-#define waxLua_setfield_is(L,k,v) _waxLua_setfield((L),integer,(k),string,(v));
-#define waxLua_setfield_ib(L,k,v) _waxLua_setfield((L),integer,(k),boolean,(v));
-
-
-
 /*
-** Create an userdata metatable and set its functions
-**
-** waxLua_newudatametatable(lua_State *L, char *udataname, luaL_Reg *funcs)
-*/
+ * waxLua_pairXY(x,y) add keys to tables where:
+ * X represents the key type and its x value
+ * Y represents the content type and its y value,
+ *
+ * Example Lua     ----->  Example Lume
+ * t["hello"]=10           waxLua_pair_si(L, "hello","10");
+ * t[10] = "hello"         waxLua_pair_is(L, 10, "hello");
+ */
+
+#define waxLua_pair_sb(L,k,v) _waxLua_sethashtkey((L),(k),boolean,(v));
+#define waxLua_pair_si(L,k,v) _waxLua_sethashtkey((L),(k),integer,(v));
+#define waxLua_pair_sn(L,k,v) _waxLua_sethashtkey((L),(k),number,(v));
+#define waxLua_pair_ss(L,k,v) _waxLua_sethashtkey((L),(k),string,(v));
+
+#define waxLua_pair_in(L,k,v) _waxLua_pair((L),integer,(k),number,(v));
+#define waxLua_pair_ii(L,k,v) _waxLua_pair((L),integer,(k),integer,(v));
+#define waxLua_pair_is(L,k,v) _waxLua_pair((L),integer,(k),string,(v));
+#define waxLua_pair_ib(L,k,v) _waxLua_pair((L),integer,(k),boolean,(v));
+
+
+
+/* Create an userdata metatable and set its functions */
 #if ( LUA_VERSION_NUM < 502 )
   #define waxLua_newuserdata_mt(lua_State, udataname, funcs) \
     luaL_newmetatable((lua_State), (udataname)); \
@@ -88,11 +83,15 @@
 ** Only can be catched with pcall
 */
 
-#define waxLua_error(lua_State,condition,message) \
-  if ((condition)) { \
-    lua_pushstring((lua_State),(message)); \
-    lua_error(lua_State); \
-    return 0; \
+#define waxLua_error(lua_State,message) \
+  lua_pushstring((lua_State),(message)); \
+  lua_error(lua_State); \
+  return 0;
+
+
+#define waxLua_assert(lua_State,condition,message) \
+  if (!(condition)) { \
+    waxLua_error(lua_State, message); \
   }
 
 

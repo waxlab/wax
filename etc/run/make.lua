@@ -1,5 +1,6 @@
 local make, help = {},{}
-local DEBUG = os.getenv('DEBUG')
+local DEBUG    = os.getenv('DEBUG')    -- debug flags (with gdb and more verbose)
+local WAXTFLAG = os.getenv('WAXTFLAG') -- test flags (force -std=gnu89)
 local OBJ_EXTENSION = os.getenv 'OBJ_EXTENSION'
 local LIB_EXTENSION = os.getenv 'LIB_EXTENSION'
 local SINGLE_MODULE = os.getenv 'SINGLE_MODULE'
@@ -143,13 +144,18 @@ do
     return libfile;
   end
 
+  -- adds test flags, to enforce code standard on development
+  function cc.tflags()
+    return os.getenv('WAXTFLAG') and '-std=gnu89' or ''
+  end
+
   function cc.binout(o) return outdir..'/bin/'..o[1] end
 
 
   local
   function clib(config)
-    local cmd_obj   = '@cc @debug @flags @incdir @srcout'
-    local cmd_shobj = '@cc @sharedflag -o @libout @src'
+    local cmd_obj   = '@cc @debug @tflags @flags @incdir @srcout'
+    local cmd_shobj = '@cc @tflags @sharedflag -o @libout @src'
     if config.clib and #config.clib > 0 then
       x('mkdir -p %s/lib', outdir)
       for _,item in ipairs(config.clib) do

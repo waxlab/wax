@@ -1,0 +1,7 @@
+gcc
+-I/usr/include/lua5.1
+-I/usr/include/lua5.2
+-I/usr/include/lua5.3
+-I/usr/include/lua5.4
+-xc
+-std=gnu89

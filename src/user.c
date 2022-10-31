@@ -114,21 +114,21 @@ static int wax_user_groups(lua_State *L) {
   if (pw == NULL) {
     lua_pushnil(L);
     return 1;
-  }
+  } else {
+    int i, gnum = 1;
+    gid_t *gids = malloc(sizeof(*gids) * gnum);
 
-  int gnum = 1;
-  gid_t *gids = malloc(sizeof(*gids) * gnum);
+    if (getgrouplist(pw->pw_name, pw->pw_gid, gids, &gnum) == -1) {
+      gids = realloc(gids, sizeof(*gids) * gnum);
+      getgrouplist(pw->pw_name, pw->pw_gid, gids, &gnum);
+    }
 
-  if (getgrouplist(pw->pw_name, pw->pw_gid, gids, &gnum) == -1) {
-    gids = realloc(gids, sizeof(*gids) * gnum);
-    getgrouplist(pw->pw_name, pw->pw_gid, gids, &gnum);
+    lua_createtable(L, gnum, 0);
+    for (i = 1; i <= gnum; i++) {
+      waxLua_pair_ii(L, i, gids[i-1]);
+    }
+    return 1;
   }
-
-  lua_createtable(L,gnum,0);
-  for (int i=1; i <= gnum; i++) {
-    waxLua_setfield_ii(L,i,gids[i-1]);
-  }
-  return 1;
 }
 
 

@@ -31,9 +31,9 @@ local luabin = {
 function test_compile(luaver, module)
   print(("\n╒═══╡ Compiling for Lua %s"):format(luaver))
   if (module) then
-    sh.exec("SINGLE_MODULE=%q LUA_VERSION=%q luarocks --tree ./tree --lua-version %s make %s",module, luaver, luaver, config.rockspec)
+    sh.exec("SINGLE_MODULE=%q LUA_VERSION=%q WAXTFLAG=1 luarocks --tree ./tree --lua-version %s make %s",module, luaver, luaver, config.rockspec)
   else
-    sh.exec("LUA_VERSION=%q luarocks --tree ./tree --lua-version %s make %s",luaver,luaver,config.rockspec)
+    sh.exec("LUA_VERSION=%q WAXTFLAG=1 luarocks --tree ./tree --lua-version %s make %s",luaver,luaver,config.rockspec)
   end
 end
 
@@ -143,6 +143,7 @@ function command.sparse()
     [[ for i in src/*c ; do ]],
       [[echo sparsing "$i" ; ]],
       [[sparse -Wsparse-error ]],
+        [[ -std=gnu89 ]],
         [[ -Wno-declaration-after-statement ]],
         [[ -Wsparse-all ]],
         [[ -I/usr/include/lua%s ]],

@@ -20,22 +20,22 @@
 static int _wax_checkmode(lua_State *L, int arg) {
   char *e;
   int mode = strtol(luaL_checkstring(L,arg), &e, 8);
-  waxLua_error(L, e[0] != '\0', "invalid octal");
+  waxLua_assert(L, e[0] == '\0', "invalid octal");
   return mode;
 }
 
-
 /* string "r", "w" or "x" to integer permission */
 static int _wax_checkpermstring(lua_State *L, int arg) {
-  int mode = F_OK;
+  int mode = F_OK,
+      i;
   const char *strmode = luaL_checkstring(L, arg);
-  for (int i=0; strmode[i] != 0; i++) {
+  for (i = 0; strmode[i] != 0; i++) {
     switch (strmode[i]) {
       case 'r' : mode |= R_OK; break;
       case 'w' : mode |= W_OK; break;
       case 'x' : mode |= X_OK; break;
       default:
-        waxLua_error(L,1,"Mode character different of 'r','w' or 'x'");
+        waxLua_error(L,"Mode character different of 'r','w' or 'x'");
     }
   }
   return mode;
@@ -118,14 +118,19 @@ static int wax_fs_realpath(lua_State *L) {
 
 
 static int wax_fs_buildpath(lua_State *L) {
+  int plen   = 0,
+      nlen   = 0,
+      r      = 1,
+      waxerr = 0,
+      i;
+
   luaL_checkstring(L,1);
 
-  int plen=0, nlen=0, r=1, waxerr=0;
 
   const char *name;
   char path[PATH_MAX] = "\0";
 
-  for (int i = 1 ; i <= lua_gettop(L); i++) {
+  for (i = 1; i <= lua_gettop(L); i++) {
     name = luaL_checkstring(L,i);
     nlen = strlen(name);
     if ( (plen + 1 + nlen) >= PATH_MAX) {
@@ -180,32 +185,32 @@ static int wax_fs_stat(lua_State *L) {
   lua_createtable(L,0,16);
 
   sprintf(tstr, "%lu", (unsigned long int) sb.st_dev);
-  waxLua_setfield_ss(L, "dev",     tstr);
+  waxLua_pair_ss(L, "dev",     tstr);
 
   sprintf(tstr, "%lu", (unsigned long int) sb.st_rdev);
-  waxLua_setfield_ss(L, "rdev",    tstr);
+  waxLua_pair_ss(L, "rdev",    tstr);
 
   sprintf(tstr, "%03o", sb.st_mode & 0777);
-  waxLua_setfield_ss(L, "mode",    tstr);
+  waxLua_pair_ss(L, "mode",    tstr);
 
-  waxLua_setfield_si(L, "ino",     sb.st_ino);
+  waxLua_pair_si(L, "ino",     sb.st_ino);
 
-  waxLua_setfield_ss(L, "type",    _wax_filetype(sb.st_mode));
+  waxLua_pair_ss(L, "type",    _wax_filetype(sb.st_mode));
 
-  waxLua_setfield_si(L, "nlink",   sb.st_nlink);
-  waxLua_setfield_si(L, "uid",     sb.st_uid);
-  waxLua_setfield_si(L, "gid",     sb.st_gid);
-  waxLua_setfield_si(L, "size",    sb.st_size);
-  waxLua_setfield_si(L, "blksize", sb.st_blksize);
-  waxLua_setfield_si(L, "blocks",  sb.st_blocks);
-  waxLua_setfield_si(L, "atime",   sb.st_atim.tv_sec);
-  waxLua_setfield_si(L, "ctime",   sb.st_ctim.tv_sec);
-  waxLua_setfield_si(L, "mtime",   sb.st_mtim.tv_sec);
+  waxLua_pair_si(L, "nlink",   sb.st_nlink);
+  waxLua_pair_si(L, "uid",     sb.st_uid);
+  waxLua_pair_si(L, "gid",     sb.st_gid);
+  waxLua_pair_si(L, "size",    sb.st_size);
+  waxLua_pair_si(L, "blksize", sb.st_blksize);
+  waxLua_pair_si(L, "blocks",  sb.st_blocks);
+  waxLua_pair_si(L, "atime",   sb.st_atim.tv_sec);
+  waxLua_pair_si(L, "ctime",   sb.st_ctim.tv_sec);
+  waxLua_pair_si(L, "mtime",   sb.st_mtim.tv_sec);
 
   /* Some systems doesn't support these below. In that case, they are 0 */
-  waxLua_setfield_si(L, "atimens", sb.st_atim.tv_nsec);
-  waxLua_setfield_si(L, "ctimens", sb.st_ctim.tv_nsec);
-  waxLua_setfield_si(L, "mtimens", sb.st_mtim.tv_nsec);
+  waxLua_pair_si(L, "atimens", sb.st_atim.tv_nsec);
+  waxLua_pair_si(L, "ctimens", sb.st_ctim.tv_nsec);
+  waxLua_pair_si(L, "mtimens", sb.st_mtim.tv_nsec);
 
   return 1;
 }
@@ -398,16 +403,16 @@ static int wax_fs_mkdir(lua_State *L) {
 
 static int _wax_mkdirp(const char *inpath, int mode) {
   struct stat sb;
-  int test = 1;
-  char path[PATH_MAX];
-  int  plen;
-  char sep     = DIRSEP[0];      /* is "/" or "\" ? */
+  int  test = 1,
+       i, plen;
+  char sep = DIRSEP[0],
+       path[PATH_MAX];
 
   _wax_fssanitize((char *)inpath, path);
   plen = strlen(path);
 
   /* map the position of separators, rtl */
-  for (int i=1; i<=plen; i++) {
+  for (i = 1; i<=plen; i++) {
     if (i< plen) {
       if (path[i] != sep) continue;
       path[i] = '\0';
