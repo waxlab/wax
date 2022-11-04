@@ -84,10 +84,10 @@
  * Only can be catched with pcall
  */
 
-#define waxLua_error(lua_State, msg) \
+#define waxLua_error(lua_State, msg) { \
   lua_pushstring((lua_State),(msg)); \
   lua_error(lua_State); \
-  return 0;
+}
 
 
 #define waxLua_assert(lua_State, cond, msg) \
@@ -164,3 +164,15 @@
   #endif
 #endif
 
+
+/*
+ * DEBUG HELPERS
+ */
+
+#ifdef __GNUC__
+#define SHOW(S, args...) \
+  fprintf(stderr,(S), ## args)
+#endif
+
+#define BEGIN(n) #n :
+#define GOTO(n)  goto ##n

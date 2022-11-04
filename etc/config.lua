@@ -8,8 +8,9 @@ bin = { }
 -- ./src/lib - The C code containing the Lua C Api logic
 -- ./src/macros
 clib = {
-    { "wax.os",   { "os.c" } },
-    { "wax.fs",   { "fs.c" } },
+    { "wax.csv",  { "csv.c"  } },
+    { "wax.os",   { "os.c"   } },
+    { "wax.fs",   { "fs.c"   } },
     { "wax.user", { "user.c" } },
     { "wax.json", { "ext/json/cJSON.c", "json.c" } },
 }

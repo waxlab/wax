@@ -88,13 +88,22 @@ do
 
   function cc.flags(o)
     local debug = os.getenv("CC_DEBUG") and ' -g ' or ''
+    local flags
     if o.flags then
       if type(o.flags) == 'table'
-        then return debug..table.concat(o.flags, ' ')
-        else return debug..tostring(o.flags)
+        then
+          flags = debug..table.concat(o.flags, ' ')
+        else
+          flags = debug..tostring(o.flags)
       end
+    else
+
+      flags = env('CFLAGS', debug)
+
+      flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
+           .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
     end
-    return env('CFLAGS', debug..'-Wall -Wextra -O2 -fPIC -fdiagnostic-color=always')
+    return flags
   end
 
 
