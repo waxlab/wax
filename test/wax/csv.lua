@@ -1,39 +1,51 @@
 local fs  = require 'wax.fs'
-local csv = require 'wax.csv'
 
 
---$ wax.csv.open(file, mode: string]) : csvdata | nil, string
+--$ wax.csv.open(file, mode: string [, sep: string, quo: string]) : csvdata | ( nil, string )
 --| Open a CSV file and returns its handler.
 --|
 --| `mode` should be one of:
 --| * `r` Open file to be read
 --| * `w` Open file to be written
 --|
---| It returns `csvdata` userdata on success, or `nil` and a message on error.
---| See `csvdata:irows()`, `csvdata:prows()` and `csvdata:write()` for examples.
+--| There are two optional parameters:
+--| * `sep` indicates the separator to be used (default `,`)
+--| * `quo` indicates the quoting character to be used (default `"`)
+--|
+--| This function returns `csvdata` userdata on success, or `nil` and a message
+--| on error. See `wax.csv.irecords()`, `wax.csv.records()` and
+--| `wax.csv.write()` for examples.
 
---$ csvdata:irows()
---| Return an iterator resulting in a list (positive integer indexed table)
+
+--$ wax.csv.irecords( csvdata ) : iterator()
+--$ csvdata:irecords() : iterator()
+--| Return iterator function to retrieve csv records as Lua index/value tables
+--| (tables indexed by number position of csv columns)
+--|
 do
-  local file = '/tmp/nada' -- os.tmpname()
-  local handler = io.open(file, 'w')
+  local csv = require 'wax.csv'
+  local file = os.tmpname()
+  local fh = io.open(file, 'w')
 
-  local csvdata = table.concat({
+  fh:write( table.concat({
     --[[ record 1 ]] '"a 1","","a, 3"," a\n4","a""5"',
     --[[ record 2 ]] ', b2, b"3,b"4",b5 ',
     --[[ record 3 ]] ',,,,',
     --[[ record 4 ]] '"","","","",""',
     --[[ record 5 ]] '"f\n1","\r\n","""",'
-  },"\r\n").."\r\n"
-  handler:write (csvdata)
-  handler:close()
+  },"\r\n").."\r\n" )
+  fh:close()
 
 
-  local fh = csv.open(file,'r')
+  local csvh = csv.open(file,'r')
   local res = {}
-  for row in fh:irows() do
+  for row in csvh:irecords() do
     res[#res+1] = row
   end
+
+  fs.unlink(file)
+  assert(csvh:close() == true) -- if is open return true
+  assert(not csvh:close())     -- return false if already closed
 
   -- Record 1 & 2 tests on:
   -- * quoted and simple values,
@@ -71,29 +83,31 @@ do
   assert(res[5][3] == '"')
   assert(res[5][4] == '')   -- empty value after dangling separator
   assert(not res[6])        -- no empty record at the end
-
-  fs.unlink(file)
-
-  assert(fh:close() == true) -- if is open return true
-  assert(not fh:close()) -- if is not open return nil
-
   os.exit(0);
 end
 
 
---$ csvdata:prows([names: list]) : iterator() : table | nil
---| Return an iterator resulting in a string indexed table.
---| If the `names` list is provided, their values will be used as the record
---| keys. If not, the keys will be guessed from the first record.
+--$ wax.csv.records(csvdata [, head: list]) : iterator()
+--$ csvdata:records([head: list]) : iterator()
+--| Return an iterator function retrieve csv records as Lua key/value tables.
+--|
+--| The first CSV record is used by default as field names when using this
+--| function and so it is not retrieved by the iterator as a result record.
+--|
+--| When the optional `head` list of strings is specified, then its values are used as
+--| field names and the first CSV record is retrieved as result record like
+--| any subsequent record.
+--| When a value or header is not found to its counterpart then the value is
+--| not added to the retrieved record table.
 do
-  local fh = csv.open(file,'r')
-  local n = 1
-  for record in fh:records() do
-    for k,v in pairs(record) do
-      print(n, k, v)
-    end
-    n = n+1
-  end
+  local csv = require 'wax.csv'
+  local file = os.tmpname()
+  local fh = io.open(file, 'w')
+  fh:write( table.concat({
+    ' a1,a2,"a 4","a\n4",a5 ',
+    'b1,b2,"b3",b4',
+    '"c1", "c2","c""3","c\n4"'
+  }, "\r\n"))
   fh:close()
 end
 

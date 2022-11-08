@@ -44,21 +44,24 @@ typedef enum { csv_val, csv_eor, csv_end } csv_Step;
 static int wax_csv_open(lua_State *L);
 static int wax_csv_close(lua_State *L);
 static int wax_csv_irecords(lua_State *L);
+static int wax_csv_records(lua_State *L);
 static int iter_irecords(lua_State *L);
 
 static const luaL_Reg csvh_mt[] = {
   { "irecords",   wax_csv_irecords },
-  { "close",   wax_csv_close },
-  { "__gc",    wax_csv_close },
-  { "__close", wax_csv_close },
-  { NULL,      NULL          }
+  { "records",    wax_csv_records  },
+  { "close",      wax_csv_close    },
+  { "__gc",       wax_csv_close    },
+  { "__close",    wax_csv_close    },
+  { NULL,         NULL             }
 };
 
 static const luaL_Reg module[] = {
-  { "open",  wax_csv_open  },
-  { "close", wax_csv_close },
+  { "open",     wax_csv_open     },
   { "irecords", wax_csv_irecords },
-  { NULL,    NULL         }
+  { "records",  wax_csv_records  },
+  { "close",    wax_csv_close    },
+  { NULL,    NULL                }
 };
 
 
@@ -108,6 +111,7 @@ static int wax_csv_open(lua_State *L) {
   return 1;
 }
 
+
 static int wax_csv_close(lua_State *L) {
   csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
 
@@ -128,8 +132,7 @@ static int wax_csv_close(lua_State *L) {
 }
 
 
-/*
- * Effectively open/reopen the file, so every time wax.cvs.irecords is used
+/* Effectively open/reopen the file, so every time wax.cvs.irecords is used
  * the reading position is reset to the start of the file.
  */
 static int wax_csv_irecords(lua_State *L) {
@@ -138,6 +141,16 @@ static int wax_csv_irecords(lua_State *L) {
   lua_pushcfunction(L, iter_irecords);
   lua_pushvalue(L, 1);
   return 2;
+}
+
+
+static int wax_csv_records(lua_State *L) {
+  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+  csv_reset(CSV, L);
+  if (lua_istable(L,3)) {
+    waxLua_rawlen(L, 2);
+  }
+  return 0;
 }
 
 
