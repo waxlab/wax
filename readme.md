@@ -41,14 +41,6 @@ You can [donate](https://liberapay.com/WaxLab/donate) or help us
 reviewing, reporting, testing or coding.
 See contribution [guidelines](contributing.md) for more information.
 
-You have a plenty of ways to contribute to this project:
-
-* Sponsoring the developer
-* Reporting well detailed bugs and with code demonstration of that.
-* Suggesting features with use examples.
-* Testing in different OSes POSIX compliant
-* Developing conditionals on code for use with Windows, by now not supported
-(See "Using under Windows" section).
 
 ## Join Community
 
