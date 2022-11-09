@@ -9,12 +9,11 @@ bin = { }
 -- ./src/macros
 clib = {
     { "wax.csv",  { "csv.c"  } },
-    { "wax.os",   { "os.c"   } },
-    { "wax.fs",   { "fs.c"   } },
-    { "wax.user", { "user.c" } },
+    { "wax.fs",   { "fs.c" } },
     { "wax.json", { "ext/json/cJSON.c", "json.c" } },
+    { "wax.os",   { "os.c" } },
+    { "wax.user", { "user.c" } },
 }
-
 cbin = {
   -- {'target', 'code.c' }
 }

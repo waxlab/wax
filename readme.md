@@ -10,10 +10,9 @@ hell.
 By now, it is fully supported under Linux and the major BSD representants
 (FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
 
-You can read a
-[short list of available functions in the Wiki](
-https://codeberg.org/wax/wax/wiki
-) or dive in the full examples within the Lua files inside deva folder.
+By now you can read a short list of available functions in the
+[Wiki](https://codeberg.org/wax/wax/wiki)
+or dive in the full examples within the Lua files inside ./test folder.
 
 In future these tests will be used to generate the full wiki documentation.
 
@@ -31,12 +30,16 @@ The minimum requirements to run are:
 
 Binary modules are tested on different Unix systems:
 
-* Debian (as common user)
+* Debian (as common user) - Most frequent
 * Debian Container (as root)
 * BSDs (FreeBSD, OpenBSD, NetBSD and Dragonfly) as root and common user.
 
 
 ## Contribute
+
+You can [donate](https://liberapay.com/WaxLab/donate) or help us
+reviewing, reporting, testing or coding.
+See contribution [guidelines](contributing.md) for more information.
 
 You have a plenty of ways to contribute to this project:
 
