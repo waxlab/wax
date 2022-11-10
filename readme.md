@@ -41,10 +41,13 @@ You can [donate](https://liberapay.com/WaxLab/donate) or help us
 reviewing, reporting, testing or coding.
 See contribution [guidelines](contributing.md) for more information.
 
+The main code home is https://codeberg.org/waxlab/wax repository.
+Head there to read about lastest commits, bug reporting or discussions.
+
 
 ## Join Community
 
-Join our channel at Matrix: [https://matrix.to/#/#wax-lua:matrix.org]
+Join our [Matrix channel]([https://matrix.to/#/#wax-lua:matrix.org])
 created basically for announcements and discussions about the future of project.
 
 
