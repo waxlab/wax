@@ -6,7 +6,7 @@
  * (https://github.com/waxlab/wax)
  */
 
-#include "wax.h"
+#include "waxl/waxl.h"
 #include <stdlib.h>    /* realpath */
 #include <sys/param.h> /* pmax Posix */
 #include <sys/stat.h>  /* stat */

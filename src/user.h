@@ -6,5 +6,5 @@
  * (https://github.com/waxlab/wax)
  */
 
-#include "wax.h"
+#include "waxl/waxl.h"
 int luaopen_wax_user(lua_State *L);

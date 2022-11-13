@@ -30,9 +30,14 @@ typedef struct csv_State {
   char  chr;         /* last char parsed                  */
 
   /* Temporary buffer for field extraction */
-  size_t bufalloc;   /* Allocated memory                  */
-  size_t buflen;     /* char count                        */
-  char  *bufval;     /* string                            */
+  size_t valloc;     /* Allocated memory                  */
+  size_t vlen;       /* char count                        */
+  char  *val;        /* string                            */
+
+  size_t kalloc;     /* */
+  size_t klen;       /* */
+  char **keys;       /* */
+
 } csv_State;
 
 typedef enum { csv_val, csv_eor, csv_end } csv_Step;
@@ -46,6 +51,7 @@ static int wax_csv_close(lua_State *L);
 static int wax_csv_irecords(lua_State *L);
 static int wax_csv_records(lua_State *L);
 static int iter_irecords(lua_State *L);
+static int iter_records(lua_State *L);
 
 static const luaL_Reg csvh_mt[] = {
   { "irecords",   wax_csv_irecords },
@@ -85,8 +91,8 @@ static void       strclr (csv_State *CSV);
 /* ALGORITHM */
 
 int luaopen_wax_csv(lua_State *L) {
-  waxLua_newuserdata_mt(L, LUADATA_NAME, csvh_mt);
-  waxLua_export(L, "wax_csv", module);
+  waxL_newuserdata_mt(L, LUADATA_NAME, csvh_mt);
+  waxL_export(L, "wax_csv", module);
   return 1;
 }
 
@@ -101,9 +107,12 @@ static int wax_csv_open(lua_State *L) {
   CSV->chr      = '\0';
   CSV->sep      = lua_isstring(L, 3) ? luaL_checkstring(L, 3)[0] : ',';
   CSV->quo      = lua_isstring(L, 4) ? luaL_checkstring(L, 4)[0] : '"';
-  CSV->bufalloc = 0;
-  CSV->buflen   = 0;
-  CSV->bufval   = NULL;
+  CSV->valloc   = 0;
+  CSV->vlen     = 0;
+  CSV->val      = NULL;
+  CSV->kalloc   = 0;
+  CSV->klen     = 0;
+  CSV->keys     = NULL;
 
   luaL_getmetatable(L, LUADATA_NAME);
   lua_setmetatable(L, -2);
@@ -115,16 +124,16 @@ static int wax_csv_open(lua_State *L) {
 static int wax_csv_close(lua_State *L) {
   csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
 
-  if (CSV->fp == NULL && CSV->bufval == NULL)
+  if (CSV->fp == NULL && CSV->val == NULL)
     return 0;
 
   if (CSV->fp != NULL) {
     fclose(CSV->fp);
     CSV->fp = NULL;
   }
-  if (CSV->bufval != NULL) {
-    free(CSV->bufval);
-    CSV->bufval = NULL;
+  if (CSV->val != NULL) {
+    free(CSV->val);
+    CSV->val = NULL;
   }
 
   lua_pushboolean(L, 1);
@@ -143,13 +152,56 @@ static int wax_csv_irecords(lua_State *L) {
   return 2;
 }
 
+static void key_add(csv_State *CSV, char *str) {
+  if (CSV->klen >= CSV->kalloc) {
+
+  }
+}
+
+
+static int key_alloc(csv_State *CSV, size_t sz) {
+  if (sz < 1) { /* Free the memory */
+    if (CSV->kalloc != 0) free(CSV->keys);
+    goto update;
+  } else {      /* Allocate */
+    if (CSV->kalloc == 0) {
+      CSV->keys = malloc(sizeof(char *) * sz);
+      goto assert;
+    } else {
+      if (CSV->kalloc >= sz) {
+        while(CSV->kalloc > sz) {
+          free(CSV->keys[--CSV->kalloc]);
+          CSV->keys[CSV->kalloc] = NULL;
+        }
+        CSV->keys = malloc(sizeof(char *) * sz);
+        goto assert;
+      } else {
+        CSV->keys = realloc(CSV->keys, sizeof(char *) * sz);
+        goto assert;
+      }
+      if (CSV->kalloc < CSV->klen) CSV->klen = CSV->kalloc;
+    }
+  }
+  assert :
+    if (CSV->keys == NULL) return 0;
+  update:
+    CSV->kalloc = sz;
+    if (CSV->klen > CSV->kalloc) CSV->klen = CSV->kalloc;
+    CSV->klen = 0;
+    CSV->kalloc = 0;
+  return 1;
+}
+
+
 
 static int wax_csv_records(lua_State *L) {
   csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
   csv_reset(CSV, L);
   if (lua_istable(L,3)) {
-    waxLua_rawlen(L, 2);
+    waxL_rawlen(L, 2);
   }
+  lua_pushcfunction(L, iter_records);
+  lua_pushvalue(L, 1);
   return 0;
 }
 
@@ -168,7 +220,7 @@ static int iter_irecords(lua_State *L) {
   lua_newtable(L);
   getval: {
     S = csv_getval(CSV);
-    waxLua_pair_is(L, idx++, (CSV->bufval? CSV->bufval : ""));
+    waxL_pair_is(L, idx++, (CSV->val? CSV->val : ""));
     strclr(CSV);
     if (S == csv_val) goto getval;
   }
@@ -176,6 +228,12 @@ static int iter_irecords(lua_State *L) {
   return 1;
 }
 
+static int iter_records(lua_State *L) {
+  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+
+  if (is_eof(CSV)) return 0;
+  return 0;
+}
 
 /* ------- C helpers ------- */
 
@@ -184,7 +242,14 @@ static int csv_reset(csv_State *CSV, lua_State *L) {
   if (CSV->fp != NULL) fclose(CSV->fp);
 
   CSV->fp = fopen(CSV->fname, CSV->mode);
-  waxLua_assert(L, CSV->fp != NULL, strerror(errno));
+  waxL_assert(L, CSV->fp != NULL, strerror(errno));
+
+  if (CSV->kalloc > 0) {
+    free(CSV->keys);
+    CSV->klen = 0;
+    CSV->kalloc = 0;
+    CSV->keys = NULL;
+  }
 
   nxtchr(CSV);
   return 1;
@@ -193,7 +258,7 @@ static int csv_reset(csv_State *CSV, lua_State *L) {
 
 
 
-/* Read each field, char by char catenating to V->bufval.
+/* Read each field, char by char catenating to V->val.
  * When field ends, look for the next beginning and return csv_val
  * When row ends, look for the 1st char of next and return csv_eor.
  * when file ends (eof) can't go beyond so immediatelly return csv_eor.
@@ -257,18 +322,19 @@ static csv_Step csv_getval(csv_State *CSV) {
 
 
 static void stradd(csv_State *CSV) {
-  if (CSV->buflen+1 >= CSV->bufalloc) {
-    CSV->bufalloc += BUFFER_SIZE;
-    CSV->bufval = (char *) realloc(CSV->bufval, CSV->bufalloc);
+  if (CSV->vlen+1 >= CSV->valloc) {
+    CSV->valloc += BUFFER_SIZE;
+    CSV->val = (char *) realloc(CSV->val, CSV->valloc);
   }
-  CSV->bufval[CSV->buflen++] = CSV->chr;
-  CSV->bufval[CSV->buflen] = '\0';
+  CSV->val[CSV->vlen++] = CSV->chr;
+  CSV->val[CSV->vlen] = '\0';
 }
 
 
 static void strclr(csv_State *CSV) {
-  if (CSV->bufalloc > 0) {
-    CSV->bufval[0] = '\0';
-    CSV->buflen   = 0;
+  if (CSV->valloc > 0) {
+    CSV->val[0] = '\0';
+    CSV->vlen   = 0;
   }
 }
+

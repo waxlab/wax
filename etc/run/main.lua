@@ -17,7 +17,7 @@ local command = {}
 local sh = require 'etc.run.sh'
 local config = require 'etc.run.config'
 local luaVersions = {"5.1","5.2","5.3","5.4"}
-local docdir  = "./test"
+local mandir  = "./man"
 local testdir = "./test"
 
 local luabin = {
@@ -112,9 +112,10 @@ end
 
 function command.help()
   cmd = ([[
-    cat $(find %s -name '*.lua') \
-    | grep '\--\$'|cut -d' ' -f2- 2> /dev/null | fzf
-  ]]):format(docdir)
+  { cat $(find %s -name '*.lua') | grep '^\s*\--\$' | cut -d\$ -f2- |cut -d' ' -f2-;
+    cat $(find %s -name '*.md') | grep '######'|cut -d' ' -f2- | tr -d '`';
+  } 2> /dev/null | fzf
+  ]]):format(testdir,mandir)
   os.execute(cmd)
 end
 

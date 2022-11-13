@@ -1,4 +1,4 @@
-#include "wax.h"
+#include "waxl/waxl.h"
 #include <errno.h>
 #include <string.h>
 

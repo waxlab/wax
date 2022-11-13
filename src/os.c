@@ -16,7 +16,7 @@ static int wax_os_exec(lua_State *L) {
   argv[0] = (char *) luaL_checkstring(L,1);
 
   if (lua_istable(L, 2)) {
-    for (idx=1; idx <= waxLua_rawlen(L,2); idx++) {
+    for (idx=1; idx <= waxL_rawlen(L,2); idx++) {
       lua_rawgeti(L, 2, idx);
       argv[idx] = (char *) luaL_checkstring(L, -1);
     }
@@ -40,6 +40,6 @@ static const luaL_Reg wax_os[] = {
 
 
 int luaopen_wax_os(lua_State *L) {
-  waxLua_export(L, "wax.os", wax_os);
+  waxL_export(L, "wax.os", wax_os);
   return 1;
 }

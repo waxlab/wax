@@ -6,7 +6,7 @@
  * (https://github.com/waxlab/wax)
  */
 
-#include "wax.h"
+#include "waxl/waxl.h"
 #include <stddef.h>
 #include <stdio.h>
 #include "unistd.h"
