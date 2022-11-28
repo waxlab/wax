@@ -6,7 +6,7 @@
 --| * docklist   List available Docker confs
 --| * dockrun    Run command on Docker test instance
 --| * docktest   Run Lua deva files through the Docker test instance
---| * docmd      Retrieve list of code signatures in markdown
+--| * howl       Update documentation using howl
 --| * help       Retrieve the list of documented items
 --| * install    Install the rockspec for all Lua versions
 --| * remove     Uninstall the rockspec for all Lua versions
@@ -120,13 +120,14 @@ function command.help()
 end
 
 
-function command.docmd()
-  cmd = ([[
-    for i in $(find %s -name '*.lua'); do
-      grep -A1 '^\(--\$\|--| #\)' $i | grep -- '^--'
-    done | sed 's/^--\$\s*\(\([^(]\+\).*\)\s*$/###### \1/g;s/^--[}{|]\?\s*//g;s/^#/\n#/g'
-  ]]):format(docdir)
-  os.execute(cmd)
+function command.howl()
+  print 'Generating wiki...'
+  os.execute 'howl --from ./test --from ./doc --fmt wiki ../wax.wiki'
+  print 'Generating vim help...'
+  os.execute 'howl --from ./test --from ./doc --fmt vim ~/.config/nvim/doc/wax'
+  print 'Updating vim help tags...'
+  os.execute 'nvim --cmd ":helptags ~/.config/nvim/doc\n" --cmd ":q"'
+  print 'Done.'
 end
 
 

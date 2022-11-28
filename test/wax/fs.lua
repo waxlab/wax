@@ -1,6 +1,6 @@
 --| # wax.fs
---| This module contains filesystem related functions to list,
---| retrieve info of files as well as filename handling helpers
+--| Filesystem handling library to list, create, remove, set and get
+--| permissions of files and directorie.
 
 --| ## Basic usage
 --{
@@ -85,29 +85,32 @@ end
 --$ wax.fs.buildpath(dir1 ... dirN: string) : string
 --| Receives a variable number of strings and builds a path from it
 do
+--| Basic Usage:
+--| 1. concatenate correctly the path elements
 --{
-  --| Basic Usage:
-
-  -- 1. concatenate correctly the path elements
   assert( fs.buildpath("1nd","2nd","3rd") == "1nd/2nd/3rd" )
-
-  -- 2. clear strange paths
+--}
+--| 2. clear strange paths
+--{
   assert( fs.buildpath("a//b////c/./d/") == "a/b/c/d")
-
-  --| Expected behaviors
-
-  -- 1. Doesn't normalizes parent `..` entries
+--}
+--| Expected behavior
+--| 1. Doesn't normalizes parent `..` entries
+--{
   assert( fs.buildpath("a/../a")          == "a/../a" )
   assert( fs.buildpath("..", "a"  ,"b"  ) == "../a/b" )
-
-  -- 2. remove rightmost pending separator
+--}
+--| 2. remove rightmost pending separator
+--{
   assert( fs.buildpath("a/b/c/") == "a/b/c" )
-
-  -- 3. remove duplicated separators
+--}
+--| 3. remove duplicated separators
+--{
   assert( fs.buildpath("a//","/b/","/c/") == "a/b/c"    )
   assert( fs.buildpath("//a","b/c"      ) == "/a/b/c"   )
-
-  -- 4. remove relative here dot `.` that is not the first char
+--}
+--| 4. remove relative here dot `.` that is not the first char
+--{
   assert( fs.buildpath(".", "a", "b"     ) == "./a/b"    )
   assert( fs.buildpath(".", "a", ".", "b") == "./a/b"    )
   assert( fs.buildpath("./a"," b/", "./c") == "./a/ b/c" )
@@ -121,15 +124,16 @@ end
 --$ wax.fs.stat(path: string) : table | (nil, string)
 --| Get information about path status
 do
+--| Usage example
 --{
-  --| Usage example
   local res, err
   res, err = fs.stat( testfile )
 
   assert(type(err) == "nil")   -- has no error
   assert(type(res) == "table") -- the retrieved data
 
-  --| Which are the fields returned?
+  -- Which are the fields returned?
+
   assert(type(res.dev) == "string")  -- device id
   assert(type(res.rdev) == "string") -- device id for special files
   assert(res.ino     >= 0)           -- inode
@@ -149,18 +153,23 @@ do
   assert(res.ctimens >= 0)   -- nanoseconds part of ctime
   assert(res.mtime   >= 0)   -- time of last modification (unix secs)
   assert(res.mtimens >= 0)   -- nanoseconds part of mtime
+--}
 
   --| Another example with the user home dir
+--{
   if user.name() ~= "root" then
     res, err = fs.stat(user.home())
     assert(res.mode == "755")
     assert(res.type == "dir")
   end
+--}
 
-  --| How it looks like when some stat error happens?
+--| What happens when some stat error happens?
+--{
   res, err = fs.stat("/some_invalid_path")
   assert(type(res) == "nil")
   assert(type(err) == "string")
+--}
 
 --| Observations:
 --|
@@ -272,10 +281,10 @@ do
 --|
 --| Note that this function has is more performatic when a number
 --| is specified on the `mode` argument.
+--|
+--| Example 1: Some common uses
+--| Some systems may have different permissions under root
 --{
-
-  --| Example 1: Some common uses
-  --| Some systems may have different permissions under root
   if user.name() ~= "root" then
     assert(fs.access(testfile,"r")  == true)
     assert(fs.access(testfile,"r")  == true)
@@ -284,8 +293,8 @@ do
     assert(fs.access("/tmp","rwx")  == true)
     assert(fs.access(user.home(),"rwx") == true)
   end
-
-  --| Example 2: Different users, different privileges.
+--}
+--| Example 2: Different users, different privileges.
   if user.name() == "root" then
     assert(fs.access("/","rwx") == true)
     assert(fs.access("/root","rwx") == true)
@@ -296,8 +305,10 @@ do
     assert(fs.access("/","rwx") == false)
     assert(fs.access("/etc","rwx") == false)
   end
+--}
 
-  --| Example 3: mode number correspondence to mode strings
+--| Example 3: mode number correspondence to mode strings
+--{
   for _,p in pairs{"/", "/home", "/root", "/tmp", testfile} do
     assert(fs.access(p, "x")   == fs.access(p,1))
     assert(fs.access(p, "w")   == fs.access(p,2))
@@ -307,8 +318,10 @@ do
     assert(fs.access(p, "rw")  == fs.access(p,6))
     assert(fs.access(p, "rwx") == fs.access(p,7))
   end
+--}
 
-  --| Example 4: Invalid modes; If wrong arguments are passed, throws error.
+--| Example 4: Invalid modes; If wrong arguments are passed, throws error.
+--{
   local res,err
 
   for _,invalidMode in pairs{"a", "rwz", 0, -1, 8, 100} do
@@ -532,12 +545,11 @@ do
 end
 
 --$ wax.fs.mkdirs(path: string, mode: string) : boolean [, string]
---| Make all missing directories in path string and returns true.
---| When not possible, returns a descriptive string.ocal ds = "%s"..fs.dirsep.."%s"
---| The `mode` parameter is a string like "777".
+--| Make all missing directories in path string and
+--| returns true. When not possible, returns a descriptive
+--| string. `mode` parameter is a string like "777".
 do
 --{
-
   local uncle = fs.buildpath("..","uncleDir")
   local cousin = fs.buildpath(uncle,"cousin")
   assert(fs.mkdirs(cousin,"777"))

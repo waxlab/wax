@@ -1,5 +1,5 @@
 --| # wax.json
---| Module for JSON handling.
+--| Create and parse JSON file to/from Lua tables.
 
 --{
 local json = require 'wax.json'

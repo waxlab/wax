@@ -1,6 +1,4 @@
---| # wax.html
---|
---| HTML handling module for Lua
+--| # wax.html - HTML handling
 
 local html = require 'wax.html'
 
