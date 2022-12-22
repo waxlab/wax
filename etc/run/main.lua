@@ -107,6 +107,7 @@ function command.clean()
   sh.exec("rm -rf ./tree ./wax ./out ./lua ./luarocks ./lua_modules ./.luarocks")
   sh.exec("rm -rf ./lua ./luarocks ./lua_modules ./.luarocks")
   sh.exec("find ./src -name '*.o' -delete")
+  sh.exec("find ./src -name '*.out' -delete")
 end
 
 
