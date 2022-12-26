@@ -16,78 +16,87 @@ local fs  = require 'wax.fs'
 --| * `quo` indicates the quoting character to be used (default `"`)
 --|
 --| This function returns `csvdata` userdata on success, or `nil` and a message
---| on error. See `wax.csv.irecords()`, `wax.csv.records()` and
+--| on error. See `wax.csv.lists()`, `wax.csv.records()` and
 --| `wax.csv.write()` for examples.
 
 
---$ wax.csv.irecords( csvdata ) : iterator()
---$ csvdata:irecords() : iterator()
---| Return iterator function to retrieve csv records as Lua index/value tables
---| (tables indexed by number position of csv columns)
+--$ wax.csv.lists( csvdata ) : iterator()
+--$ csvdata:lists() : iterator()
+--| Return an iterator that retrieves each csv line as a list of values.
 --|
+--| It provides a flexible way to get values when CSV has different number of
+--| values in each line.
+
 do
-  local csv = require 'wax.csv'
   local file = os.tmpname()
   local fh = io.open(file, 'w')
-
   fh:write( table.concat({
-    --[[ record 1 ]] '"a 1","","a, 3"," a\n4","a""5"',
-    --[[ record 2 ]] ', b2, b"3,b"4",b5 ',
-    --[[ record 3 ]] ',,,,',
-    --[[ record 4 ]] '"","","","",""',
-    --[[ record 5 ]] '"f\n1","\r\n","""",'
+    --[[ R1 ]] '"a 1",eeeee,"a, 3"," a\n4","a""5"',
+    --[[ R2 ]] ', b2, b"3,b"4",b5 ',
+    --[[ R3 ]] ',,,,',
+    --[[ R4 ]] '"","","","","",""',
+    --[[ R5 ]] '"f\n1","\r\n",""""',
   },"\r\n").."\r\n" )
   fh:close()
 
-
+--{
+  local csv = require 'wax.csv'
   local csvh = csv.open(file,'r')
   local res = {}
-  for row in csvh:irecords() do
-    res[#res+1] = row
+  for list in csvh:lists() do
+    assert(#list > 0)
+    res[#res+1] = list
   end
+--}
 
   fs.unlink(file)
-  assert(csvh:close() == true) -- if is open return true
-  assert(not csvh:close())     -- return false if already closed
+  assert(csvh:close() == true) -- if it is opened
+  assert(not csvh:close())     -- if already closed
 
-  -- Record 1 & 2 tests on:
+  assert(#res == 5, 'number of records')
+
+  -- R1, R2:
   -- * quoted and simple values,
   -- * edge whitespaces
   -- * values with line breaks
+  assert(#res[1] == 5)
   assert(res[1][1] == 'a 1'  )
-  assert(res[1][2] == ''     )
+  assert(res[1][2] == 'eeeee')
   assert(res[1][3] == 'a, 3' )
   assert(res[1][4] == ' a\n4')
   assert(res[1][5] == 'a"5'  )
 
+  assert(#res[2] == 5)
   assert(res[2][1] == ''     )
   assert(res[2][2] == ' b2'  )
   assert(res[2][3] == ' b"3' )
   assert(res[2][4] == 'b"4"' )
   assert(res[2][5] == 'b5 '  )
 
-  -- Record 3: empty simple values
+  -- R3: empty unquoted values
+  assert(#res[3] == 5)
   assert(res[3][1] == '')
   assert(res[3][2] == '')
   assert(res[3][3] == '')
   assert(res[3][4] == '')
   assert(res[3][5] == '')
 
-  -- Record 4: empty quoted values
+  -- R4: empty quoted values
+  assert(#res[4] == 6)
   assert(res[4][1] == '')
   assert(res[4][2] == '')
   assert(res[4][3] == '')
   assert(res[4][4] == '')
   assert(res[4][5] == '')
+  assert(res[4][6] == '')
 
-  -- Record 5:
+  -- R5: quoted quotes and quoted breaks
+  assert(#res[5] == 3)
   assert(res[5][1] == 'f\n1')
   assert(res[5][2] == '\r\n')
   assert(res[5][3] == '"')
-  assert(res[5][4] == '')   -- empty value after dangling separator
-  assert(not res[6])        -- no empty record at the end
 end
-
+os.exit(0)
 
 --$ wax.csv.records(CsvData [, head: list]) : iterator()
 --$ CsvData:records([head: list]) : iterator()
@@ -107,6 +116,7 @@ do
   local csv = require 'wax.csv'
   local file = os.tmpname()
   local fh = io.open(file, 'w')
+
   fh:write( table.concat({
     ' a1,a2,"a 4","a\n4",a5 ',
     'b1,b2,"b3",b4',
@@ -116,17 +126,17 @@ do
 
   local csvh = csv.open(file, "r")
   local res = {}
-  print(csvh)
 
   print(csvh:records({
     "ieoeoie",
   }))
-  os.exit(1)
+
+  print("pppppp")
   for k,v in csvh:records({"oio","eieie"}) do
-    print(k,v)
+    print('K',k,'V',v)
   end
 
-
+  print "oioioioioi"
   os.exit(1)
 end
 

@@ -9,6 +9,7 @@
 #include "csv.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include "t8c/arr.h"
 
 #define BUFFER_SIZE   1024
 #define LUADATA_NAME  "wax_csv_handler"
@@ -18,7 +19,7 @@
 
 /* TYPES */
 
-typedef struct csv_State {
+typedef struct CsvHandler {
   /* File handler */
   const char *fname; /* file name                         */
   const char *mode;  /* open() mode                       */
@@ -29,18 +30,17 @@ typedef struct csv_State {
   char  quo;         /* value quoting character           */
   char  chr;         /* last char parsed                  */
 
+
   /* Temporary buffer for field extraction */
   size_t valloc;     /* Allocated memory                  */
   size_t vlen;       /* char count                        */
   char  *val;        /* string                            */
 
-  size_t kalloc;     /* */
-  size_t klen;       /* */
-  char **keys;       /* */
+  char **keys;       /* Lua keys or CSV head field names  */
+  int    ended;
+} CsvHandler;
 
-} csv_State;
-
-typedef enum { csv_val, csv_eor, csv_end } csv_Step;
+typedef enum { csv_val, csv_eor, csv_end } CsvStep;
 
 
 
@@ -48,43 +48,40 @@ typedef enum { csv_val, csv_eor, csv_end } csv_Step;
 
 static int wax_csv_open(lua_State *L);
 static int wax_csv_close(lua_State *L);
-static int wax_csv_irecords(lua_State *L);
+static int wax_csv_lists(lua_State *L);
 static int wax_csv_records(lua_State *L);
-static int iter_irecords(lua_State *L);
+static int iter_lists(lua_State *L);
 static int iter_records(lua_State *L);
 
 static const luaL_Reg csvh_mt[] = {
-  { "irecords",   wax_csv_irecords },
-  { "records",    wax_csv_records  },
-  { "close",      wax_csv_close    },
-  { "__gc",       wax_csv_close    },
-  { "__close",    wax_csv_close    },
-  { NULL,         NULL             }
+  { "lists",   wax_csv_lists    },
+  { "records", wax_csv_records  },
+  { "close",   wax_csv_close    },
+  { "__gc",    wax_csv_close    },
+  { "__close", wax_csv_close    },
+  { NULL,      NULL             }
 };
 
 static const luaL_Reg module[] = {
-  { "open",     wax_csv_open     },
-  { "irecords", wax_csv_irecords },
-  { "records",  wax_csv_records  },
-  { "close",    wax_csv_close    },
-  { NULL,    NULL                }
+  { "open",    wax_csv_open     },
+  { "lists",   wax_csv_lists    },
+  { "records", wax_csv_records  },
+  { "close",   wax_csv_close    },
+  { NULL,      NULL             }
 };
 
 
 
 /* PRIVATE FUNCTIONS & MACROS */
 
-static int        csv_reset (csv_State *CSV, lua_State *L);
-static csv_Step   csv_getval (csv_State *CSV);
+static int        csv_reset  (CsvHandler *CSV, lua_State *L);
+static int        csv_walk   (CsvHandler *CSV, const char sep, const char quo);
 
-static void       stradd (csv_State *CSV);
-static void       strclr (csv_State *CSV);
 
 #define is_quo(CSV) ((CSV)->chr == (CSV)->quo)
 #define is_sep(CSV) ((CSV)->chr == (CSV)->sep)
 #define is_eor(CSV) ((CSV)->chr == '\r' || (CSV)->chr == '\n')
-#define is_eof(CSV) ((CSV)->chr == '\0')
-#define nxtchr(CSV) if (fread(&CSV->chr, 1, 1, CSV->fp) == 0) CSV->chr = '\0'
+#define nextchar(CSV) (fread(&CSV->chr, 1, 1, CSV->fp)==0 ? (CSV->chr = '\0') : CSV->chr)
 
 
 
@@ -100,7 +97,7 @@ int luaopen_wax_csv(lua_State *L) {
 
 /* Create the handler for the CSV file */
 static int wax_csv_open(lua_State *L) {
-  csv_State *CSV = lua_newuserdata(L, sizeof(csv_State));
+  CsvHandler *CSV = lua_newuserdata(L, sizeof(CsvHandler));
   CSV->fname    = luaL_checkstring(L, 1);
   CSV->mode     = luaL_checkstring(L, 2);
   CSV->fp       = NULL;
@@ -109,10 +106,9 @@ static int wax_csv_open(lua_State *L) {
   CSV->quo      = lua_isstring(L, 4) ? luaL_checkstring(L, 4)[0] : '"';
   CSV->valloc   = 0;
   CSV->vlen     = 0;
-  CSV->val      = NULL;
-  CSV->kalloc   = 0;
-  CSV->klen     = 0;
+  CSV->val      = t8c_arrnew(CSV->val,1);
   CSV->keys     = NULL;
+  CSV->ended    = 0;
 
   luaL_getmetatable(L, LUADATA_NAME);
   lua_setmetatable(L, -2);
@@ -122,7 +118,7 @@ static int wax_csv_open(lua_State *L) {
 
 
 static int wax_csv_close(lua_State *L) {
-  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+  CsvHandler *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
 
   if (CSV->fp == NULL && CSV->val == NULL)
     return 0;
@@ -131,210 +127,140 @@ static int wax_csv_close(lua_State *L) {
     fclose(CSV->fp);
     CSV->fp = NULL;
   }
-  if (CSV->val != NULL) {
-    free(CSV->val);
-    CSV->val = NULL;
-  }
+
+  t8c_arrfree(CSV->val);
 
   lua_pushboolean(L, 1);
   return 1;
 }
 
 
-/* Effectively open/reopen the file, so every time wax.cvs.irecords is used
+/* Effectively open/reopen the file, so every time wax.cvs.lists is used
  * the reading position is reset to the start of the file.
  */
-static int wax_csv_irecords(lua_State *L) {
-  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+static int wax_csv_lists(lua_State *L) {
+  CsvHandler *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
   csv_reset(CSV, L);
-  lua_pushcfunction(L, iter_irecords);
+  nextchar(CSV);
+  lua_pushcfunction(L, iter_lists);
   lua_pushvalue(L, 1);
   return 2;
 }
 
-static void key_add(csv_State *CSV, char *str) {
-  if (CSV->klen >= CSV->kalloc) {
-
-  }
-}
-
-
-static int key_alloc(csv_State *CSV, size_t sz) {
-  if (sz < 1) { /* Free the memory */
-    if (CSV->kalloc != 0) free(CSV->keys);
-    goto update;
-  } else {      /* Allocate */
-    if (CSV->kalloc == 0) {
-      CSV->keys = malloc(sizeof(char *) * sz);
-      goto assert;
-    } else {
-      if (CSV->kalloc >= sz) {
-        while(CSV->kalloc > sz) {
-          free(CSV->keys[--CSV->kalloc]);
-          CSV->keys[CSV->kalloc] = NULL;
-        }
-        CSV->keys = malloc(sizeof(char *) * sz);
-        goto assert;
-      } else {
-        CSV->keys = realloc(CSV->keys, sizeof(char *) * sz);
-        goto assert;
-      }
-      if (CSV->kalloc < CSV->klen) CSV->klen = CSV->kalloc;
-    }
-  }
-  assert :
-    if (CSV->keys == NULL) return 0;
-  update:
-    CSV->kalloc = sz;
-    if (CSV->klen > CSV->kalloc) CSV->klen = CSV->kalloc;
-    CSV->klen = 0;
-    CSV->kalloc = 0;
-  return 1;
-}
-
-
 
 static int wax_csv_records(lua_State *L) {
-  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+  /*
+  CsvHandler *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+  nextchar(CSV);
   csv_reset(CSV, L);
   if (lua_istable(L,3)) {
     waxL_rawlen(L, 2);
   }
   lua_pushcfunction(L, iter_records);
   lua_pushvalue(L, 1);
-  return 0;
+  */
+  return 2;
 }
 
 
-/* Iterators gets the record (a CSV line) values and left the cursor
+/* Get a CSV record as Lua indexed table.
+ * left the cursor
  * at the first char of the next record
  */
-static int iter_irecords(lua_State *L) {
-  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
+static int iter_lists(lua_State *L) {
+  CsvHandler *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
 
-  if (is_eof(CSV)) return 0;
-
-  int idx = 1;
-  csv_Step S;
+  if (CSV->chr == '\0') return 0;
+  register int idx = 1;
+  register int no_eor = 1;
 
   lua_newtable(L);
-  getval: {
-    S = csv_getval(CSV);
-    waxL_pair_is(L, idx++, (CSV->val? CSV->val : ""));
-    strclr(CSV);
-    if (S == csv_val) goto getval;
-  }
+
+  do {
+    no_eor = csv_walk(CSV, CSV->sep, CSV->quo);
+    t8c_arrpush(CSV->val,'\0');
+    waxL_pair_is(L, idx++, CSV->val);
+  } while (no_eor);
 
   return 1;
 }
 
-static int iter_records(lua_State *L) {
-  csv_State *CSV = luaL_checkudata(L, 1, LUADATA_NAME);
 
-  if (is_eof(CSV)) return 0;
+static int iter_records(lua_State *L) {
   return 0;
 }
 
 /* ------- C helpers ------- */
 
 /* Really re/open the file and reset structure to 1st char */
-static int csv_reset(csv_State *CSV, lua_State *L) {
+static int csv_reset(CsvHandler *CSV, lua_State *L) {
   if (CSV->fp != NULL) fclose(CSV->fp);
+  if (CSV->keys != NULL) t8c_arrfree(CSV->keys);
 
   CSV->fp = fopen(CSV->fname, CSV->mode);
   waxL_assert(L, CSV->fp != NULL, strerror(errno));
-
-  if (CSV->kalloc > 0) {
-    free(CSV->keys);
-    CSV->klen = 0;
-    CSV->kalloc = 0;
-    CSV->keys = NULL;
-  }
-
-  nxtchr(CSV);
   return 1;
 }
 
 
 
+/* Returns:
+ * 0 - when there is no field to be fetch on record
+ * 1 - when still has fields to be fetched on the record (CSV row)
+ */
+static int csv_walk(CsvHandler *CSV, const char sep, const char quo) {
 
-/* Read each field, char by char catenating to V->val.
- * When field ends, look for the next beginning and return csv_val
- * When row ends, look for the 1st char of next and return csv_eor.
- * when file ends (eof) can't go beyond so immediatelly return csv_eor.
- * The eof treatment should be done by the iterator.
- * */
-static csv_Step csv_getval(csv_State *CSV) {
-  if (is_quo(CSV)) goto fill_quoted;     /* Most common? */
-  if (is_eof(CSV)) return csv_end;       /* Less common! */
-  if (is_eor(CSV)) goto find_nextrecord; /* But need to discard EOF */
+  register char chr = CSV->chr;
+  char *val = CSV->val;
+  t8c_arrclear(val);
 
-  fill: {
-    if (is_sep(CSV)) {
-      nxtchr(CSV);
-      return csv_val;
-    }
+  if (chr == quo ) goto get_quoted_value;
+  if (chr == '\0') goto END_RECORD;
 
-    if (is_eof(CSV)|| is_eor(CSV)) return csv_val;
+  simple_value:
+    if (chr == sep ) goto SEP;
+    if (chr == '\n') goto LF;
+    if (chr == '\r') goto CR;
+    if (chr == '\0') goto EOV; /* on loop is needed */
+    t8c_arrpush(val,chr);
+    chr = nextchar(CSV);
+    goto simple_value;
 
-    stradd(CSV);
-    nxtchr(CSV);
-    goto fill;
-  }
+  get_quoted_value:
+    chr = nextchar(CSV);
+    if (chr == '\0') goto END_RECORD;
+    if (chr == quo && (chr = nextchar(CSV)) != quo) goto find_delim;
+    t8c_arrpush(val,chr);
+    goto get_quoted_value;
 
-  fill_quoted: {
-    nxtchr(CSV);
-    if (is_eof(CSV)) return csv_val;
+  find_delim:
+    if (chr == sep ) goto SEP;
+    if (chr == '\n') goto LF;
+    if (chr == '\r') goto CR;
+    if (chr == '\0') goto END_RECORD;
+    chr = nextchar(CSV);
+    goto find_delim;
 
-    if (is_quo(CSV)) {
-      nxtchr(CSV);
+  SEP:
+    nextchar(CSV);
+    goto EOV;
 
-      if (!is_quo(CSV)) goto ignore;
+  CR:
+    if ((chr = nextchar(CSV)) == '\n') nextchar(CSV);
+    goto END_RECORD;
 
-      stradd(CSV);
-      goto fill_quoted;
-    }
+  LF:
+    nextchar(CSV);
+    goto END_RECORD;
 
-    stradd(CSV);
-    goto fill_quoted;
-  }
+  END_RECORD: /* Record ends with the this field */
+    t8c_arrpush(val, '\0');
+    CSV->val = &val[0];
+    return 0;
 
-  /* ignore anything between an ending quote and a separator */
-  ignore: {
-    if (is_sep(CSV)) {
-      nxtchr(CSV);
-      return csv_val;
-    }
-    if (is_eor(CSV)) goto find_nextrecord;
-    if (is_eof(CSV)) return csv_val;
-    goto ignore;
-  }
-
-  find_nextrecord: {
-    nxtchr(CSV);
-    if (!is_eor(CSV))
-      return csv_eor;
-    goto find_nextrecord;
-  }
-
-  return csv_end;
-}
-
-
-static void stradd(csv_State *CSV) {
-  if (CSV->vlen+1 >= CSV->valloc) {
-    CSV->valloc += BUFFER_SIZE;
-    CSV->val = (char *) realloc(CSV->val, CSV->valloc);
-  }
-  CSV->val[CSV->vlen++] = CSV->chr;
-  CSV->val[CSV->vlen] = '\0';
-}
-
-
-static void strclr(csv_State *CSV) {
-  if (CSV->valloc > 0) {
-    CSV->val[0] = '\0';
-    CSV->vlen   = 0;
-  }
+  EOV: /* Field ends but not the record */
+    t8c_arrpush(val, '\0');
+    CSV->val = &val[0];
+    return 1;
 }
 

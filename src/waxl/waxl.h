@@ -29,38 +29,40 @@
  */
 
 #define waxL_pair_sb(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),boolean,(val));
+  iwaxL_sethashtkey((lua_State),(key),boolean,(val))
 #define waxL_pair_si(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),integer,(val));
+  iwaxL_sethashtkey((lua_State),(key),integer,(val))
 #define waxL_pair_sn(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),number, (val));
+  iwaxL_sethashtkey((lua_State),(key),number, (val))
 #define waxL_pair_ss(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),string, (val));
+  iwaxL_sethashtkey((lua_State),(key),string, (val))
 
 #define waxL_pair_in(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),number, (val));
+  iwaxL_pair((lua_State),integer,(key),number, (val))
 #define waxL_pair_ii(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),integer,(val));
+  iwaxL_pair((lua_State),integer,(key),integer,(val))
 #define waxL_pair_is(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),string, (val));
+  iwaxL_pair((lua_State),integer,(key),string, (val))
 #define waxL_pair_ib(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),boolean,(val));
+  iwaxL_pair((lua_State),integer,(key),boolean,(val))
 
 
 
 /* Creates an userdata metatable and set its functions */
 #if ( LUA_VERSION_NUM < 502 )
-  #define waxL_newuserdata_mt(lua_State, udataname, funcs) \
-    luaL_newmetatable((lua_State), (udataname)); \
-    lua_pushvalue((lua_State), -1); \
-    lua_setfield((lua_State),-2,"__index"); \
-    luaL_register((lua_State) ,NULL, (funcs))
+  #define waxL_newuserdata_mt(lua_State, udataname, funcs) (\
+    luaL_newmetatable((lua_State), (udataname)),            \
+    lua_pushvalue((lua_State), -1),                         \
+    lua_setfield((lua_State),-2,"__index"),                 \
+    luaL_register((lua_State) ,NULL, (funcs))               \
+  )
 #else
-  #define waxL_newuserdata_mt(lua_State, udataname, funcs) \
-    luaL_newmetatable((lua_State), (udataname)); \
-    lua_pushvalue((lua_State), -1); \
-    lua_setfield((lua_State),-2,"__index"); \
-    luaL_setfuncs((lua_State), (funcs), 0);
+  #define waxL_newuserdata_mt(lua_State, udataname, funcs) (\
+    luaL_newmetatable((lua_State), (udataname)),            \
+    lua_pushvalue((lua_State), -1),                         \
+    lua_setfield((lua_State),-2,"__index"),                 \
+    luaL_setfuncs((lua_State), (funcs), 0)                  \
+  )
 #endif
 
 
@@ -100,11 +102,11 @@
   waxL_failnil_m(L, cond, strerror(errno))
 
 
-#define waxL_failboolean_m(lua_State, cond, msg) \
-  if ((cond)) {\
-    lua_pushboolean(lua_State,0); \
+#define waxL_failboolean_m(lua_State, cond, msg)      \
+  if ((cond)) {                                       \
+    lua_pushboolean(lua_State,0);                     \
     lua_pushstring((lua_State), (const char *)(msg)); \
-    return 2; \
+    return 2;                                         \
   }
 
 
@@ -120,7 +122,7 @@
     lua_objlen((lua_State), (index))
 
   #define waxL_export(lua_State, name, luaL_Reg) \
-    luaL_register((lua_State), (name), (luaL_Reg));
+    luaL_register((lua_State), (name), (luaL_Reg))
 #else
   #define waxL_rawlen(lua_State, index) \
     lua_rawlen((lua_State), (index))
@@ -159,13 +161,15 @@
  */
 
 /* For all Lua types */
-#define iwaxL_pair(lua_State, keytype, key, valtype, val) \
-  lua_push ## keytype((lua_State),(key)); \
-  lua_push ## valtype((lua_State),(val)); \
-  lua_settable((lua_State),(-3));
+#define iwaxL_pair(lua_State, ktype, k, vtype, v) (\
+  lua_push ## ktype((lua_State),(k)), \
+  lua_push ## vtype((lua_State),(v)), \
+  lua_settable((lua_State),(-3))      \
+)
 
 /* Only for string keys */
-#define iwaxL_sethashtkey(lua_State, key, valtype, val) \
-  lua_push ## valtype((lua_State),(val)); \
-  lua_setfield(L, -2, key);
+#define iwaxL_sethashtkey(lua_State, k, vtype, v) (\
+  lua_push ## vtype((lua_State),(v)), \
+  lua_setfield(L, -2, k)              \
+)
 
