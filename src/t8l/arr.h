@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #ifndef T8C_ARR_INCLUDED
 #define T8C_ARR_INCLUDED
-typedef struct { size_t len, cap, tsz; } t8c_arr_t;
+typedef struct { size_t len, cap, tsz; } t8l_arr_t;
 
 /*
-/$ t8c_arrnew(ref_type, items) : int 1|0
+/$ t8l_arrnew(ref_type, items) : int 1|0
 // - ref_type : the variable or type used as size reference as in sizeof()
 // - items    : initial number of items allocated in the array
 // - returns 1 or 0 as success.
@@ -22,29 +22,29 @@ typedef struct { size_t len, cap, tsz; } t8c_arr_t;
 // to use this value as it can avoid excessive internal callings to
 // realloc.
 */
-#define t8c_arrnew(t,l) \
-  M_t8c_arrnew(sizeof(t),(size_t)(l))
+#define t8l_arrnew(t,l) \
+  M_t8l_arrnew(sizeof(t),(size_t)(l))
 
 
 /* For inner usage only. The return value can be changed, what is not intended
  * for who uses this library
  */
 
-#define V_t8c_arrmeta(a) (((size_t *)(a)) - 3)
-#define V_t8c_arrlen(a)  (V_t8c_arrmeta(a)[0])
-#define V_t8c_arrcap(a)  (V_t8c_arrmeta(a)[1])
-#define V_t8c_arrtsz(a)  (V_t8c_arrmeta(a)[2])
+#define V_t8l_arrmeta(a) (((size_t *)(a)) - 3)
+#define V_t8l_arrlen(a)  (V_t8l_arrmeta(a)[0])
+#define V_t8l_arrcap(a)  (V_t8l_arrmeta(a)[1])
+#define V_t8l_arrtsz(a)  (V_t8l_arrmeta(a)[2])
 
 
 /*
-/$ t8c_arrlen(array) : size_t
+/$ t8l_arrlen(array) : size_t
 //
 // Get the length of array, i.e., the used items.
 */
-#define t8c_arrlen(a) (0,V_t8c_arrlen(a))
+#define t8l_arrlen(a) (0,V_t8l_arrlen(a))
 
 /*
-/$ t8c_arrcapsz(array,items) : int 1|0
+/$ t8l_arrcapsz(array,items) : int 1|0
 //
 // Check if there is room for new `items` on `array` or try to allocate
 // the needed space. Returns 1 in success (if there is space or it could be
@@ -52,42 +52,42 @@ typedef struct { size_t len, cap, tsz; } t8c_arr_t;
 //
 // On case of error, the error can be retrieved with errno/strerror
 */
-#define t8c_arrcapsz(a,c) \
-  M_t8c_arrcapsz((void *)&(a),(size_t)(c))
+#define t8l_arrcapsz(a,c) \
+  M_t8l_arrcapsz((void *)&(a),(size_t)(c))
 
 /*
-/$ t8c_arrpush(array,value) : int 1|0
+/$ t8l_arrpush(array,value) : int 1|0
 //
 // Adds `value` at the end of `array` returning 1 on success or 0 on false.
 // It internally does the array capacity management.
 //
 // On case of error, the error can be retrieved with errno/strerror
 */
-#define t8c_arrpush(a,v) (              \
-  (V_t8c_arrlen(a)+1 <= V_t8c_arrcap(a) \
-    || t8c_arrcapsz((a),1))             \
-       ? ((a)[V_t8c_arrlen(a)++]=(v),1) \
+#define t8l_arrpush(a,v) (              \
+  (V_t8l_arrlen(a)+1 <= V_t8l_arrcap(a) \
+    || t8l_arrcapsz((a),1))             \
+       ? ((a)[V_t8l_arrlen(a)++]=(v),1) \
        : 0 )
 
 /*
-/$ t8c_arrpop(array,default)
+/$ t8l_arrpop(array,default)
 //
 // Pops the last item of `array`, reducing its length. If the length of array
 // is already 0 returns the specified `default` value.
 */
-#define t8c_arrpop(a,default) ( \
-  (V_t8c_arrlen(a) > 0          \
-    ? (a)[(--V_t8c_arrlen(a))]  \
-    : (default) )
+#define t8l_arrpop(a,default) ( \
+  (V_t8l_arrlen(a) > 0          \
+    ? (a)[(--V_t8l_arrlen(a))]  \
+    : (default) ) )
 
 /*
-/$ t8c_arrfree(array)
+/$ t8l_arrfree(array)
 //
 // Call free to the raw array and sets the pointer to NULL.
 // It only try to free if the pointer is not NULL, so have no risk to
 // double free error.
 */
-#define t8c_arrfree(a) (     \
+#define t8l_arrfree(a) (     \
   (a) == NULL                \
     ? NULL                   \
     : (                      \
@@ -95,16 +95,16 @@ typedef struct { size_t len, cap, tsz; } t8c_arr_t;
       ((a)=NULL) ) )
 
 /*
-/$ t8c_arrclear(array)
+/$ t8l_arrclear(array)
 // Reset the array length to 0. Further pushes and pops will consider the
 // updated length. It keeps the allocation size for subsequent operations.
 // It is useful when you wan't to reuse the array to fill with other values and
 // don't want to engage on the allocation process again.
 // Don't mistake it by the free operation. After you end to use the array
-// you still need to call `t8c_arrfree'.
+// you still need to call `t8l_arrfree'.
 */
-#define t8c_arrclear(a) ( \
-  (V_t8c_arrlen(a) = 0) )
+#define t8l_arrclear(a) ( \
+  (V_t8l_arrlen(a) = 0) )
 
 
 /* GENERIC TYPE FUNCTIONS
@@ -114,7 +114,7 @@ typedef struct { size_t len, cap, tsz; } t8c_arr_t;
  * - make possible to deal with different types (polymorphism)
  */
 
-static void *M_t8c_arrnew(size_t sz, size_t l) {
+static void *M_t8l_arrnew(size_t sz, size_t l) {
   size_t *a = realloc(NULL, (sz*l) + sizeof(size_t) * 3);
   a[0]=0;
   a[1]=l;
@@ -122,24 +122,24 @@ static void *M_t8c_arrnew(size_t sz, size_t l) {
   return (void *) (((size_t *)a)+3);
 }
 
-#define t8c_shct_arrrsz \
-  ((size_t *)(*a)) - 3,(sizeof(size_t) * 3) + (nc * V_t8c_arrtsz(*a))
+#define t8l_shct_arrrsz \
+  ((size_t *)(*a)) - 3,(sizeof(size_t) * 3) + (nc * V_t8l_arrtsz(*a))
 
-static int M_t8c_arrcapsz (void **a, size_t mincap) {
+static int M_t8l_arrcapsz (void **a, size_t mincap) {
   size_t *new;
-  size_t nc = V_t8c_arrcap(*a);
+  size_t nc = V_t8l_arrcap(*a);
 
-  mincap += V_t8c_arrlen(*a);
+  mincap += V_t8l_arrlen(*a);
   while( (nc *= 2) < mincap );
 
-  if (NULL == (new = realloc(t8c_shct_arrrsz))) return 0;
+  if (NULL == (new = realloc(t8l_shct_arrrsz))) return 0;
 
   *a = (void *) (new+3);
-  V_t8c_arrcap(*a) = nc;
+  V_t8l_arrcap(*a) = nc;
 
   return 1;
 }
 
-
-
 #endif /* T8C_ARR_INCLUDED */
+
+/* vim: set fdm=indent fdn=1 ts=2 sts=2 sw=2: */

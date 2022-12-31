@@ -2,7 +2,7 @@
  * A waxing Lua Standard Library
  *
  * Copyright (C) 2022 Thadeu A C de Paula
- * (https://github.com/waxlab/wax)
+ * (https://github.com/w8lab/wax)
  *
  *
  * This header stores macros that simplifies Lua data handling.
@@ -18,46 +18,49 @@
 #include <errno.h>
 
 
+#define Lua static int
+#define LuaReg static const luaL_Reg
+
 /*
- * waxL_pairXY(x,y) add keys to tables where:
+ * w8l_pairXY(x,y) add keys to tables where:
  * X represents the key type and its x value
  * Y represents the content type and its y value,
  *
  * Example Lua     ----->  Example Lume
- * t["hello"]=10           waxL_pair_si(L, "hello","10");
- * t[10] = "hello"         waxL_pair_is(L, 10, "hello");
+ * t["hello"]=10           w8l_pair_si(L, "hello","10");
+ * t[10] = "hello"         w8l_pair_is(L, 10, "hello");
  */
 
-#define waxL_pair_sb(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),boolean,(val))
-#define waxL_pair_si(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),integer,(val))
-#define waxL_pair_sn(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),number, (val))
-#define waxL_pair_ss(lua_State, key, val) \
-  iwaxL_sethashtkey((lua_State),(key),string, (val))
+#define w8l_pair_sb(lua_State, key, val) \
+  iw8l_sethashtkey((lua_State),(key),boolean,(val))
+#define w8l_pair_si(lua_State, key, val) \
+  iw8l_sethashtkey((lua_State),(key),integer,(val))
+#define w8l_pair_sn(lua_State, key, val) \
+  iw8l_sethashtkey((lua_State),(key),number, (val))
+#define w8l_pair_ss(lua_State, key, val) \
+  iw8l_sethashtkey((lua_State),(key),string, (val))
 
-#define waxL_pair_in(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),number, (val))
-#define waxL_pair_ii(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),integer,(val))
-#define waxL_pair_is(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),string, (val))
-#define waxL_pair_ib(lua_State, key, val) \
-  iwaxL_pair((lua_State),integer,(key),boolean,(val))
+#define w8l_pair_in(lua_State, key, val) \
+  iw8l_pair((lua_State),integer,(key),number, (val))
+#define w8l_pair_ii(lua_State, key, val) \
+  iw8l_pair((lua_State),integer,(key),integer,(val))
+#define w8l_pair_is(lua_State, key, val) \
+  iw8l_pair((lua_State),integer,(key),string, (val))
+#define w8l_pair_ib(lua_State, key, val) \
+  iw8l_pair((lua_State),integer,(key),boolean,(val))
 
 
 
 /* Creates an userdata metatable and set its functions */
 #if ( LUA_VERSION_NUM < 502 )
-  #define waxL_newuserdata_mt(lua_State, udataname, funcs) (\
+  #define w8l_newuserdata_mt(lua_State, udataname, funcs) (\
     luaL_newmetatable((lua_State), (udataname)),            \
     lua_pushvalue((lua_State), -1),                         \
     lua_setfield((lua_State),-2,"__index"),                 \
     luaL_register((lua_State) ,NULL, (funcs))               \
   )
 #else
-  #define waxL_newuserdata_mt(lua_State, udataname, funcs) (\
+  #define w8l_newuserdata_mt(lua_State, udataname, funcs) (\
     luaL_newmetatable((lua_State), (udataname)),            \
     lua_pushvalue((lua_State), -1),                         \
     lua_setfield((lua_State),-2,"__index"),                 \
@@ -72,15 +75,15 @@
  * Only can be catched with pcall
  */
 
-#define waxL_error(lua_State, msg) { \
+#define w8l_error(lua_State, msg) { \
   lua_pushstring((lua_State),(msg)); \
   lua_error(lua_State); \
 }
 
 
-#define waxL_assert(lua_State, cond, msg) \
+#define w8l_assert(lua_State, cond, msg) \
   if (!(cond)) { \
-    waxL_error(lua_State, msg); \
+    w8l_error(lua_State, msg); \
   }
 
 
@@ -90,7 +93,7 @@
  * Make function return immediately condition is fullfilled and
  * return default fail values (boolean false or nil)
  */
-#define waxL_failnil_m(lua_State, cond, msg) \
+#define w8l_failnil_m(lua_State, cond, msg) \
   if ((cond)) {\
     lua_pushnil((lua_State)); \
     lua_pushstring((lua_State), (const char *)(msg)); \
@@ -98,11 +101,11 @@
   }
 
 
-#define waxL_failnil(L, cond) \
-  waxL_failnil_m(L, cond, strerror(errno))
+#define w8l_failnil(L, cond) \
+  w8l_failnil_m(L, cond, strerror(errno))
 
 
-#define waxL_failboolean_m(lua_State, cond, msg)      \
+#define w8l_failboolean_m(lua_State, cond, msg)      \
   if ((cond)) {                                       \
     lua_pushboolean(lua_State,0);                     \
     lua_pushstring((lua_State), (const char *)(msg)); \
@@ -110,24 +113,24 @@
   }
 
 
-#define waxL_failboolean(L, cond) \
-  waxL_failboolean_m(L, cond, strerror(errno))
+#define w8l_failboolean(L, cond) \
+  w8l_failboolean_m(L, cond, strerror(errno))
 
 /*
  * POLYFILL MACROS
  * Abstraction over Lua versions
  */
 #if ( LUA_VERSION_NUM < 502 )
-  #define waxL_rawlen(lua_State, index) \
+  #define w8l_rawlen(lua_State, index) \
     lua_objlen((lua_State), (index))
 
-  #define waxL_export(lua_State, name, luaL_Reg) \
+  #define w8l_export(lua_State, name, luaL_Reg) \
     luaL_register((lua_State), (name), (luaL_Reg))
 #else
-  #define waxL_rawlen(lua_State, index) \
+  #define w8l_rawlen(lua_State, index) \
     lua_rawlen((lua_State), (index))
 
-  #define waxL_export(lua_State, name, luaL_Reg) \
+  #define w8l_export(lua_State, name, luaL_Reg) \
     luaL_newlib((lua_State), (luaL_Reg))
 
 #endif
@@ -161,15 +164,16 @@
  */
 
 /* For all Lua types */
-#define iwaxL_pair(lua_State, ktype, k, vtype, v) (\
+#define iw8l_pair(lua_State, ktype, k, vtype, v) (\
   lua_push ## ktype((lua_State),(k)), \
   lua_push ## vtype((lua_State),(v)), \
   lua_settable((lua_State),(-3))      \
 )
 
 /* Only for string keys */
-#define iwaxL_sethashtkey(lua_State, k, vtype, v) (\
+#define iw8l_sethashtkey(lua_State, k, vtype, v) (\
   lua_push ## vtype((lua_State),(v)), \
   lua_setfield(L, -2, k)              \
 )
 
+/* vim: set fdm=indent fdn=1 ts=2 sts=2 sw=2: */
