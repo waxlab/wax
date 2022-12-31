@@ -116,10 +116,18 @@ static int wax_user_groups(lua_State *L) {
     return 1;
   } else {
     int i, gnum = 1;
-    gid_t *gids = malloc(sizeof(*gids) * gnum);
+    gid_t *gids;
+    if ((gids = realloc(NULL,sizeof(*gids) * gnum)) == NULL) {
+      waxL_error(L, strerror(errno));
+    }
 
     if (getgrouplist(pw->pw_name, pw->pw_gid, gids, &gnum) == -1) {
-      gids = realloc(gids, sizeof(*gids) * gnum);
+      gid_t *gids_2 = realloc(gids, sizeof(*gids) * gnum);
+      if (!gids_2) {
+        free(gids);
+        waxL_error(L, strerror(errno));
+      }
+      gids = gids_2;
       getgrouplist(pw->pw_name, pw->pw_gid, gids, &gnum);
     }
 
@@ -127,6 +135,7 @@ static int wax_user_groups(lua_State *L) {
     for (i = 1; i <= gnum; i++) {
       waxL_pair_ii(L, i, gids[i-1]);
     }
+    free(gids);
     return 1;
   }
 }
