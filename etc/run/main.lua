@@ -142,6 +142,14 @@ end
 
 
 function command.sparse()
+  print [[
+
+    Sparse, a semantic parser and static analyzer for C.
+    For info see: https://sparse.docs.kernel.org
+
+  ]]
+
+
   local cmd = table.concat {
     [[ for i in src/*c ; do ]],
       [[echo sparsing "$i" ; ]],

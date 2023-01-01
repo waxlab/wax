@@ -6,7 +6,7 @@
  * (https://github.com/w8lab/wax)
  */
 
-#include "w8l/w8l.h"
+#include "c8l/w8l.h"
 #include <stdlib.h>    /* realpath */
 #include <sys/param.h> /* pmax Posix */
 #include <sys/stat.h>  /* stat */

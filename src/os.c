@@ -6,7 +6,7 @@
  * (https://github.com/w8lab/wax)
  */
 
-#include "w8l/w8l.h"
+#include "c8l/w8l.h"
 #include <stddef.h>
 #include <stdio.h>
 #include "unistd.h"

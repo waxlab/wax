@@ -1,4 +1,4 @@
-# WaxL : C Lua Library Dev
+# Wool : C Lua Library Dev
 
 To use it, include the `waxL/waxL.h` header.
 

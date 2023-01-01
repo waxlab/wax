@@ -6,7 +6,7 @@
  * (https://github.com/w8lab/wax)
  */
 
-#include "w8l/w8l.h"
+#include "c8l/w8l.h"
 #include <stdlib.h>    /* realpath */
 #include <stdio.h>
 #include <string.h>

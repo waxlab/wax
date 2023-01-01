@@ -96,66 +96,65 @@ do
   assert(res[5][2] == '\r\n')
   assert(res[5][3] == '"')
 end
-os.exit(0)
 
---$ wax.csv.records(CsvData [, head: list]) : iterator()
---$ CsvData:records([head: list]) : iterator()
---|
---| Returns an iterator function retrieve csv records as Lua key/value tables.
---|
---| The first CSV record is used by default as field names when using this
---| function and so it is not retrieved by the iterator as a result record.
---|
---| When the optional `head` list of strings is specified, then its values are
---| used as field names and the first CSV record is retrieved as result record
---| like any subsequent record.
---|
---| When a value or header is not found to its counterpart then the value is
---| not added to the retrieved record table.
-do
-  local csv = require 'wax.csv'
-  local file = os.tmpname()
-  local fh = io.open(file, 'w')
-
-  fh:write( table.concat({
-    ' a1,a2,"a 4","a\n4",a5 ',
-    'b1,b2,"b3",b4',
-    '"c1", "c2","c""3","c\n4"'
-  }, "\r\n"))
-  fh:close()
-
-  local csvh = csv.open(file, "r")
-  local res = {}
-
-  print(csvh:records({
-    "ieoeoie",
-  }))
-
-  print("pppppp")
-  for k,v in csvh:records({"oio","eieie"}) do
-    print('K',k,'V',v)
-  end
-
-  print "oioioioioi"
-  os.exit(1)
-end
-
-
---$ CsvData:write(values: list)
---| Writes a list into file respecting the separator. It not checks for the
---| amount of items on the list, so take care on nil values.
-do
-  local fh = csv.open(file,'w')
-  for i,v in pairs(data) do
-    fh:write(v)
-  end
-  fh:close()
-end
-
-
---$ CsvData:close() : boolean
---| Try to close a not closed csvdata handler. It returns true on success or
---| false on an already closed handler
+----$ wax.csv.records(CsvData [, head: list]) : iterator()
+----$ CsvData:records([head: list]) : iterator()
+----|
+----| Returns an iterator function retrieve csv records as Lua key/value tables.
+----|
+----| The first CSV record is used by default as field names when using this
+----| function and so it is not retrieved by the iterator as a result record.
+----|
+----| When the optional `head` list of strings is specified, then its values are
+----| used as field names and the first CSV record is retrieved as result record
+----| like any subsequent record.
+----|
+----| When a value or header is not found to its counterpart then the value is
+----| not added to the retrieved record table.
+--do
+--  local csv = require 'wax.csv'
+--  local file = os.tmpname()
+--  local fh = io.open(file, 'w')
+--
+--  fh:write( table.concat({
+--    ' a1,a2,"a 4","a\n4",a5 ',
+--    'b1,b2,"b3",b4',
+--    '"c1", "c2","c""3","c\n4"'
+--  }, "\r\n"))
+--  fh:close()
+--
+--  local csvh = csv.open(file, "r")
+--  local res = {}
+--
+--  print(csvh:records({
+--    "ieoeoie",
+--  }))
+--
+--  print("pppppp")
+--  for k,v in csvh:records({"oio","eieie"}) do
+--    print('K',k,'V',v)
+--  end
+--
+--  print "oioioioioi"
+--  os.exit(1)
+--end
+--
+--
+----$ CsvData:write(values: list)
+----| Writes a list into file respecting the separator. It not checks for the
+----| amount of items on the list, so take care on nil values.
+--do
+--  local fh = csv.open(file,'w')
+--  for i,v in pairs(data) do
+--    fh:write(v)
+--  end
+--  fh:close()
+--end
+--
+--
+----$ CsvData:close() : boolean
+----| Try to close a not closed csvdata handler. It returns true on success or
+----| false on an already closed handler
 
 
 

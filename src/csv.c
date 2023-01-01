@@ -6,8 +6,8 @@
  * (https://github.com/w8lab/wax)
  */
 
-#include "w8l/w8l.h"
-#include "t8l/arr.h"
+#include "c8l/w8l.h"
+#include "c8l/arr.h"
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -105,7 +105,7 @@ Lua wax_csv_open(lua_State *L) {
   CSV->quo      = lua_isstring(L, 4) ? luaL_checkstring(L, 4)[0] : '"';
   CSV->valloc   = 0;
   CSV->vlen     = 0;
-  CSV->val      = t8l_arrnew(CSV->val,1);
+  CSV->val      = c8l_arrnew(CSV->val,1);
   CSV->keys     = NULL;
   CSV->ended    = 0;
 
@@ -127,7 +127,7 @@ Lua wax_csv_close(lua_State *L) {
     CSV->fp = NULL;
   }
 
-  t8l_arrfree(CSV->val);
+  c8l_arrfree(CSV->val);
 
   lua_pushboolean(L, 1);
   return 1;
@@ -156,7 +156,7 @@ Lua iter_lists(lua_State *L) {
 
   do {
     no_eor = aux_walk(CSV, CSV->sep, CSV->quo);
-    t8l_arrpush(CSV->val,'\0');
+    c8l_arrpush(CSV->val,'\0');
     w8l_pair_is(L, idx++, CSV->val);
   } while (no_eor);
 
@@ -186,7 +186,7 @@ Lua iter_records(lua_State *L) {
 /* Used to reset the file handler on wax.csv.records and wax.csv.lists */
 static int aux_reset(CsvHandler *CSV) {
   if (CSV->fp != NULL) fclose(CSV->fp);
-  if (CSV->keys != NULL) t8l_arrfree(CSV->keys);
+  if (CSV->keys != NULL) c8l_arrfree(CSV->keys);
 
   CSV->fp = fopen(CSV->fname, CSV->mode);
   if (CSV->fp == NULL) return 0;
@@ -202,7 +202,7 @@ static int aux_reset(CsvHandler *CSV) {
 static int aux_walk(CsvHandler *CSV, const char sep, const char quo) {
   register char chr = CSV->chr;
   char *val = CSV->val;
-  t8l_arrclear(val);
+  c8l_arrclear(val);
 
   if (chr == quo ) goto get_quoted_value;
   if (chr == '\0') goto END_RECORD;
@@ -212,7 +212,7 @@ static int aux_walk(CsvHandler *CSV, const char sep, const char quo) {
     if (chr == '\n') goto LF;
     if (chr == '\r') goto CR;
     if (chr == '\0') goto EOV; /* on loop is needed */
-    t8l_arrpush(val,chr);
+    c8l_arrpush(val,chr);
     chr = aux_nextchar(CSV);
     goto simple_value;
 
@@ -220,7 +220,7 @@ static int aux_walk(CsvHandler *CSV, const char sep, const char quo) {
     chr = aux_nextchar(CSV);
     if (chr == '\0') goto END_RECORD;
     if (chr == quo && (chr = aux_nextchar(CSV)) != quo) goto find_delim;
-    t8l_arrpush(val,chr);
+    c8l_arrpush(val,chr);
     goto get_quoted_value;
 
   find_delim:
@@ -244,12 +244,12 @@ static int aux_walk(CsvHandler *CSV, const char sep, const char quo) {
     goto END_RECORD;
 
   END_RECORD: /* Record ends with the this field */
-    t8l_arrpush(val, '\0');
+    c8l_arrpush(val, '\0');
     CSV->val = &val[0];
     return 0;
 
   EOV: /* Field ends but not the record */
-    t8l_arrpush(val, '\0');
+    c8l_arrpush(val, '\0');
     CSV->val = &val[0];
     return 1;
 }
