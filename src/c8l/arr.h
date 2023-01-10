@@ -4,16 +4,28 @@
 //
 // This library provides functions and function like algoriths to
 // create, manage and free dynamic arrays with C.
+//
+// It basically allocates memory for a 3 size_t array plus the amount
+// requested in operations for any specified type.
+//
+// So if you want an array of 5 chars (a string!):
+//
+//             |
+// | 0 | 1 | 2 | 0 | 1 | 2 | 3 | 4 |
+// < meta data | space to store your
+//   in size_t |    data (char *)
+//             |
+//  Hidden     | Exposed to your app
+//
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef C8L_ARR_INCLUDED
 #define C8L_ARR_INCLUDED
-typedef struct { size_t len, cap, tsz; } c8l_arr_t;
 
 /*
-/$ c8l_arrnew(ref_type, items) : int 1|0
+/$ c8l_arrnew(ref_type, items) : ptr | NULL
 // - ref_type : the variable or type used as size reference as in sizeof()
 // - items    : initial number of items allocated in the array
 // - returns 1 or 0 as success.
@@ -30,10 +42,9 @@ typedef struct { size_t len, cap, tsz; } c8l_arr_t;
  * for who uses this library
  */
 
-#define V_c8l_arrmeta(a) (((size_t *)(a)) - 3)
-#define V_c8l_arrlen(a)  (V_c8l_arrmeta(a)[0])
-#define V_c8l_arrcap(a)  (V_c8l_arrmeta(a)[1])
-#define V_c8l_arrtsz(a)  (V_c8l_arrmeta(a)[2])
+#define V_c8l_arrlen(a)  (*(((size_t *)(a)) - 3))
+#define V_c8l_arrcap(a)  (*(((size_t *)(a)) - 2))
+#define V_c8l_arrtsz(a)  (*(((size_t *)(a)) - 1))
 
 
 /*
@@ -41,7 +52,10 @@ typedef struct { size_t len, cap, tsz; } c8l_arr_t;
 //
 // Get the length of array, i.e., the used items.
 */
-#define c8l_arrlen(a) (0,V_c8l_arrlen(a))
+#define c8l_arrlen(a) ((void)NULL,V_c8l_arrlen(a))
+
+
+#define c8l_arrcap(a) ((void)NULL,V_c8l_arrcap(a))
 
 /*
 /$ c8l_arrcapsz(array,items) : int 1|0
@@ -116,6 +130,9 @@ typedef struct { size_t len, cap, tsz; } c8l_arr_t;
 
 static void *M_c8l_arrnew(size_t sz, size_t l) {
   size_t *a = realloc(NULL, (sz*l) + sizeof(size_t) * 3);
+
+  if (a == NULL) return NULL;
+
   a[0]=0;
   a[1]=l;
   a[2]=sz;

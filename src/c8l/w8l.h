@@ -93,11 +93,11 @@
  * Make function return immediately condition is fullfilled and
  * return default fail values (boolean false or nil)
  */
-#define w8l_failnil_m(lua_State, cond, msg) \
-  if ((cond)) {\
-    lua_pushnil((lua_State)); \
+#define w8l_failnil_m(lua_State, cond, msg)           \
+  if ((cond)) {                                       \
+    lua_pushnil((lua_State));                         \
     lua_pushstring((lua_State), (const char *)(msg)); \
-    return 2; \
+    return 2;                                         \
   }
 
 
@@ -105,7 +105,7 @@
   w8l_failnil_m(L, cond, strerror(errno))
 
 
-#define w8l_failboolean_m(lua_State, cond, msg)      \
+#define w8l_failboolean_m(lua_State, cond, msg)       \
   if ((cond)) {                                       \
     lua_pushboolean(lua_State,0);                     \
     lua_pushstring((lua_State), (const char *)(msg)); \
