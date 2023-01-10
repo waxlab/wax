@@ -1,9 +1,10 @@
---| # wax - Wax Lua package core functionalities
+--| # wax
+--| Core functionalities to wax.Wax Lua package core functionalities
 
---| ## Functions
-
+--| Basic require:
+--{
 local wax = require "wax"
-
+--}
 
 --$ wax.similar( t1: any, t2: any ) **
 --| Checks if t1 and t2 have similar contents.

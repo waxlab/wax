@@ -11,7 +11,7 @@ By now, it is fully supported under Linux and the major BSD representants
 (FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
 
 By now you can read a short list of available functions in the
-[Wiki](https://codeberg.org/wax/wax/wiki)
+[Wiki](https://codeberg.org/waxlab/wax/wiki)
 or dive in the full examples within the Lua files inside ./test folder.
 
 In future these tests will be used to generate the full wiki documentation.
@@ -41,10 +41,13 @@ You can [donate](https://liberapay.com/WaxLab/donate) or help us
 reviewing, reporting, testing or coding.
 See contribution [guidelines](contributing.md) for more information.
 
+The main code home is https://codeberg.org/waxlab/wax repository.
+Head there to read about lastest commits, bug reporting or discussions.
+
 
 ## Join Community
 
-Join our channel at Matrix: [https://matrix.to/#/#wax-lua:matrix.org]
+Join our [Matrix channel]([https://matrix.to/#/#wax-lua:matrix.org])
 created basically for announcements and discussions about the future of project.
 
 

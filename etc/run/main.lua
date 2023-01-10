@@ -6,7 +6,7 @@
 --| * docklist   List available Docker confs
 --| * dockrun    Run command on Docker test instance
 --| * docktest   Run Lua deva files through the Docker test instance
---| * docmd      Retrieve list of code signatures in markdown
+--| * howl       Update documentation using howl
 --| * help       Retrieve the list of documented items
 --| * install    Install the rockspec for all Lua versions
 --| * remove     Uninstall the rockspec for all Lua versions
@@ -17,7 +17,7 @@ local command = {}
 local sh = require 'etc.run.sh'
 local config = require 'etc.run.config'
 local luaVersions = {"5.1","5.2","5.3","5.4"}
-local docdir  = "./test"
+local mandir  = "./man"
 local testdir = "./test"
 
 local luabin = {
@@ -107,25 +107,28 @@ function command.clean()
   sh.exec("rm -rf ./tree ./wax ./out ./lua ./luarocks ./lua_modules ./.luarocks")
   sh.exec("rm -rf ./lua ./luarocks ./lua_modules ./.luarocks")
   sh.exec("find ./src -name '*.o' -delete")
+  sh.exec("find ./src -name '*.out' -delete")
 end
 
 
 function command.help()
   cmd = ([[
-    cat $(find %s -name '*.lua') \
-    | grep '\--\$'|cut -d' ' -f2- 2> /dev/null | fzf
-  ]]):format(docdir)
+  { cat $(find %s -name '*.lua') | grep '^\s*\--\$' | cut -d\$ -f2- |cut -d' ' -f2-;
+    cat $(find %s -name '*.md') | grep '######'|cut -d' ' -f2- | tr -d '`';
+  } 2> /dev/null | fzf
+  ]]):format(testdir,mandir)
   os.execute(cmd)
 end
 
 
-function command.docmd()
-  cmd = ([[
-    for i in $(find %s -name '*.lua'); do
-      grep -A1 '^\(--\$\|--| #\)' $i | grep -- '^--'
-    done | sed 's/^--\$\s*\(\([^(]\+\).*\)\s*$/###### \1/g;s/^--[}{|]\?\s*//g;s/^#/\n#/g'
-  ]]):format(docdir)
-  os.execute(cmd)
+function command.howl()
+  print 'Generating wiki...'
+  os.execute 'howl --from ./test --from ./doc --fmt wiki ../wax.wiki'
+  print 'Generating vim help...'
+  os.execute 'howl --from ./test --from ./doc --fmt vim ~/.config/nvim/doc/wax'
+  print 'Updating vim help tags...'
+  os.execute 'nvim --cmd ":helptags ~/.config/nvim/doc\n" --cmd ":q"'
+  print 'Done.'
 end
 
 
@@ -139,6 +142,14 @@ end
 
 
 function command.sparse()
+  print [[
+
+    Sparse, a semantic parser and static analyzer for C.
+    For info see: https://sparse.docs.kernel.org
+
+  ]]
+
+
   local cmd = table.concat {
     [[ for i in src/*c ; do ]],
       [[echo sparsing "$i" ; ]],

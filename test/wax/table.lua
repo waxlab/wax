@@ -1,4 +1,5 @@
---| # wax.table - extension to Lua standard table package
+--| # wax.table
+--| Extends Lua standard library table module..
 local wax = require 'wax'
 wax.table = require 'wax.table'
 

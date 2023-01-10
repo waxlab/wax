@@ -1,4 +1,10 @@
---| # wax.template - Simple Lua embedded strings
+--| # wax.template
+--| Simple Lua templating library using a mix between Lua and Lua comments.
+--|
+--| This library provides a simple way to templating using Lua. It is not the
+--| usual user friendly way you may find on other template engines, but it
+--| reuses the Lua block comments in a way to have the minimal parsing
+--| complexity.
 
 --| ## Basic usage
 do

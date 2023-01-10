@@ -1,5 +1,5 @@
 --| ## wax.user
---| Module with user information
+--| Operating system user handling library.
 --|
 --| Most of time the info retrieved through this module is the same that the
 --| obtained from environment variables (Ex. `os.getenv("USER")`) but consider

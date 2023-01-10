@@ -7,5 +7,6 @@
 /tree
 **/*.o
 **/*.so
+**/*.out
 .ccls*
 
