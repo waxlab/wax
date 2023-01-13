@@ -19,7 +19,15 @@ wax.os = require 'wax.os'
 --| host program when using Lua as a scripting extension.
 do
 --{
-wax.os.exec('bash',{"-c", "ls -la /dev/null > /dev/null 2>&1"} )
+local subproc = io.popen 'echo $PPID'
+local pid = subproc:read() -- Lua pid is the ppid of the child
+subproc:close()
+
+-- When process is replaced the pid's should be the same
+wax.os.exec('bash', {"-c", ('[ "$$" == %q ]'):format(pid)})
+
+-- This block only run if the process couldn't be replaced
+print "Couldn't replace process"
 os.exit(1) -- Will not trigger this error unless wax.os.exec has an error
 --}
 end
