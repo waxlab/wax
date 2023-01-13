@@ -19,17 +19,17 @@
 --| would add overcomplexity to the module while Lua already is simple and
 --| sufficient to make it easy:
 --{
-  local file = os.tmpname()
-  local fh = io.open(file,'w')
+	local file = os.tmpname()
+	local fh = io.open(file,'w')
 
-  local header = '%q,%q,%q,%q,%q\n'
-  local record = '%q,%s,%s,%s,%s\n'
+	local header = '%q,%q,%q,%q,%q\n'
+	local record = '%q,%s,%s,%s,%s\n'
 
-  fh:write (header:format('Planet','Moons','Mass','Aphelion','Perihelion') )
-  fh:write (record:format('Earth', 1, 1.0, 1.01, 0.98))
-  fh:write (record:format('Mars',  2, 0.1, 1.66, 1.38))
-  fh:write (record:format('Venus', 0, 0.8, 0.72, 0.72))
-  fh:close()
+	fh:write (header:format('Planet','Moons','Mass','Aphelion','Perihelion') )
+	fh:write (record:format('Earth', 1, 1.0, 1.01, 0.98))
+	fh:write (record:format('Mars',  2, 0.1, 1.66, 1.38))
+	fh:write (record:format('Venus', 0, 0.8, 0.72, 0.72))
+	fh:close()
 --}
 --| ### Handling CSV files.
 --|
@@ -41,58 +41,58 @@
 --| - Close the handler.
 do
 --{
-  -- Opening the file. Default is `,` as separator and `"` as quoting.
-  local csv = require 'wax.csv'
-  local handler = csv.open(file)
+	-- Opening the file. Default is `,` as separator and `"` as quoting.
+	local csv = require 'wax.csv'
+	local handler = csv.open(file)
 
-  -- Reads each row of CSV as a list (indexed values)
-  local lists = {}
+	-- Reads each row of CSV as a list (indexed values)
+	local lists = {}
 
-  for list in handler:lists() do
-    lists[#lists+1] = list
-  end
+	for list in handler:lists() do
+		lists[#lists+1] = list
+	end
 
-  assert(lists[1][1] == 'Planet' and lists[1][5] == 'Perihelion')
-  assert(lists[2][1] == 'Earth'  and lists[2][4] == '1.01')
-  assert(lists[4][1] == 'Venus'  and lists[4][3] == '0.8')
+	assert(lists[1][1] == 'Planet' and lists[1][5] == 'Perihelion')
+	assert(lists[2][1] == 'Earth'  and lists[2][4] == '1.01')
+	assert(lists[4][1] == 'Venus'  and lists[4][3] == '0.8')
 
-  -- Reads each row of CSV as a record (key/value tables)
-  -- using the first record row as the keys
-  local records = {}
+	-- Reads each row of CSV as a record (key/value tables)
+	-- using the first record row as the keys
+	local records = {}
 
-  for rec in handler:records() do
-    records[#records+1] = rec
-  end
+	for rec in handler:records() do
+		records[#records+1] = rec
+	end
 
-  assert(records[1].Planet == 'Earth')
-  assert(records[2].Planet == 'Mars')
-  assert(records[3].Planet == 'Venus')
+	assert(records[1].Planet == 'Earth')
+	assert(records[2].Planet == 'Mars')
+	assert(records[3].Planet == 'Venus')
 
-  assert(records[1].Perihelion == '0.98')
-  assert(records[2].Perihelion == '1.38')
-  assert(records[3].Perihelion == '0.72')
+	assert(records[1].Perihelion == '0.98')
+	assert(records[2].Perihelion == '1.38')
+	assert(records[3].Perihelion == '0.72')
 
-  -- Reads each row of CSV as a record, but we specify which will be
-  -- the keys of resulting record.
-  local res = {}
-  local headers = {
-    'body','sat','weight','max dist','min dist'
-  }
+	-- Reads each row of CSV as a record, but we specify which will be
+	-- the keys of resulting record.
+	local res = {}
+	local headers = {
+		'body','sat','weight','max dist','min dist'
+	}
 
-  for rec in handler:records(headers) do
-    res[#res+1] = rec
-  end
+	for rec in handler:records(headers) do
+		res[#res+1] = rec
+	end
 
-  assert(res[1].body == 'Planet')
-  assert(res[2].body == 'Earth')
-  assert(res[1]['min dist'] == 'Perihelion')
-  assert(res[2]['min dist'] == '0.98')
+	assert(res[1].body == 'Planet')
+	assert(res[2].body == 'Earth')
+	assert(res[1]['min dist'] == 'Perihelion')
+	assert(res[2]['min dist'] == '0.98')
 
-  -- Finally we close the handler.
-  assert(handler:close() == true)
+	-- Finally we close the handler.
+	assert(handler:close() == true)
 
-  -- But it will give no error trying to close again
-  assert(handler:close() == false)
+	-- But it will give no error trying to close again
+	assert(handler:close() == false)
 --}
 end
 
@@ -108,32 +108,32 @@ end
 --| Example:
 do
 --{
-  -- We create the example file
-  local file = os.tmpname()
-  local fh = io.open(file,'w')
-  local record = '%s\t%s\t%s\n'
+	-- We create the example file
+	local file = os.tmpname()
+	local fh = io.open(file,'w')
+	local record = '%s\t%s\t%s\n'
 
-  fh:write( record:format('Planet','Moons','Nickname') )
-  fh:write( record:format('Earth', 1, '"Blue Marble"') )
-  fh:write( record:format('Mars',  2, '"Morning Star"') )
-  fh:write( record:format('Venus', 0, '"Red Planet"') )
-  fh:close()
+	fh:write( record:format('Planet','Moons','Nickname') )
+	fh:write( record:format('Earth', 1, '"Blue Marble"') )
+	fh:write( record:format('Mars',  2, '"Morning Star"') )
+	fh:write( record:format('Venus', 0, '"Red Planet"') )
+	fh:close()
 
-  -- Now we retrieve the data from the example file
-  local csv = require 'wax.csv'
-  local handler = csv.open(file, '\t','\0')
-  local res = {}
-  for rec in handler:records() do
-    res[#res+1] = rec
-  end
+	-- Now we retrieve the data from the example file
+	local csv = require 'wax.csv'
+	local handler = csv.open(file, '\t','\0')
+	local res = {}
+	for rec in handler:records() do
+		res[#res+1] = rec
+	end
 
-  assert(res[1].Planet   == 'Earth')
-  assert(res[2].Moons    == '2')
-  assert(res[3].Nickname == '"Red Planet"') -- preserved quotes
+	assert(res[1].Planet   == 'Earth')
+	assert(res[2].Moons    == '2')
+	assert(res[3].Nickname == '"Red Planet"') -- preserved quotes
 
-  -- Clean the house...
-  assert(handler:close())
-  os.remove(file)
+	-- Clean the house...
+	assert(handler:close())
+	os.remove(file)
 --}
 end
 
@@ -167,138 +167,138 @@ end
 
 -- SPEC TEST 1: delimiter positions, quoting positions
 do
-  local csv = require 'wax.csv'
-  local file = os.tmpname()
-  local fh = io.open(file, 'w')
-  fh:write( table.concat({
-    --[[ R1 ]] '"a 1",eeeee,"a, 3"," a\n4","a""5"',
-    --[[ R2 ]] ', b2, b"3,b"4",b5 ',
-    --[[ R3 ]] ',,,,',
-    --[[ R4 ]] '"","","","","",""',
-    --[[ R5 ]] '"f\n1","\r\n",""""',
-  },"\r\n").."\r\n" )
-  fh:close()
+	local csv = require 'wax.csv'
+	local file = os.tmpname()
+	local fh = io.open(file, 'w')
+	fh:write( table.concat({
+		--[[ R1 ]] '"a 1",eeeee,"a, 3"," a\n4","a""5"',
+		--[[ R2 ]] ', b2, b"3,b"4",b5 ',
+		--[[ R3 ]] ',,,,',
+		--[[ R4 ]] '"","","","","",""',
+		--[[ R5 ]] '"f\n1","\r\n",""""',
+	},"\r\n").."\r\n" )
+	fh:close()
 
-  local csvh = csv.open(file)
-  local res = {}
-  for list in csvh:lists() do
-    assert(#list > 0)
-    res[#res+1] = list
-  end
-  assert(csvh:close() == true)
+	local csvh = csv.open(file)
+	local res = {}
+	for list in csvh:lists() do
+		assert(#list > 0)
+		res[#res+1] = list
+	end
+	assert(csvh:close() == true)
 
-  os.remove(file)
+	os.remove(file)
 
-  assert(#res == 5, 'number of records')
+	assert(#res == 5, 'number of records')
 
-  -- R1, R2:
-  -- * quoted and simple values,
-  -- * edge whitespaces
-  -- * values with line breaks
-  assert(#res[1] == 5)
-  assert(res[1][1] == 'a 1'  )
-  assert(res[1][2] == 'eeeee')
-  assert(res[1][3] == 'a, 3' )
-  assert(res[1][4] == ' a\n4')
-  assert(res[1][5] == 'a"5'  )
+	-- R1, R2:
+	-- * quoted and simple values,
+	-- * edge whitespaces
+	-- * values with line breaks
+	assert(#res[1] == 5)
+	assert(res[1][1] == 'a 1'  )
+	assert(res[1][2] == 'eeeee')
+	assert(res[1][3] == 'a, 3' )
+	assert(res[1][4] == ' a\n4')
+	assert(res[1][5] == 'a"5'  )
 
-  assert(#res[2] == 5)
-  assert(res[2][1] == ''     )
-  assert(res[2][2] == ' b2'  )
-  assert(res[2][3] == ' b"3' )
-  assert(res[2][4] == 'b"4"' )
-  assert(res[2][5] == 'b5 '  )
+	assert(#res[2] == 5)
+	assert(res[2][1] == ''    )
+	assert(res[2][2] == ' b2' )
+	assert(res[2][3] == ' b"3')
+	assert(res[2][4] == 'b"4"')
+	assert(res[2][5] == 'b5 ' )
 
-  -- R3: empty unquoted values
-  assert(#res[3] == 5)
-  assert(res[3][1] == '')
-  assert(res[3][2] == '')
-  assert(res[3][3] == '')
-  assert(res[3][4] == '')
-  assert(res[3][5] == '')
+	-- R3: empty unquoted values
+	assert(#res[3] == 5)
+	assert(res[3][1] == '')
+	assert(res[3][2] == '')
+	assert(res[3][3] == '')
+	assert(res[3][4] == '')
+	assert(res[3][5] == '')
 
-  -- R4: empty quoted values
-  assert(#res[4] == 6)
-  assert(res[4][1] == '')
-  assert(res[4][2] == '')
-  assert(res[4][3] == '')
-  assert(res[4][4] == '')
-  assert(res[4][5] == '')
-  assert(res[4][6] == '')
+	-- R4: empty quoted values
+	assert(#res[4] == 6)
+	assert(res[4][1] == '')
+	assert(res[4][2] == '')
+	assert(res[4][3] == '')
+	assert(res[4][4] == '')
+	assert(res[4][5] == '')
+	assert(res[4][6] == '')
 
-  -- R5: quoted quotes and quoted breaks
-  assert(#res[5] == 3)
-  assert(res[5][1] == 'f\n1')
-  assert(res[5][2] == '\r\n')
-  assert(res[5][3] == '"')
+	-- R5: quoted quotes and quoted breaks
+	assert(#res[5] == 3)
+	assert(res[5][1] == 'f\n1')
+	assert(res[5][2] == '\r\n')
+	assert(res[5][3] == '"')
 end
 
 -- SPEC TEST 2: different delimiter and quote
 do
-  local csv = require 'wax.csv'
-  local file = os.tmpname()
-  local fh = io.open(file, 'w')
-  fh:write( table.concat({
-    --[[ R1 ]] '%a 1%|eeeee|%a| 3%|% a\n4%|%a%%5%',
-    --[[ R2 ]] '| b2| b%3|b%4%|b5 ',
-    --[[ R3 ]] '||||',
-    --[[ R4 ]] '%%|%%|%%|%%|%%|%%',
-    --[[ R5 ]] '%f\n1%|%\r\n%|%%%%',
-  },"\r\n").."\r\n" )
-  fh:close()
+	local csv = require 'wax.csv'
+	local file = os.tmpname()
+	local fh = io.open(file, 'w')
+	fh:write( table.concat({
+		--[[ R1 ]] '%a 1%|eeeee|%a| 3%|% a\n4%|%a%%5%',
+		--[[ R2 ]] '| b2| b%3|b%4%|b5 ',
+		--[[ R3 ]] '||||',
+		--[[ R4 ]] '%%|%%|%%|%%|%%|%%',
+		--[[ R5 ]] '%f\n1%|%\r\n%|%%%%',
+	},"\r\n").."\r\n" )
+	fh:close()
 
-  local csvh = csv.open(file,'|','%')
-  local res = {}
-  for list in csvh:lists() do
-    assert(#list > 0)
-    res[#res+1] = list
-  end
-  assert(csvh:close() == true)
+	local csvh = csv.open(file,'|','%')
+	local res = {}
+	for list in csvh:lists() do
+		assert(#list > 0)
+		res[#res+1] = list
+	end
+	assert(csvh:close() == true)
 
-  os.remove(file)
+	os.remove(file)
 
-  assert(#res == 5, 'number of records')
+	assert(#res == 5, 'number of records')
 
-  -- R1, R2:
-  -- * quoted and simple values,
-  -- * edge whitespaces
-  -- * values with line breaks
-  assert(#res[1] == 5)
-  assert(res[1][1] == 'a 1'  )
-  assert(res[1][2] == 'eeeee')
-  assert(res[1][3] == 'a| 3' )
-  assert(res[1][4] == ' a\n4')
-  assert(res[1][5] == 'a%5'  )
+	-- R1, R2:
+	-- * quoted and simple values,
+	-- * edge whitespaces
+	-- * values with line breaks
+	assert(#res[1] == 5)
+	assert(res[1][1] == 'a 1'  )
+	assert(res[1][2] == 'eeeee')
+	assert(res[1][3] == 'a| 3' )
+	assert(res[1][4] == ' a\n4')
+	assert(res[1][5] == 'a%5'  )
 
-  assert(#res[2] == 5)
-  assert(res[2][1] == ''     )
-  assert(res[2][2] == ' b2'  )
-  assert(res[2][3] == ' b%3' )
-  assert(res[2][4] == 'b%4%' )
-  assert(res[2][5] == 'b5 '  )
+	assert(#res[2] == 5)
+	assert(res[2][1] == ''    )
+	assert(res[2][2] == ' b2' )
+	assert(res[2][3] == ' b%3')
+	assert(res[2][4] == 'b%4%')
+	assert(res[2][5] == 'b5 ' )
 
-  -- R3: empty unquoted values
-  assert(#res[3] == 5)
-  assert(res[3][1] == '')
-  assert(res[3][2] == '')
-  assert(res[3][3] == '')
-  assert(res[3][4] == '')
-  assert(res[3][5] == '')
+	-- R3: empty unquoted values
+	assert(#res[3] == 5)
+	assert(res[3][1] == '')
+	assert(res[3][2] == '')
+	assert(res[3][3] == '')
+	assert(res[3][4] == '')
+	assert(res[3][5] == '')
 
-  -- R4: empty quoted values
-  assert(#res[4] == 6)
-  assert(res[4][1] == '')
-  assert(res[4][2] == '')
-  assert(res[4][3] == '')
-  assert(res[4][4] == '')
-  assert(res[4][5] == '')
-  assert(res[4][6] == '')
+	-- R4: empty quoted values
+	assert(#res[4] == 6)
+	assert(res[4][1] == '')
+	assert(res[4][2] == '')
+	assert(res[4][3] == '')
+	assert(res[4][4] == '')
+	assert(res[4][5] == '')
+	assert(res[4][6] == '')
 
-  -- R5: quoted quotes and quoted breaks
-  assert(#res[5] == 3)
-  assert(res[5][1] == 'f\n1')
-  assert(res[5][2] == '\r\n')
-  assert(res[5][3] == '%')
+	-- R5: quoted quotes and quoted breaks
+	assert(#res[5] == 3)
+	assert(res[5][1] == 'f\n1')
+	assert(res[5][2] == '\r\n')
+	assert(res[5][3] == '%')
 end
 
 
@@ -328,10 +328,10 @@ end
 --| If the `CsvHandler` is already closed, returns false.
 do
 --{
-  local csv = require 'wax.csv'
-  local handler = csv.open(file)
-  assert(handler:close() == true)
-  assert(handler:close() == false)
+	local csv = require 'wax.csv'
+	local handler = csv.open(file)
+	assert(handler:close() == true)
+	assert(handler:close() == false)
 --}
 end
 

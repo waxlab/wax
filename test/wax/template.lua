@@ -13,9 +13,9 @@ do
 local template = require "wax.template"
 
 local revolutions = {
-  {name = 'Mars',    days=687},
-  {name = 'Jupiter', days=4333},
-  {name = 'Saturn',  days=10759}
+	{name = 'Mars',    days=687},
+	{name = 'Jupiter', days=4333},
+	{name = 'Saturn',  days=10759}
 }
 --}
 
@@ -25,7 +25,7 @@ local revolutions = {
 --{
 local str = {}
 for _,v in ipairs(revolutions) do
-  str[#str+1] = template.format('{{data.name}} year lasts {{data.days}} Earth days.',v)
+	str[#str+1] = template.format('{{data.name}} year lasts {{data.days}} Earth days.',v)
 end
 
 assert(table.concat(str,'\n') == [[
@@ -40,10 +40,10 @@ Saturn year lasts 10759 Earth days.]])
 --{
 local str = {}
 for _,v in ipairs(revolutions) do
-  str[#str+1] = template.format(
-    '{{data.name:upper()}} year = {{string.format("%.1f",(data.days / 365))}} Earth year.'
-    ,v
-  )
+	str[#str+1] = template.format(
+		'{{data.name:upper()}} year = {{string.format("%.1f",(data.days / 365))}} Earth year.'
+		,v
+	)
 end
 
 assert(table.concat(str,'\n') == [[
@@ -68,25 +68,25 @@ do
 local template = require "wax.template"
 
 local revolutions = {
-  {name = 'Mars',    days=687},
-  {name = 'Jupiter', days=4333},
-  {name = 'Saturn',  days=10759}
+	{name = 'Mars',    days=687},
+	{name = 'Jupiter', days=4333},
+	{name = 'Saturn',  days=10759}
 }
 
 local res, err = template.format([=[
 ]] for i,v in ipairs(data) do --[[
-  {{ i }}. {{ v.name }} revolves around the Sun in {{ v.days }} Earth days,
-  (near {{ ('%.2f'):format(v.days/365.26) }} years).
+	{{ i }}. {{ v.name }} revolves around the Sun in {{ v.days }} Earth days,
+	(near {{ ('%.2f'):format(v.days/365.26) }} years).
 ]]
 end]=], revolutions)
 
 assert(res == [[
-  1. Mars revolves around the Sun in 687 Earth days,
-  (near 1.88 years).
-  2. Jupiter revolves around the Sun in 4333 Earth days,
-  (near 11.86 years).
-  3. Saturn revolves around the Sun in 10759 Earth days,
-  (near 29.46 years).
+	1. Mars revolves around the Sun in 687 Earth days,
+	(near 1.88 years).
+	2. Jupiter revolves around the Sun in 4333 Earth days,
+	(near 11.86 years).
+	3. Saturn revolves around the Sun in 10759 Earth days,
+	(near 29.46 years).
 ]])
 
 --}
@@ -106,23 +106,23 @@ local template = require "wax.template"
 -- Default behavior without backfilter: preserve and breaklines and spaces
 local res_default = template.format([[
 XX
-  {{data}}]], 'hi')
+	{{data}}]], 'hi')
 
 assert(res_default == [[
 XX
-  hi]])
+	hi]])
 
 --| Using `**` strips previous white spaces or line breaks
 local greedy = template.format([[
 XX
-  {{**data}}]],'hi')
+	{{**data}}]],'hi')
 assert(greedy == 'XXhi')
 
 --| Using `*` replaces previous white spaces and line breaks
 --| by a single white space
 local elegantgreedy = template.format([[
 XX
-  {{*data}}]],'hi')
+	{{*data}}]],'hi')
 assert(elegantgreedy == 'XX hi')
 
 --| Using `++` strips any previous white spaces
@@ -133,17 +133,17 @@ assert(leftist1 == [[XX
 hi]])
 
 leftist2 = template.format([[
-XX                 {{++data}}]],'hi')
+XX    {{++data}}]],'hi')
 assert(leftist2 == [[XXhi]])
 
 --| * `+` strips all previous spaces on the line if there is no other
 --| word before. If there is a word, replace all spaces by a single one.
 normalizer1 = template.format([[
-XX                 {{+data}}]],'hi')
+XX   {{+data}}]],'hi')
 assert(normalizer1 == [[XX hi]])
 
 normalizer2 = template.format([[
-                 {{+data}}]],'hi')
+    {{+data}}]],'hi')
 assert(normalizer2 == [[hi]])
 
 --}
@@ -212,9 +212,9 @@ do
 local template = require "wax.template"
 
 local bookChapters = {
-  { name = 'Tripping to Proxima Centauri' },
-  { name = 'Has Great Attractor a Black Hole?' },
-  { name = 'To the Shapley Cluster and Beyond' }
+	{ name = 'Tripping to Proxima Centauri' },
+	{ name = 'Has Great Attractor a Black Hole?' },
+	{ name = 'To the Shapley Cluster and Beyond' }
 }
 
 -- Create a template instance from a string
@@ -222,7 +222,7 @@ tpl = template.load[=[
 Index
 =====
 ]] for n, chapter in ipairs(data) do --[[
-  * [{{chapter.name}}]({{slugify(chapter.name)}}.md)
+	* [{{chapter.name}}]({{slugify(chapter.name)}}.md)
 ]] end ]=]
 
 -- Inject on template environment the 'slugify' as a function
@@ -232,9 +232,9 @@ local res = tpl(bookChapters)
 assert(res == [[
 Index
 =====
-  * [Tripping to Proxima Centauri](tripping-to-proxima-centauri.md)
-  * [Has Great Attractor a Black Hole?](has-great-attractor-a-black-hole-.md)
-  * [To the Shapley Cluster and Beyond](to-the-shapley-cluster-and-beyond.md)
+	* [Tripping to Proxima Centauri](tripping-to-proxima-centauri.md)
+	* [Has Great Attractor a Black Hole?](has-great-attractor-a-black-hole-.md)
+	* [To the Shapley Cluster and Beyond](to-the-shapley-cluster-and-beyond.md)
 ]])
 
 --}
@@ -263,29 +263,29 @@ do
 --| 1. There is no `_G` (table representing global values) inside the template
 --| environment. For Lua 5.2+, the `_ENV` contains only the assigned data.
 
-  if luaver >= 5.2 then
-    local res = template.format[=[{{type(_G)}}/{{type(_ENV)}}/{{type(_ENV.data)}}]=]
-    assert(res == 'nil/table/table')
-  end
+	if luaver >= 5.2 then
+		local res = template.format[=[{{type(_G)}}/{{type(_ENV)}}/{{type(_ENV.data)}}]=]
+		assert(res == 'nil/table/table')
+	end
 
-  if luaver == 5.1 then
-    local res = template.format'{{ type(_G) }}/{{ type(_ENV) }}'
-    assert(res == 'nil/nil')
-  end
+	if luaver == 5.1 then
+		local res = template.format'{{ type(_G) }}/{{ type(_ENV) }}'
+		assert(res == 'nil/nil')
+	end
 
 
 --| 2. Variables declared inside template without the `local` keyword do not
 --| affect the outer template scope.
-  local scopex = (template.format']] somevar="x" --[[{{somevar}}')
-  assert(scopex == "x")
-  assert(somevar == nil)
+	local scopex = (template.format']] somevar="x" --[[{{somevar}}')
+	assert(scopex == "x")
+	assert(somevar == nil)
 --}
 end
 
 --| ## Functions
 
 --$ wax.template.format(t: string, data: any) : string
---| Uses the string `t` as  template to apply the values contained in `data`.
+--| Uses the string `t` as	template to apply the values contained in `data`.
 --| Only the default `wax.template` subset of Lua functions are allowed.
 do
 --{
@@ -330,10 +330,8 @@ do
 --{
 local tpl = template.load[[The {{what}} {{thing}} in {{data[1]}} is {{top}} {{data[2]}}]]
 tpl:assign({ what='brightest', thing = 'star', top = 'alpha'})
-assert(tpl({'Virgo','Virginis'})
-  == 'The brightest star in Virgo is alpha Virginis')
-assert(tpl({'Crux','Crucis'})
-  == 'The brightest star in Crux is alpha Crucis')
+assert(tpl({'Virgo','Virginis'}) == 'The brightest star in Virgo is alpha Virginis')
+assert(tpl({'Crux','Crucis'}) == 'The brightest star in Crux is alpha Crucis')
 --}
 end
 

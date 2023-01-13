@@ -11,13 +11,13 @@
 --|
 --| ```
 --| myaibot  find --star --maxmag 9 --cnt vir --cnt leo 1982 09 21 00 15
---|          :..: :....: :........: :.......: :...: :..................:
---|            :     :        :         :       :             :
---| P.cmd = "find"   :        :         :.......:             :
---| P.opt.star = {} ·'        :             :                 :
---| P.opt.maxmag = { "9" } ···'             :                 :
---| P.opt.cnt = { "vir", "leo" } ··..·······'                 :
---| P.arg = { "1982","09","21","00","15" } ···················'
+--|          |__| |____| |________| |_______| |___| |__________________|
+--|            |     |        |          |       |              |
+--| P_cmd = "find"   |        |          |_______|              |
+--| P.opt.star = {} -'        |              |                  |
+--| P.opt.maxmag = { "9" } ---'              |                  |
+--| P.opt.cnt = { "vir", "leo" } ------------'                  |
+--| P.arg = { "1982","09","21","00","15" } ---------------------'
 --| ```
 --|
 --| 1. Option names are prefixed with double hyphen-minus `--`:
@@ -39,8 +39,8 @@ local arglist, result
 
 arglist = {'--op1','v1','--op2','v2a','--op3','--op2','v2b','a1','a2'}
 result = {
-  opt = { op1 = {'v1'}, op2 = {'v2a','v2b'}, op3 = {} },
-  arg = { 'a1','a2' }
+	opt = { op1 = {'v1'}, op2 = {'v2a','v2b'}, op3 = {} },
+	arg = { 'a1','a2' }
 }
 
 assert(wax.similar( argparse(arglist), result ))
@@ -48,8 +48,8 @@ assert(wax.similar( argparse(arglist), result ))
 -- after the first non option assumes the remaining are all arguments
 arglist = {'somevalue','--opt1','--opt2','val2','a1','a2'}
 result = {
-  opt = {},
-  arg = {'somevalue','--opt1','--opt2','val2','a1','a2'}
+	opt = {},
+	arg = {'somevalue','--opt1','--opt2','val2','a1','a2'}
 }
 
 assert(wax.similar( argparse(arglist), result))
