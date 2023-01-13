@@ -35,7 +35,7 @@
 // realloc.
 */
 #define c8l_arrnew(t,l) \
-  M_c8l_arrnew(sizeof(t),(size_t)(l))
+	M_c8l_arrnew(sizeof(t),(size_t)(l))
 
 
 /* For inner usage only. The return value can be changed, what is not intended
@@ -67,7 +67,7 @@
 // On case of error, the error can be retrieved with errno/strerror
 */
 #define c8l_arrcapsz(a,c) \
-  M_c8l_arrcapsz((void *)&(a),(size_t)(c))
+	M_c8l_arrcapsz((void *)&(a),(size_t)(c))
 
 /*
 /$ c8l_arrpush(array,value) : int 1|0
@@ -77,11 +77,10 @@
 //
 // On case of error, the error can be retrieved with errno/strerror
 */
-#define c8l_arrpush(a,v) (              \
-  (V_c8l_arrlen(a)+1 <= V_c8l_arrcap(a) \
-    || c8l_arrcapsz((a),1))             \
-       ? ((a)[V_c8l_arrlen(a)++]=(v),1) \
-       : 0 )
+#define c8l_arrpush(a,v) ( \
+	V_c8l_arrlen(a)+1 <= V_c8l_arrcap(a) || c8l_arrcapsz((a),1) \
+		? ((a)[V_c8l_arrlen(a)++]=(v),1) : 0 \
+)
 
 /*
 /$ c8l_arrpop(array,default)
@@ -90,9 +89,10 @@
 // is already 0 returns the specified `default` value.
 */
 #define c8l_arrpop(a,default) ( \
-  (V_c8l_arrlen(a) > 0          \
-    ? (a)[(--V_c8l_arrlen(a))]  \
-    : (default) ) )
+	V_c8l_arrlen(a) > 0 \
+		? (a)[(--V_c8l_arrlen(a))] \
+		: (default) \
+)
 
 /*
 /$ c8l_arrfree(array)
@@ -102,11 +102,11 @@
 // double free error.
 */
 #define c8l_arrfree(a) (     \
-  (a) == NULL                \
-    ? NULL                   \
-    : (                      \
-      free((size_t *)(a)-3), \
-      ((a)=NULL) ) )
+	(a) == NULL                \
+		? NULL                   \
+		: (                      \
+			free((size_t *)(a)-3), \
+			((a)=NULL) ) )
 
 /*
 /$ c8l_arrclear(array)
@@ -118,7 +118,7 @@
 // you still need to call `c8l_arrfree'.
 */
 #define c8l_arrclear(a) ( \
-  (V_c8l_arrlen(a) = 0) )
+	(V_c8l_arrlen(a) = 0) )
 
 
 /* GENERIC TYPE FUNCTIONS
@@ -129,32 +129,32 @@
  */
 
 static void *M_c8l_arrnew(size_t sz, size_t l) {
-  size_t *a = realloc(NULL, (sz*l) + sizeof(size_t) * 3);
+	size_t *a = realloc(NULL, (sz*l) + sizeof(size_t) * 3);
 
-  if (a == NULL) return NULL;
+	if (a == NULL) return NULL;
 
-  a[0]=0;
-  a[1]=l;
-  a[2]=sz;
-  return (void *) (((size_t *)a)+3);
+	a[0]=0;
+	a[1]=l;
+	a[2]=sz;
+	return (void *) (((size_t *)a)+3);
 }
 
 #define c8l_shct_arrrsz \
-  ((size_t *)(*a)) - 3,(sizeof(size_t) * 3) + (nc * V_c8l_arrtsz(*a))
+	((size_t *)(*a)) - 3,(sizeof(size_t) * 3) + (nc * V_c8l_arrtsz(*a))
 
 static int M_c8l_arrcapsz (void **a, size_t mincap) {
-  size_t *new;
-  size_t nc = V_c8l_arrcap(*a);
+	size_t *new;
+	size_t nc = V_c8l_arrcap(*a);
 
-  mincap += V_c8l_arrlen(*a);
-  while( (nc *= 2) < mincap );
+	mincap += V_c8l_arrlen(*a);
+	while( (nc *= 2) < mincap );
 
-  if (NULL == (new = realloc(c8l_shct_arrrsz))) return 0;
+	if (NULL == (new = realloc(c8l_shct_arrrsz))) return 0;
 
-  *a = (void *) (new+3);
-  V_c8l_arrcap(*a) = nc;
+	*a = (void *) (new+3);
+	V_c8l_arrcap(*a) = nc;
 
-  return 1;
+	return 1;
 }
 
 #endif /* C8L_ARR_INCLUDED */

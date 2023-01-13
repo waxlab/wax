@@ -13,31 +13,31 @@ local outdir = LUA_VERSION and 'out/'..LUA_VERSION or 'out'
 -----------------------------------------------------------
 local _x = os.execute
 local function x(cmd, ...)
-  cmd=cmd:format(...)
-  if DEBUG then print(cmd, ...) end
-  assert(_x(cmd))
+	cmd=cmd:format(...)
+	if DEBUG then print(cmd, ...) end
+	assert(_x(cmd))
 end
 local function isdir(path)
-  local p = io.popen(('file -i %q'):format(path),'r')
-  if p then
-    local mime = p:read('*a')
-    mime = mime:gsub('^[^:]*:%s*',''):gsub('%s*;[^;]*$','')
-    if mime == 'inode/directory' then
-      return true
-    end
-  end
-  return false
+	local p = io.popen(('file -i %q'):format(path),'r')
+	if p then
+		local mime = p:read('*a')
+		mime = mime:gsub('^[^:]*:%s*',''):gsub('%s*;[^;]*$','')
+		if mime == 'inode/directory' then
+			return true
+		end
+	end
+	return false
 end
 
 
 local
 function env(var, def)
-  local val = os.getenv(var)
-  if not val or val:len() < 1 then
-    if not def then error('No env var "'..var..'"',2) end
-    val = def
-  end
-  return val
+	local val = os.getenv(var)
+	if not val or val:len() < 1 then
+		if not def then error('No env var "'..var..'"',2) end
+		val = def
+	end
+	return val
 end
 
 
@@ -47,31 +47,31 @@ end
 -----------------------------------------------------------
 do
 
-  help.install = 'Install the Lua files and compiled binaries and libraries'
-  function make.install ()
-    local verbose = DEBUG and 'v' or ''
-    if isdir('lib') then
-      x( 'cp -rf%s lib/* %q || :', verbose, env('INST_LUADIR') )
-    end
-    if isdir('bin') then
-      x( 'cp -rf%s bin/* %q || :', verbose, env('INST_BINDIR') )
-    end
+	help.install = 'Install the Lua files and compiled binaries and libraries'
+	function make.install ()
+		local verbose = DEBUG and 'v' or ''
+		if isdir('lib') then
+			x( 'cp -rf%s lib/* %q || :', verbose, env('INST_LUADIR') )
+		end
+		if isdir('bin') then
+			x( 'cp -rf%s bin/* %q || :', verbose, env('INST_BINDIR') )
+		end
 
-    if config.clib and #config.clib > 0 then
-      x( 'cp -rf%s %s/lib/* %q', verbose, outdir, env('INST_LIBDIR') )
-    end
+		if config.clib and #config.clib > 0 then
+			x( 'cp -rf%s %s/lib/* %q', verbose, outdir, env('INST_LIBDIR') )
+		end
 
-    if config.cbin and #config.cbin > 0 then
-      x( 'cp -rf%s %s/bin/* %q', verbose, outdir, env('INST_BINDIR') )
-    end
-  end
+		if config.cbin and #config.cbin > 0 then
+			x( 'cp -rf%s %s/bin/* %q', verbose, outdir, env('INST_BINDIR') )
+		end
+	end
 end
 
 -----------------------------------------------------------
 -- CLEAN --------------------------------------------------
 -----------------------------------------------------------
 function make.clean()
-  x('rm -rf ./out* ./tmp ./src/*.o')
+	x('rm -rf ./out* ./tmp ./src/*.o')
 end
 
 
@@ -80,126 +80,126 @@ end
 -- BUILD --------------------------------------------------
 -----------------------------------------------------------
 do
-  local cc = {}
-  function cc.cc(o)
-    return o.cc
-        or env('CC','gcc')
-  end
+	local cc = {}
+	function cc.cc(o)
+		return o.cc
+				or env('CC','gcc')
+	end
 
-  function cc.flags(o)
-    local debug = os.getenv("CC_DEBUG") and ' -g ' or ''
-    local flags
-    if o.flags then
-      if type(o.flags) == 'table'
-        then
-          flags = debug..table.concat(o.flags, ' ')
-        else
-          flags = debug..tostring(o.flags)
-      end
-    else
+	function cc.flags(o)
+		local debug = os.getenv("CC_DEBUG") and ' -g ' or ''
+		local flags
+		if o.flags then
+			if type(o.flags) == 'table'
+				then
+					flags = debug..table.concat(o.flags, ' ')
+				else
+					flags = debug..tostring(o.flags)
+			end
+		else
 
-      flags = env('CFLAGS', debug)
+			flags = env('CFLAGS', debug)
 
-      flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
-           .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
-    end
-    return flags
-  end
-
-
-  function cc.debug(item)
-    return DEBUG and '-g' or ''
-  end
-
-  function cc.src(item)
-    local t, f = {}, nil
-    f = type(item[2]) == 'table' and item[2] or { tostring(item[2]) }
-
-    for i,v in ipairs(f) do
-      if v:find('%.%.')
-        then error(('invalid filename: %q'):format(v))
-      end
-      t[#t+1] = 'src/'..v
-    end
-
-    return table.concat(t,' ')
-  end
+			flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
+					 .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
+		end
+		return flags
+	end
 
 
-  function cc.sharedflag()
-    return env('LIBFLAG', '-shared')
-  end
+	function cc.debug(item)
+		return DEBUG and '-g' or ''
+	end
 
-  function cc.incdir()
-    local incdir = env('LUA_INCDIR',nil)
-    return incdir and '-I'..incdir or ''
-  end
+	function cc.src(item)
+		local t, f = {}, nil
+		f = type(item[2]) == 'table' and item[2] or { tostring(item[2]) }
 
+		for i,v in ipairs(f) do
+			if v:find('%.%.')
+				then error(('invalid filename: %q'):format(v))
+			end
+			t[#t+1] = 'src/'..v
+		end
 
-  function cc.srcout(item)
-    if item:find('%.%.') then
-      error(('invalid filename: %q'):format(item))
-    end
-    return table.concat {
-      ' -c src/',item,
-      ' -o src/',(item:gsub('[^.]+$',OBJ_EXTENSION))
-    }
-  end
-
-  function cc.libout(item)
-    local path = outdir..'/lib/'..item[1]:gsub('%.','/') -- 'wax.x' to 'wax/x'
-    x('mkdir -p %q', path:gsub('/[^/]*$',''))
-    local libfile = path..'.'..LIB_EXTENSION
-    return libfile;
-  end
-
-  -- adds test flags, to enforce code standard on development
-  function cc.tflags()
-    return os.getenv('WAXTFLAG') and '-std=gnu89' or ''
-  end
-
-  function cc.binout(o) return outdir..'/bin/'..o[1] end
+		return table.concat(t,' ')
+	end
 
 
-  local
-  function clib(config)
-    local cmd_obj   = '@cc @debug @tflags @flags @incdir @srcout'
-    local cmd_shobj = '@cc @tflags @sharedflag -o @libout @src'
-    if config.clib and #config.clib > 0 then
-      x('mkdir -p %s/lib', outdir)
-      for _,item in ipairs(config.clib) do
-        if not SINGLE_MODULE or SINGLE_MODULE == item[1] then
-          for s, src in ipairs(item[2]) do
-            -- compile each .c to .o
-            x((cmd_obj:gsub('@(%w+)', function(p) return cc[p](src) end)))
-            -- replace the name from .c to .o
-            item[2][s] = src:gsub('[^.]$',OBJ_EXTENSION)
-          end
-          x((cmd_shobj:gsub('@(%w+)',function(p) return cc[p](item) end)))
-          if SINGLE_MODULE then return true end
-        end
-      end
-      if SINGLE_MODULE then return false end
-    end
-    return true
-  end
+	function cc.sharedflag()
+		return env('LIBFLAG', '-shared')
+	end
 
-  local
-  function cbin(config)
-    local cmd = '@cc @debug @incdir @flags @src -o @binout'
-    if config.cbin and #config.cbin > 0 then
-      x('mkdir -p %s/bin', outdir)
-      for _,o in ipairs(config.cbin) do
-        x((cmd:gsub('@(%w+)',function(p) return cc[p](o) end)))
-      end
-    end
-  end
+	function cc.incdir()
+		local incdir = env('LUA_INCDIR',nil)
+		return incdir and '-I'..incdir or ''
+	end
 
-  help.build = "Compile C code"
-  function make.build ()
-    if not clib(config) then print('MODULE NOT FOUND') os.exit(1) end
-    cbin(config)
-  end
+
+	function cc.srcout(item)
+		if item:find('%.%.') then
+			error(('invalid filename: %q'):format(item))
+		end
+		return table.concat {
+			' -c src/',item,
+			' -o src/',(item:gsub('[^.]+$',OBJ_EXTENSION))
+		}
+	end
+
+	function cc.libout(item)
+		local path = outdir..'/lib/'..item[1]:gsub('%.','/') -- 'wax.x' to 'wax/x'
+		x('mkdir -p %q', path:gsub('/[^/]*$',''))
+		local libfile = path..'.'..LIB_EXTENSION
+		return libfile;
+	end
+
+	-- adds test flags, to enforce code standard on development
+	function cc.tflags()
+		return os.getenv('WAXTFLAG') and '-std=gnu89' or ''
+	end
+
+	function cc.binout(o) return outdir..'/bin/'..o[1] end
+
+
+	local
+	function clib(config)
+		local cmd_obj   = '@cc @debug @tflags @flags @incdir @srcout'
+		local cmd_shobj = '@cc @tflags @sharedflag -o @libout @src'
+		if config.clib and #config.clib > 0 then
+			x('mkdir -p %s/lib', outdir)
+			for _,item in ipairs(config.clib) do
+				if not SINGLE_MODULE or SINGLE_MODULE == item[1] then
+					for s, src in ipairs(item[2]) do
+						-- compile each .c to .o
+						x((cmd_obj:gsub('@(%w+)', function(p) return cc[p](src) end)))
+						-- replace the name from .c to .o
+						item[2][s] = src:gsub('[^.]$',OBJ_EXTENSION)
+					end
+					x((cmd_shobj:gsub('@(%w+)',function(p) return cc[p](item) end)))
+					if SINGLE_MODULE then return true end
+				end
+			end
+			if SINGLE_MODULE then return false end
+		end
+		return true
+	end
+
+	local
+	function cbin(config)
+		local cmd = '@cc @debug @incdir @flags @src -o @binout'
+		if config.cbin and #config.cbin > 0 then
+			x('mkdir -p %s/bin', outdir)
+			for _,o in ipairs(config.cbin) do
+				x((cmd:gsub('@(%w+)',function(p) return cc[p](o) end)))
+			end
+		end
+	end
+
+	help.build = "Compile C code"
+	function make.build ()
+		if not clib(config) then print('MODULE NOT FOUND') os.exit(1) end
+		cbin(config)
+	end
 end
 
 
@@ -208,8 +208,8 @@ end
 -----------------------------------------------------------
 
 if not make[arg[1]] then
-  print('You need to use this script with one of the follow:')
-  for cmd,_ in pairs(make) do print(cmd, help[cmd]) end
+	print('You need to use this script with one of the follow:')
+	for cmd,_ in pairs(make) do print(cmd, help[cmd]) end
 else
-  make[arg[1]]()
+	make[arg[1]]()
 end

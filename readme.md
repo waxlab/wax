@@ -80,15 +80,15 @@ needed are found under the assets folder.
 
 To list available dockerfiles:
 
-    `lua ./run dbuild`
+	`lua ./run dbuild`
 
 To run the tests under the docker instance:
 
-    `lua ./run dtest`
+	`lua ./run dtest`
 
 To enter on docker and test:
 
-    `lua ./run drun`
+	`lua ./run drun`
 
 Observe than `./run drun` expects that the instance has bash installed.
 
@@ -98,12 +98,12 @@ Observe than `./run drun` expects that the instance has bash installed.
 To see a list of functions in all modules of Wax package, you can clone this
 repository and execute the script at its root directory:
 
-    ./run help
+	./run help
 
 Also there is a simple navigation tool as script. To run it you need bash, fzf,
 grep and sed. Like before, head to the root directory of the wax and execute:
 
-    ./view
+	./view
 
 Then you can filter while previewing the help and tests for the functions.
 

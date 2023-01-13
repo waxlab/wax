@@ -73,14 +73,24 @@ to know which Lua versions should be supported.
 
 For C and Lua files our coding style uses:
 
-* `2` spaces for indentation
 
 * `80` column wide
+
+* Tab for indentation - You should be smart enough to know how to use tabs
+as indentation and how to align things around with spaces instead of tabs.
+If not, it's always a good time to get smarter.
 
 * C curly braces opening `{` should be kept in the line where expression or
 function name is declared.
 
+* Function body should never have more than one empty line.
+
+* Between functions (function with bodies, not declaration only) should
+always to have at least two empty lines.
+
 These very simple rules make C more accessible and simple to read by who is
 accostumed with other languages while also keeping code short for use in
 different screens, from mobile to desktop and easy to open side by side in
-different editors from Nano or Notepads to Vim or VSCode.
+different editors leaving to reader to choose how many spaces a indentation
+level should be presented.
+	

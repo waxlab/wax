@@ -15,8 +15,8 @@ that it is a explanation on a prefix.
 ###### `waxL_export(lua_State *L, char *name, luaL_Reg *register)`
 
 Register module functions.
-  - Lua 5.1 : `luaL_register`
-  - Lua 5.2+: `luaL_newlib`
+	- Lua 5.1 : `luaL_register`
+	- Lua 5.2+: `luaL_newlib`
 
 
 ###### `waxL_assert(lua_State *L, condition, char *msg)`
