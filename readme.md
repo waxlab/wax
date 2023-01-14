@@ -17,6 +17,26 @@ or dive in the full examples within the Lua files inside ./test folder.
 In future these tests will be used to generate the full wiki documentation.
 
 
+## Why Wax?
+
+It is common to refer to the "Waxing Moon" phase. Wax is the word usually used
+astronomically for every celestial body that "looks like growing".
+
+The Wax library intends to reveal the Lua language face as general purpose
+language, adding modules that intends to be small, specific, and follow the
+Lua simplicity, while being well documented and not enforcing unneeded
+paradigms.
+
+As a "waxing" project, it wants to grow, without never be "full" or "fool"
+with redundancies or many ways to do the same thing.
+
+Have a centered place to the basic modules helps the packaging, distribution
+and the homogeinity on documentation. Also being a project planned to work on
+all most used and newer Lua versions (from 5.1 to 5.4) it allows the easiness
+to use the same api for repl, system, plugins and any other software that embeds
+Lua and allows it to require a external module.
+
+
 ## Quickstart
 
 luarocks install wax
