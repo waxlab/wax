@@ -86,7 +86,15 @@ do
 				or env('CC','gcc')
 	end
 
-	function cc.flags(o)
+	-- lflags      = link flags
+	-- tflags      = testing flags to enforce code standards
+	-- sharedflags = shared object flags
+	function cc.tflags() return os.getenv('WAXTFLAG') and '-std=gnu89' or '' end
+	function cc.lflags(item) return item.lflags or '' end
+	function cc.sharedflag() return env('LIBFLAG', '-shared') end
+
+	-- Compilation flags
+	function cc.cflags(o)
 		local debug = os.getenv("CC_DEBUG") and ' -g ' or ''
 		local flags
 		if o.flags then
@@ -97,23 +105,19 @@ do
 					flags = debug..tostring(o.flags)
 			end
 		else
-
 			flags = env('CFLAGS', debug)
-
 			flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
 					 .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
 		end
 		return flags
 	end
 
+	function cc.debug(item) return DEBUG and '-g' or '' end
 
-	function cc.debug(item)
-		return DEBUG and '-g' or ''
-	end
 
 	function cc.src(item)
 		local t, f = {}, nil
-		f = type(item[2]) == 'table' and item[2] or { tostring(item[2]) }
+		f = type(item.src) == 'table' and item.src or { tostring(item.src) }
 
 		for i,v in ipairs(f) do
 			if v:find('%.%.')
@@ -125,10 +129,6 @@ do
 		return table.concat(t,' ')
 	end
 
-
-	function cc.sharedflag()
-		return env('LIBFLAG', '-shared')
-	end
 
 	function cc.incdir()
 		local incdir = env('LUA_INCDIR',nil)
@@ -147,15 +147,10 @@ do
 	end
 
 	function cc.libout(item)
-		local path = outdir..'/lib/'..item[1]:gsub('%.','/') -- 'wax.x' to 'wax/x'
+		local path = outdir..'/lib/'..item.mod:gsub('%.','/') -- 'wax.x' to 'wax/x'
 		x('mkdir -p %q', path:gsub('/[^/]*$',''))
 		local libfile = path..'.'..LIB_EXTENSION
 		return libfile;
-	end
-
-	-- adds test flags, to enforce code standard on development
-	function cc.tflags()
-		return os.getenv('WAXTFLAG') and '-std=gnu89' or ''
 	end
 
 	function cc.binout(o) return outdir..'/bin/'..o[1] end
@@ -163,24 +158,28 @@ do
 
 	local
 	function clib(config)
-		local cmd_obj   = '@cc @debug @tflags @flags @incdir @srcout'
-		local cmd_shobj = '@cc @tflags @sharedflag -o @libout @src'
-		if config.clib and #config.clib > 0 then
+		local cmd_obj   = '@cc @debug @tflags @cflags @incdir @srcout'
+		local cmd_shobj = '@cc @tflags @sharedflag -o @libout @src @lflags'
+
+		if config.clib then
 			x('mkdir -p %s/lib', outdir)
+
 			for _,item in ipairs(config.clib) do
-				if not SINGLE_MODULE or SINGLE_MODULE == item[1] then
-					for s, src in ipairs(item[2]) do
+				if not SINGLE_MODULE or SINGLE_MODULE == item.mod then
+					for s, src in ipairs(item.src) do
 						-- compile each .c to .o
 						x((cmd_obj:gsub('@(%w+)', function(p) return cc[p](src) end)))
 						-- replace the name from .c to .o
-						item[2][s] = src:gsub('[^.]$',OBJ_EXTENSION)
+						item.src[s] = src:gsub('[^.]$',OBJ_EXTENSION)
 					end
 					x((cmd_shobj:gsub('@(%w+)',function(p) return cc[p](item) end)))
 					if SINGLE_MODULE then return true end
 				end
 			end
+
 			if SINGLE_MODULE then return false end
 		end
+
 		return true
 	end
 

@@ -614,12 +614,11 @@ do
 end
 
 
---$ wax.fs.list(directory: string) : iterator, userdata
---| Open an iterator to list for filesystem entries inside
---| the specified directory.
+--$ wax.fs.list(directory: string) : function
+--| List for filesystem entries inside the specified directory.
+--| It retuns a function that can be used to retrieve a file per call.
 do
 --{
-
 	--| Example 1: Basic usage
 	if fs.isdir("/") then
 		for entry in fs.list("/") do
@@ -630,9 +629,8 @@ do
 
 	--| Example 2: What fs.list() returns?
 	if fs.isdir("/") then
-		local iter, data = fs.list("/")
+		local iter = fs.list("/")
 		assert(type(iter) == "function")
-		assert(type(data) == "userdata")
 	end
 
 	--| Example 3: Root directory should have more than one entry
@@ -660,8 +658,11 @@ do
 --}
 end
 
---$ wax.fs.listex(pathexp: string) : function, userdata
---| List for filesystem entries using word expansions
+
+--$ wax.fs.glob(pathexp: string) : function
+--| List for filesystem entries using word expansions.
+--| The resulting function is an iterator that retrieves
+--| a path per call.
 do
 --| The usage is very similar of shell `ls` command.
 --| Don't be confused with Lua patterns or RegExps.
@@ -681,32 +682,31 @@ do
 
 	--| Example 1.
 	--| Basic usage
-	for matched in fs.listex("/*") do
+	for matched in fs.glob("/*") do
 		-- do something with the matched
 		assert(type(matched) == "string")
 	end
 
 	--| Example 2.
-	--| What fs.listex() returns?
-	local func, data = fs.listex('/*')
+	--| What fs.glob() returns?
+	local func = fs.glob('/*')
 	assert(type(func) == "function")
-	assert(type(data) == "userdata")
 
 	--| Example 3.
-	--| If the path doesn't exists listex() doesnt throws
+	--| If the path doesn't exists glob() doesnt throws
 	local count = 0
-	for _ in fs.listex('/some/inexistent/path/*/*/*/*') do
+	for _ in fs.glob('/some/inexistent/path/*/*/*/*') do
 		count = count + 1
 	end
 	assert(count == 0)
 
 	--| Example 4.
-	--| `fs.listex()` always returns the entire path matched for entries.
+	--| `fs.glob()` always returns the entire path matched for entries.
 	--| So if you search "../something/*" and there are matches, all the entries
 	--| will have the "../something" as its prefix.
 	local queries = { "./*", "../*", "/b*" }
 	for _, query in ipairs(queries) do
-		for entry in fs.listex(query) do
+		for entry in fs.glob(query) do
 			assert( entry:sub(1,2) == query:sub(1,2) )
 		end
 	end
@@ -714,11 +714,11 @@ do
 	--| Observe that unlike `fs.list()` we didn't check if directory exists or
 	--| if we have permission to access it. This relaxed nature allows you to
 	--| use it for searching files and do things if some path is found. In fact
-	--| `fs.listex()` is more like a "filter" counterpart of `fs.list()` that
+	--| `fs.glob()` is more like a "filter" counterpart of `fs.list()` that
 	--| can return zero or more entries.
 	--|
 	--| You are encouraged to develop yourself your test strategy if needed
-	--| before call `fs.listex()`.
+	--| before call `fs.glob()`.
 
 --}
 end
@@ -834,5 +834,9 @@ do
 --{
 	assert(fs.isblockdev("/dev/sda"))
 --}
+
+
+--$ wax.fs.listex()
+--| Deprecated. Use `fs.glob()` instead.
 end
 

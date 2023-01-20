@@ -139,7 +139,7 @@ end
 
 --| ## Module Reference
 
---$ wax.csv.open(file [,sep, quo:string]) : CsvHandler | (nil, string)
+--$ wax.csv.open(file [,sep, quo:string]) : waxCsv | (nil, string)
 --| Open a CSV file and returns its handler.
 --|
 --| There are two optional parameters:
@@ -149,16 +149,16 @@ end
 --| Once you call this function all subsequent functions on the handler will
 --| respect the choosen separator `sep` and quoting `quo`.
 --|
---| This function returns `CsvHandler` userdata on success, or `nil` and a
+--| This function returns `waxCsv` userdata on success, or `nil` and a
 --| descriptive message on error.
 --| See `wax.csv.lists()`, `wax.csv.records()` for examples.
 
 
---$ wax.csv.lists( CsvHandler ) : iterator()
---$ CsvHandler:lists() : iterator()
+--$ wax.csv.lists( waxCsv ) : iterator()
+--$ waxCsv:lists() : iterator()
 --| Returns an iterator that retrieves each csv line as a list of values.
 --|
---| Each time you call this function in an opened CsvHandler the file is
+--| Each time you call this function in an opened waxCsv the file is
 --| reopened and position set at its beginning.
 --|
 --| It provides a flexible way to get values when CSV has different number of
@@ -304,8 +304,8 @@ end
 
 
 
---$ wax.csv.records(CsvHandler [, head: list]) : iterator()
---$ CsvHandler:records([head: list]) : iterator()
+--$ wax.csv.records(waxCsv [, head: list]) : iterator()
+--$ waxCsv:records([head: list]) : iterator()
 --|
 --| Returns an iterator function to retrieve csv records as Lua key/value tables
 --|
@@ -319,13 +319,13 @@ end
 --| When a value or header is not found to its counterpart then the value is
 --| not added to the retrieved record table.
 --|
---| Like `wax.csv.lists` each time this function is called against CsvHandler,
+--| Like `wax.csv.lists` each time this function is called against waxCsv,
 --| this userdata will be reset and the file reopened.
 
---$ wax.csv.close( CsvHandler )
---$ CsvHandler:close() : boolean
---| Close a opened `CsvHandler` and returns true.
---| If the `CsvHandler` is already closed, returns false.
+--$ wax.csv.close( waxCsv )
+--$ waxCsv:close() : boolean
+--| Close a opened `waxCsv` and returns true.
+--| If the `waxCsv` is already closed, returns false.
 do
 --{
 	local csv = require 'wax.csv'

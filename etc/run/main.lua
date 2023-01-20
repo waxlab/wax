@@ -149,12 +149,29 @@ function command.sparse()
 
 	]]
 
+	local conf = {
+		std = 'gnu89',
+		file = 'src/*.c'
+	}
+	if arg[2] == 'help' then
+		print [[
+		help       print this help
+		--file=X   sparse only X (default *)
+		--std=X    use C standard X (default gnu89)
+		]]
+	end
+	for i=2, 4, 1 do
+		if arg[i] then
+			local c,v = arg[i]:match('%-%-(%w+)=(.+)')
+			if c and v then conf[c]=v end
+		end
+	end
 
 	local cmd = table.concat {
-		[[ for i in src/*c ; do ]],
-			[[echo sparsing "$i" ; ]],
-			[[sparse -Wsparse-error ]],
-				[[ -std=gnu89 ]],
+		(' for i in %s; do '):format( conf.file ),
+			[[ echo sparsing "$i" ; ]],
+			[[ sparse -Wsparse-error ]],
+				('-std=%s'):format( conf.std ),
 				[[ -Wno-declaration-after-statement ]],
 				[[ -Wsparse-all ]],
 				[[ -I/usr/include/lua%s ]],
