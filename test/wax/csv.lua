@@ -1,4 +1,6 @@
 --| # wax.csv
+--| CSV format handling.
+--|
 --| CSV reader. Reads CSV data in the Lua lists format or as records using
 --| iterators.
 --|
@@ -139,7 +141,7 @@ end
 
 --| ## Module Reference
 
---$ wax.csv.open(file [,sep, quo:string]) : waxCsv | (nil, string)
+--$ csv.open(file [,sep, quo:string]) : waxCsv | (nil, string)
 --| Open a CSV file and returns its handler.
 --|
 --| There are two optional parameters:
@@ -154,7 +156,7 @@ end
 --| See `wax.csv.lists()`, `wax.csv.records()` for examples.
 
 
---$ wax.csv.lists( waxCsv ) : iterator()
+--$ csv.lists( waxCsv ) : iterator()
 --$ waxCsv:lists() : iterator()
 --| Returns an iterator that retrieves each csv line as a list of values.
 --|
@@ -302,9 +304,7 @@ do
 end
 
 
-
-
---$ wax.csv.records(waxCsv [, head: list]) : iterator()
+--$ csv.records(waxCsv [, head: list]) : iterator()
 --$ waxCsv:records([head: list]) : iterator()
 --|
 --| Returns an iterator function to retrieve csv records as Lua key/value tables
@@ -322,7 +322,8 @@ end
 --| Like `wax.csv.lists` each time this function is called against waxCsv,
 --| this userdata will be reset and the file reopened.
 
---$ wax.csv.close( waxCsv )
+
+--$ csv.close( waxCsv )
 --$ waxCsv:close() : boolean
 --| Close a opened `waxCsv` and returns true.
 --| If the `waxCsv` is already closed, returns false.

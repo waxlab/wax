@@ -1,12 +1,11 @@
 --| # wax.json
 --| Create and parse JSON file to/from Lua tables.
-
 --{
 local json = require 'wax.json'
 --}
 
 
---$ wax.json.encode( t: {} ) : string
+--$ json.encode( t: {} ) : string
 --| Convert the table `t` into a JSON string.
 do
 
@@ -15,12 +14,12 @@ assert( res == '[10,true,{"a":"hi"},null,null]')
 
 end
 
---$ wax.json.decode( jsonstr: string) : table
+--$ json.decode( jsonstr: string) : table
 --| Convert the `jsonstr` string into a Lua table.
-do
---{
 --| Every non array or object is converted to respective Lua
 --| counterpart:
+do
+--{
 assert(json.decode[["hi"]] == "hi")
 assert(json.decode[[null]] == json.null)
 assert(json.decode[[10.9]] == 10.9)

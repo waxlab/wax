@@ -1,5 +1,5 @@
 --| # wax.sql
---| Simple SQLite3 driver for Lua
+--| Simple SQLite3 driver for Lua.
 
 --| ## Basic Usage
 os.execute 'rm -rf /tmp/solarsystem.db'

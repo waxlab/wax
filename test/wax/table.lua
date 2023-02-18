@@ -1,9 +1,12 @@
 --| # wax.table
---| Extends Lua standard library table module..
-local wax = require 'wax'
-wax.table = require 'wax.table'
+--| Extends Lua standard library table module.
 
---$ wax.table.tostring(t: table) : string
+--| Basic usage:
+--{
+local tbl = require 'wax.table'
+--}
+
+--$ table.tostring(t: table) : string
 --| Serialize a table to a string, stripping functions and userdata.
 do
 --| Ex: `{a="A","word"}` becomes `"{\"word\",a=\"A\"}"`
@@ -15,8 +18,9 @@ local t = {
 	[{2,4,6}] = true,
 	d = function() end
 }
-local str = wax.table.tostring(t)
-local res = wax.load('return '..str)()
+local str = tbl.tostring(t)
+local load = require 'wax.compat'.load
+local res = load('return '..str)()
 assert(res)
 assert(res[1] == 'fst')
 assert(res[2][1] == 30 and res[2][2] == 40)
@@ -34,7 +38,7 @@ end
 --}
 end
 
---$ wax.table.tochunk(t: table) : string
+--$ table.tochunk(t: table) : string
 --| Convert a table to a string as if were a chunk of a Lua code.
 do
 --| The first level of the table become a declaration without the `local`
@@ -49,9 +53,10 @@ local t = {
 	[{2,4,6}] = true,
 	c = function() end
 }
-local str = wax.table.tochunk(t)
+local str = tbl.tochunk(t)
+local load = require 'wax.compat'.load
 local res = {}
-wax.load(str,res)()
+load(str,res)()
 assert(res.a == "A" and res.b == "B")
 assert(res[1] == nil)
 assert(res[true] == nil and res["a b"] == nil)

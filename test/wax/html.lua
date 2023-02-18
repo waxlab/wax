@@ -1,8 +1,9 @@
---| # wax.html - HTML handling
+--| # wax.html
+--| HTML utilities.
 
 local html = require 'wax.html'
 
---$ wax.html.encode( text: string) : string
+--$ html.encode( text: string) : string
 --| Encode html special symbols found in text to html entities
 do
 --{
@@ -14,7 +15,7 @@ do
 end
 
 
---$ wax.html.decode( html: string) : string
+--$ html.decode( html: string) : string
 --| Decode html special symbols found in text to plain representation
 do
 --{

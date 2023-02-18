@@ -1,6 +1,8 @@
 --| # wax.fs
+--| File and directory management on filesystem.
+--|
 --| Filesystem handling library to list, create, remove, set and get
---| permissions of files and directorie.
+--| permissions of files and directories.
 
 --| ## Basic usage
 --{
@@ -28,7 +30,7 @@ end
 --| ## Constants
 --|
 
---$ wax.fs.dirsep : string
+--$ fs.dirsep : string
 --| Directory separator, that can change accordingly to the system.
 --| * BSD, Linux etc.: `"/"` (slash)
 --| * Windows:         `"\"` (backslash)
@@ -43,7 +45,7 @@ end
 --| ## Path handling
 --|
 
---$ wax.fs.realpath( path: string ) : string | (nil, string)
+--$ fs.realpath( path: string ) : string | (nil, string)
 --| Resolves the realpath of the `path` and returns true.
 --| When not possible, returns false and a descriptive string.
 do
@@ -56,7 +58,7 @@ do
 --}
 end
 
---$ wax.fs.dirname(path: string) : string
+--$ fs.dirname(path: string) : string
 --| Get the dir part of the path and return it.
 do
 --{
@@ -69,7 +71,7 @@ do
 --}
 end
 
---$ wax.fs.basename(path: string) : string
+--$ fs.basename(path: string) : string
 --| Get the filename part of the path and return it.
 do
 --{
@@ -82,7 +84,7 @@ do
 --}
 end
 
---$ wax.fs.buildpath(dir1 ... dirN: string) : string
+--$ fs.buildpath(dir1 ... dirN: string) : string
 --| Receives a variable number of strings and builds a path from it
 do
 --| Basic Usage:
@@ -121,7 +123,7 @@ do
 --}
 end
 
---$ wax.fs.stat(path: string) : table | (nil, string)
+--$ fs.stat(path: string) : table | (nil, string)
 --| Get information about path status
 do
 --| Usage example
@@ -155,7 +157,7 @@ do
 	assert(res.mtimens >= 0)   -- nanoseconds part of mtime
 --}
 
-	--| Another example with the user home dir
+--| Another example with the user home dir
 --{
 	if user.name() ~= "root" then
 		res, err = fs.stat(user.home())
@@ -181,10 +183,9 @@ do
 --| long type. Some OSes, like FreeBSD and MacOS, already make use of the full
 --| range of values of that type leading to misrepresentation
 --| on Lua side.
---}
 end
 
---$ wax.fs.utime(path: string, atime, mtime: number) : boolean [, string]
+--$ fs.utime(path: string, atime, mtime: number) : boolean [, string]
 --| Change file access and/or modification times.
 do
 --| 1. it time is < 0, set it to now;
@@ -194,49 +195,52 @@ do
 --|
 --| Note: atime and mtime support fractions of seconds until nanoseconds limited
 --| only by the floating pointer precision of the number type in Lua.
+--|
+--| To see some examples, consider these times in seconds since Unix epoch
 --{
-
-	--| To see some examples, consider these times in seconds since Unix epoch
 	local now = os.time(os.date("!*t"))
 	local yesterday = now - 86400
 	local lastweek  = now - (86400 * 7)
 	local lastmonth = now - (86400 * 31)
 	local lastyear  = now - (86400 * 366)
-
-	--| Example1: update mtime to yesterday and atime to lastweek
+--}
+--| Example1: update mtime to yesterday and atime to lastweek
+--{
 	assert( fs.utime(testfile, yesterday, lastweek) )
 
 	local stat1 = fs.stat(testfile)
 	assert(stat1.mtime == yesterday and stat1.atime == lastweek)
-
-	--| Example2: just touch the access time, no mtime update.
+--}
+--| Example2: just touch the access time, no mtime update.
+--{
 	assert( fs.utime(testfile) )
 
 	local stat2 = fs.stat(testfile)
 	local diff2 = stat2.atime - now
 	assert(stat2.mtime == stat1.mtime) -- mtime was kept
 	assert(diff2 < 1 and diff2 >= 0)   -- is now!
-
-	--| Example 3: keep current mtime but set a diffrent specific atime
+--}
+--| Example 3: keep current mtime but set a diffrent specific atime
+--{
 	assert( fs.utime(testfile, nil, lastmonth) )
 
 	local stat3 = fs.stat(testfile)
 	assert(stat3.atime == lastmonth)
 	assert(stat3.mtime == stat1.mtime)
-
-
-	--| Example 4: update mtime to a specific time
-	--| Observe that atime is always updated to now, unless it is specified
+--}
+--| Example 4: update mtime to a specific time
+--| Observe that atime is always updated to now, unless it is specified
+--{
 	assert( fs.utime(testfile, lastyear) )
 
 	local stat4 = fs.stat(testfile)
 	local diff4 = stat4.atime - now
 	assert(stat4.mtime == lastyear)
 	assert(diff4 < 1 and diff4 >= 0)
-
-
-	--| Example 5: sets distinct time for access and modification using nsecs
-	--| time should be informed as a tuple: { seconds, nanoseconds }
+--}
+--| Example 5: sets distinct time for access and modification using nsecs
+--| time should be informed as a tuple: { seconds, nanoseconds }
+--{
 	local atimeNew = { now + (86400*14), 123456789 }
 	local mtimeNew = { now + (86400*21), 987654321 }
 
@@ -255,16 +259,15 @@ do
 	assert(after.mtimens == mtimeNew[2] -- fresh and good systems
 			or after.mtimens == mtimeNewUs  -- systems with microsec resolution
 			or after.mtimens == 0)          -- in systems with no resolution < 1sec
-
-
-	--| Example 6: error example, trying against an inexistent file
+--}
+--| Example 6: error example, trying against an inexistent file
+--{
 	local res, err = fs.utime("/some_inexistent_path", -1, 1)
 	assert(res == false and type(err) == "string")
-
 --}
 end
 
---$ wax.fs.access(path: string, mode: string|integer) : boolean [,string]
+--$ fs.access(path: string, mode: string|integer) : boolean [,string]
 --| Checks if user is allowed to access a file in specific modes.
 --| Returns true if user has acess. Or false and a descriptive
 --| message otherwise.
@@ -295,6 +298,7 @@ do
 	end
 --}
 --| Example 2: Different users, different privileges.
+--{
 	if user.name() == "root" then
 		assert(fs.access("/","rwx")     == true)
 		assert(fs.access("/root","rwx") == true)
@@ -328,11 +332,10 @@ do
 		res, err = pcall(fs.access,"/",invalidMode)
 		assert(res == false and type(err) == "string")
 	end
-
 --}
 end
 
---$ wax.fs.getmod(path: string) : string | (nil, string)
+--$ fs.getmod(path: string) : string | (nil, string)
 --| Returns the integer representation of the mode or nil and an error string
 --| To understand the octal representation of mode, see the use of `format()`
 --| below and tha explanation of octal return on `wax.fs.chmod()`
@@ -347,7 +350,7 @@ do
 --}
 end
 
---$ wax.fs.chmod(path: string, mode: string]) : boolean [, string]
+--$ fs.chmod(path: string, mode: string]) : boolean [, string]
 --| Works as the system chmod. The number passed to mode should be
 --| an integer number prefixed with "0" to constitute a octal representation
 --|
@@ -389,7 +392,7 @@ do
 --}
 end
 
---$ wax.fs.chown(path: string, user: string|int): boolean | (nil, string)
+--$ fs.chown(path: string, user: string|int): boolean | (nil, string)
 --| Change path ownership. Group is optional.
 do
 --{
@@ -407,7 +410,6 @@ do
 		assert( fs.stat(testfile).uid == 2000 )
 		assert( fs.chown(testfile, "root") == true )
 	end
-
 --}
 end
 
@@ -416,7 +418,7 @@ end
 --| ## Directory handling
 --|
 
---$ wax.fs.getcwd() : string | (nil, string)
+--$ fs.getcwd() : string | (nil, string)
 --| Get the current working directory path.
 --| When not possible, returns nil and a descriptive string
 do
@@ -441,7 +443,7 @@ do
 end
 
 
---$ wax.fs.isdir(path: string) : boolean [, string]
+--$ fs.isdir(path: string) : boolean [, string]
 --| If path is directory returns true or returns false with error string
 do
 --{
@@ -457,7 +459,7 @@ do
 end
 
 
---$ wax.fs.exists(path: string) : boolean
+--$ fs.exists(path: string) : boolean
 --| Checks if path exists and returns true or returns false with error string
 do
 --{
@@ -470,12 +472,11 @@ do
 end
 
 
---$ wax.fs.umask([mask: string]) : string
+--$ fs.umask([mask: string]) : string
 --| Set a new mask and returns the old one.
 --| When called without argument, returns the current umask.
 do
 --{
-
 	-- Sets the umask to 777 and retrieves current mask
 	local curmask = fs.umask("777")
 	local curmasknum = tonumber(curmask, 8)
@@ -495,7 +496,7 @@ do
 end
 
 
---$ wax.fs.chdir(path: string) : boolean [, string]
+--$ fs.chdir(path: string) : boolean [, string]
 --| Changes current working dir.
 --| returns true on success or false and descriptive string
 do
@@ -510,7 +511,7 @@ do
 end
 
 
---$ wax.fs.mkdir(path: string, mode: string) : boolean [, string]
+--$ fs.mkdir(path: string, mode: string) : boolean [, string]
 --| Create a new directory and returns true or returns false with error string.
 --| If you need to create nested subdirectories see `wax.fs.mkdirs()`
 --| The `mode` parameter is a string like "777".
@@ -540,11 +541,10 @@ do
 	-- Another error examples
 	assert(not fs.mkdir(testdir,mode)) -- already exists
 	assert(not fs.mkdir(testfile,mode)) -- exists and is a file
-
 --}
 end
 
---$ wax.fs.mkdirs(path: string, mode: string) : boolean [, string]
+--$ fs.mkdirs(path: string, mode: string) : boolean [, string]
 --| Make all missing directories in path string and
 --| returns true. When not possible, returns a descriptive
 --| string. `mode` parameter is a string like "777".
@@ -588,7 +588,7 @@ do
 --}
 end
 
---$ wax.fs.rmdir(path: string) : boolean [, string]
+--$ fs.rmdir(path: string) : boolean [, string]
 --| Remove directory if it is not empty.
 do
 --{
@@ -614,26 +614,28 @@ do
 end
 
 
---$ wax.fs.list(directory: string) : function
+--$ fs.list(directory: string) : function
 --| List for filesystem entries inside the specified directory.
 --| It retuns a function that can be used to retrieve a file per call.
 do
+--| Example 1: Basic usage
 --{
-	--| Example 1: Basic usage
 	if fs.isdir("/") then
 		for entry in fs.list("/") do
 			-- do something with entry
 			assert(type(entry) == "string")
 		end
 	end
-
-	--| Example 2: What fs.list() returns?
+--}
+--| Example 2: What fs.list() returns?
+--{
 	if fs.isdir("/") then
 		local iter = fs.list("/")
 		assert(type(iter) == "function")
 	end
-
-	--| Example 3: Root directory should have more than one entry
+--}
+--| Example 3: Root directory should have more than one entry
+--{
 	if fs.isdir("/") then
 		local count = 0;
 		for _ in fs.list("/") do
@@ -641,11 +643,12 @@ do
 		end
 		assert(count > 0)
 	end
-
-	--| Example 4: Observe that in above examples we checked with fs.isdir()
-	--| before iterate with fs.list(). If you don't do that you can break the
-	--| Lua execution. Other way to avoid the fs.isdir() check is to use
-	--| pcall() but it is not so clear as the above:
+--}
+--| Example 4: Observe that in above examples we checked with fs.isdir()
+--| before iterate with fs.list(). If you don't do that you can break the
+--| Lua execution. Other way to avoid the fs.isdir() check is to use
+--| pcall() but it is not so clear as the above:
+--{
 	local ok, iter, data = pcall(fs.list,"/baaa/beeeh/biii/boooh/bum!")
 
 	if ok then
@@ -659,11 +662,10 @@ do
 end
 
 
---$ wax.fs.glob(pathexp: string) : function
+--$ fs.glob(pathexp: string) : function
 --| List for filesystem entries using word expansions.
 --| The resulting function is an iterator that retrieves
 --| a path per call.
-do
 --| The usage is very similar of shell `ls` command.
 --| Don't be confused with Lua patterns or RegExps.
 --|
@@ -678,49 +680,50 @@ do
 --| * `/tmp/*.lua` matches any file or directory with name ended in `.lua`
 --| * `/tmp/[a-c]*.lua` matches any file started with "a", "b" or "c" followed
 --| by any ammount of characters ended with ".lua" string
+do
+--| Example 1.
+--| Basic usage
 --{
-
-	--| Example 1.
-	--| Basic usage
 	for matched in fs.glob("/*") do
 		-- do something with the matched
 		assert(type(matched) == "string")
 	end
-
-	--| Example 2.
-	--| What fs.glob() returns?
+--}
+--| Example 2.
+--| What fs.glob() returns?
+--{
 	local func = fs.glob('/*')
 	assert(type(func) == "function")
-
-	--| Example 3.
-	--| If the path doesn't exists glob() doesnt throws
+--}
+--| Example 3.
+--| If the path doesn't exists glob() doesnt throws
+--{
 	local count = 0
 	for _ in fs.glob('/some/inexistent/path/*/*/*/*') do
 		count = count + 1
 	end
 	assert(count == 0)
-
-	--| Example 4.
-	--| `fs.glob()` always returns the entire path matched for entries.
-	--| So if you search "../something/*" and there are matches, all the entries
-	--| will have the "../something" as its prefix.
+--}
+--| Example 4.
+--| `fs.glob()` always returns the entire path matched for entries.
+--| So if you search "../something/*" and there are matches, all the entries
+--| will have the "../something" as its prefix.
+--{
 	local queries = { "./*", "../*", "/b*" }
 	for _, query in ipairs(queries) do
 		for entry in fs.glob(query) do
 			assert( entry:sub(1,2) == query:sub(1,2) )
 		end
 	end
-
-	--| Observe that unlike `fs.list()` we didn't check if directory exists or
-	--| if we have permission to access it. This relaxed nature allows you to
-	--| use it for searching files and do things if some path is found. In fact
-	--| `fs.glob()` is more like a "filter" counterpart of `fs.list()` that
-	--| can return zero or more entries.
-	--|
-	--| You are encouraged to develop yourself your test strategy if needed
-	--| before call `fs.glob()`.
-
 --}
+--| Observe that unlike `fs.list()` we didn't check if directory exists or
+--| if we have permission to access it. This relaxed nature allows you to
+--| use it for searching files and do things if some path is found. In fact
+--| `fs.glob()` is more like a "filter" counterpart of `fs.list()` that
+--| can return zero or more entries.
+--|
+--| You are encouraged to develop yourself your test strategy if needed
+--| before call `fs.glob()`.
 end
 os.exit(0)
 
@@ -728,27 +731,29 @@ os.exit(0)
 --| ## Symbolic links handling
 --|
 
---$ wax.fs.islink(path: string) : boolean
+	--$ fs.islink(path: string) : boolean
 --| checks if the path exists and is a link
 do
 --{
 	assert(fs.islink("/somelink") == true)
 
 	local ok, errstr
-
-	--| Existent path but not directory
+--}
+--| Existent path but not directory:
+--{
 	ok, errstr = fs.islink("/some_not_link")
 	assert(ok == false)
 	assert(type(errstr) == "nil")
-
-	--| Inexistent path
+--}
+--| Inexistent path:
+--{
 	ok, errstr = fs.islink("/some_inexistent_path")
 	assert(ok == false);
 	assert(type(errstr) == "nil")
 --}
 end
 
---$ wax.fs.makeLink(orig, dest: string) : boolean [, string]
+--$ fs.makeLink(orig, dest: string) : boolean [, string]
 --| Creates a new link from `orig` to `dest` and return true.
 --| When not possible returns false and a descriptive string.
 do
@@ -757,7 +762,7 @@ assert(fs.makeLink());
 --}
 end
 
---$ wax.fs.linkStat(path: string) : table | (nil, string)
+--$ fs.linkStat(path: string) : table | (nil, string)
 --| Get the stat for links returning a table.
 --| When not possible, returns nil and a descriptive string.
 do
@@ -770,7 +775,7 @@ end
 --| ## Regular files handling
 --|
 
---$ wax.fs.isfile(path: string) : boolean
+--$ fs.isfile(path: string) : boolean
 --| Check if path is a regular file and is reachable.
 do
 --| Note that "reachable" doesn't means "writable". If script has not access to
@@ -780,7 +785,7 @@ do
 --}
 end
 
---$ wax.fs.unlink(path: string) : boolean [, string]
+--$ fs.unlink(path: string) : boolean [, string]
 --| Removes a file or link and returns true.
 --| When it is not possible, returns false and a descriptive string.
 do
@@ -795,19 +800,19 @@ end
 --| Named pipes or FIFO's are special files used for comunications between
 --| applications.
 
---$ wax.fs.ispipe(path: string) : boolean
+--$ fs.ispipe(path: string) : boolean
 do
 --{ Check if the file is a pipe (FIFO)
 	assert(fs.ispipe("/pipe"))
 --}
 end
 
---$ wax.fs.makePipe(path: string) : boolean [, string]
+--$ fs.makePipe(path: string) : boolean [, string]
 --| Create a new named pipe file (FIFO) and return true on success or false and
 --| a descriptive string on error.
 do
 --{
-assert(fs.makepipe())
+	assert(fs.makepipe())
 --}
 end
 
@@ -816,17 +821,17 @@ end
 --| ## Others
 --|
 
---$ wax.fs.ischardev(path: string) : boolean
+--$ fs.ischardev(path: string) : boolean
 --| Checks if the file is a character device.
 --| These are special files used to send data for devices like
 --| printer, screen, speakers, mouse, keyboard etc.
 do
 --{
-assert(fs.ischardev("/dev/tty"))
+	assert(fs.ischardev("/dev/tty"))
 --}
 end
 
---$ wax.fs.isblockdev(path: string) : boolean
+--$ fs.isblockdev(path: string) : boolean
 --| Checks if the file is a block device.
 --| These are special files used to manage physical data storage
 --| like USB, SD, HDD etc.
@@ -836,7 +841,7 @@ do
 --}
 
 
---$ wax.fs.listex()
+--$ fs.listex()
 --| Deprecated. Use `fs.glob()` instead.
 end
 
