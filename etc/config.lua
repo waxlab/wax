@@ -39,7 +39,7 @@ cbin = {
 }
 
 
---[[
+
 clib = {
 	["wax.csv"] = {
 		sources = { "csv.c" }
@@ -61,4 +61,4 @@ clib = {
 		sources = { "user.c" }
 	},
 }
-]]
+

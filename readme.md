@@ -12,11 +12,13 @@ and take advantage of the Lua way of doing things.
 By now, it is fully supported under Linux and the major BSD representants
 (FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
 
-* [Documentation / Wiki](./wiki)
-* [Roadmap](tree/meta/roadmap/)
-* [Issues](tree/meta/issues/)
-* [Contributors](tree/meta/contributors/)
-* [Donate](https://liberapay.com/WaxLab/donate)
+|               |                                                                 |                                                                 |                                                                           |
+|---------------|-----------------------------------------------------------------|-----------------------------------------------------------------|---------------------------------------------------------------------------|
+| Documentation | [GitHub](https://github.com/waxlab/wax/wiki)                    | [GitLab](https://gitlab.com/waxlab/wax/wiki)                    | [Codeberg](https://codeberg.org/waxlab/wax/wiki)                          |
+| Roadmap       | [GitHub](https://github.com/waxlab/wax/tree/meta/roadmap/)      | [GitLab](https://gitlab.com/waxlab/wax/tree/meta/roadmap/)      | [Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/roadmap/)      |
+| Issues        | [GitHub](https://github.com/waxlab/wax/tree/meta/issues/)       | [GitLab](https://gitlab.com/waxlab/wax/tree/meta/issues/)       | [Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/issues/)       |
+| Contributors  | [GitHub](https://github.com/waxlab/wax/tree/meta/contributors/) | [GitLab](https://gitlab.com/waxlab/wax/tree/meta/contributors/) | [Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/contributors/) |
+| Donate        | [Liberapay](https://liberapay.com/WaxLab/donate)                |                                                                 |                                                                           |
 
 
 ## Quickstart
@@ -105,3 +107,4 @@ Then you can filter while previewing the help and tests for the functions.
 The `run help` and `view` scripts are just a temporary improvisation to get the
 access to the documentation as a documentation extraction, conversion and a
 simple viewer for console should take its way to the project some day in future.
+
