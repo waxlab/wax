@@ -2,39 +2,21 @@
 
 # Wax
 
+The word Wax: increasing of size, development, prosperity and strength,
+also the word used to describe the Moon phase and planets like Venus and Mercury.
+
 Wax is a Lua package containing a set of modules to extend the Lua standard
-library for multipurpose programming. It intends to inforce good practices
-and less boilerplate code, while not building up to a dependency or abstraction
-hell.
+library for multipurpose programming. It aims to enforce some good practices
+and take advantage of the Lua way of doing things.
 
 By now, it is fully supported under Linux and the major BSD representants
 (FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
 
-By now you can read a short list of available functions in the
-[Wiki](https://codeberg.org/waxlab/wax/wiki)
-or dive in the full examples within the Lua files inside ./test folder.
-
-In future these tests will be used to generate the full wiki documentation.
-
-
-## Why Wax?
-
-It is common to refer to the "Waxing Moon" phase. Wax is the word usually used
-astronomically for every celestial body that "looks like growing".
-
-The Wax library intends to reveal the Lua language face as general purpose
-language, adding modules that intends to be small, specific, and follow the
-Lua simplicity, while being well documented and not enforcing unneeded
-paradigms.
-
-As a "waxing" project, it wants to grow, without never be "full" or "fool"
-with redundancies or many ways to do the same thing.
-
-Have a centered place to the basic modules helps the packaging, distribution
-and the homogeinity on documentation. Also being a project planned to work on
-all most used and newer Lua versions (from 5.1 to 5.4) it allows the easiness
-to use the same api for repl, system, plugins and any other software that embeds
-Lua and allows it to require a external module.
+* [Documentation / Wiki](./wiki)
+* [Roadmap](tree/meta/roadmap/)
+* [Issues](tree/meta/issues/)
+* [Contributors](tree/meta/contributors/)
+* [Donate](https://liberapay.com/WaxLab/donate)
 
 
 ## Quickstart
@@ -55,26 +37,16 @@ Binary modules are tested on different Unix systems:
 * BSDs (FreeBSD, OpenBSD, NetBSD and Dragonfly) as root and common user.
 
 
-## Contribute
+## Principles
 
-You can [donate](https://liberapay.com/WaxLab/donate) or help us
-reviewing, reporting, testing or coding.
-See contribution [guidelines](contributing.md) for more information.
-
-The main code home is https://codeberg.org/waxlab/wax repository.
-Head there to read about lastest commits, bug reporting or discussions.
-
-
-## Join Community
-
-Join our [Matrix channel]([https://matrix.to/#/#wax-lua:matrix.org])
-created basically for announcements and discussions about the future of project.
-
-
-## Development
-
-* The latest tested version is under the `latest` branch
-* Releases can be downloaded with `luarocks`
+* If developed then documented.
+* If documented then tested.
+* If released then tested.
+* Never full or fool. More power but less bloat.
+* Discretion. Simplicity matters more than the last programming fashion.
+* Thoughtfull development. Avoid unnecessary features and compatibility issues.
+* Consistency. Namings, conventions, syntax should be harmonic between modules.
+* Intuitivity and previsibility. The siblings of the consistency.
 
 
 ## Versioning
@@ -91,6 +63,9 @@ what is going on.
 
 The development version should be got directly from the repository under the
 `dev` branch.
+
+While the `latest` branch contains the latest tested code, it may be slightly
+newer than the lastest rock found under Luarocks.
 
 
 ## Running tests under multiple Linuxes
