@@ -1,24 +1,23 @@
 local wax = {}
 
 local
-	locals, _locals_mt,
-	script,
+	wax_locals, _locals_mt,
+	wax_script,
+	wax_from,
 	_
 
--- TODO: To be moved to wax.test.almostEqual
-do
-end
+local fs_realpath = require 'wax.fs'.realpath
 
 
-function script()
-	local realpath = require 'wax.fs'.realpath
+
+function wax_script()
 	local s = debug.getinfo(2,'S')
-	if s then return realpath(s.short_src) end
+	if s then return fs_realpath(s.short_src) end
 	return nil
 end
 
 
-function locals()
+function wax_locals()
 	local _ENV    = _ENV or _G
 	local _ENV_MT = getmetatable(_ENV)
 
@@ -42,7 +41,17 @@ function locals()
 	return nil, 'Other metatable is already set for _ENV or _G'
 end
 
+
+local function wax_from(src, ...)
+	if type(src) ~= 'table' then src = require(src) end
+	local t = {...}
+	for i,v in ipairs(t) do t[i] = src[v] end
+	return (table.unpack or unpack)(t)
+end
+
+
 return {
-	locals = locals,
-	script = script,
+	locals = wax_locals,
+	script = wax_script,
+	from   = wax_from
 }
