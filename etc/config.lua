@@ -38,27 +38,3 @@ cbin = {
 	-- {'target', 'code.c' }
 }
 
-
-
-clib = {
-	["wax.csv"] = {
-		sources = { "csv.c" }
-	},
-	["wax.fs"] = {
-		sources = { "fs.c" }
-	},
-	["wax.json"] = {
-		sources = { "ext/json/cJSON.c", "json.c" }
-	},
-	["wax.os"] = {
-		sources = { "os.c" }
-	},
-	["wax.sql"] = {
-		sources = { "sqlite3.c" },
-		flags = { "-lsqlite3" }
-	},
-	["wax.user"] = {
-		sources = { "user.c" }
-	},
-}
-

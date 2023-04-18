@@ -7,8 +7,8 @@
 local wax = require 'wax'
 wax.os = require 'wax.os'
 
---$ wax.os.exec(command:string [, argv: string list]) : errorstr
---{ Replaces the current process by the `command`.
+--$ os.exec(command:string [, argv: string list]) : errorstr
+--| Replaces the current process by the `command`.
 --|
 --| When you call `wax.os.exec()` the current program will be replaced by the
 --| `command` you specified (so you cant retrieve any return of this function).

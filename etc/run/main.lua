@@ -245,7 +245,7 @@ function command.install()
 end
 
 function command.remove(rockspec)
-	local cmd = 'luarocks --lua-version %q remove %q'
+	local cmd = 'luarocks --lua-version %q remove --force %q'
 	for k,_ in pairs(luabin) do
 		os.execute(cmd:format(k, rockspec or config.rockspec))
 	end
