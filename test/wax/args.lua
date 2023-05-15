@@ -1,3 +1,6 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
 --| # wax.args
 --| Parse command line arguments.
 --|
@@ -31,8 +34,8 @@
 --|
 --| Basic usage:
 --{
-	local args = require 'wax.args'
-	local res = args.parse()
+  local args = require 'wax.args'
+  local res = args.parse()
 --}
 
 
@@ -49,31 +52,31 @@
 --| should start.
 --{
 do
-	local was = require "wax.was"
-	local args = require "wax.args"
+  local was = require "wax.was"
+  local args = require "wax.args"
 
-	local arg1, arg2, res
+  local arg1, arg2, res
 
-	-- emulates what you would receive in the standard Lua arg global var
-	arg1 = {'--op1','v1','--op2','v2a','--op3','--op2','v2b','a1','a2'}
-	arg2 = {'subcmd','--op1','v1','--op2','v2a','--op3','--op2','v2b','a1','a2'}
-	res = {
-		opt = { op1 = {'v1'}, op2 = {'v2a','v2b'}, op3 = {} },
-		arg = { 'a1','a2' }
-	}
+  -- emulates what you would receive in the standard Lua arg global var
+  arg1 = {'--op1','v1','--op2','v2a','--op3','--op2','v2b','a1','a2'}
+  arg2 = {'subcmd','--op1','v1','--op2','v2a','--op3','--op2','v2b','a1','a2'}
+  res = {
+    opt = { op1 = {'v1'}, op2 = {'v2a','v2b'}, op3 = {} },
+    arg = { 'a1','a2' }
+  }
 
-	assert(was.similar( args.parse(arg1), res ))
-	assert(was.similar( args.parse(arg2,2), res ))
+  assert(was.similar( args.parse(arg1), res ))
+  assert(was.similar( args.parse(arg2,2), res ))
 
-	-- after the first non option assumes the remaining are all arguments
-	arg1 = {'somevalue','--opt1','--opt2','val2','a1','a2'}
-	arg2 = {'subcmd','somevalue','--opt1','--opt2','val2','a1','a2'}
-	res = {
-		opt = {},
-		arg = {'somevalue','--opt1','--opt2','val2','a1','a2'}
-	}
+  -- after the first non option assumes the remaining are all arguments
+  arg1 = {'somevalue','--opt1','--opt2','val2','a1','a2'}
+  arg2 = {'subcmd','somevalue','--opt1','--opt2','val2','a1','a2'}
+  res = {
+    opt = {},
+    arg = {'somevalue','--opt1','--opt2','val2','a1','a2'}
+  }
 
-	assert(was.similar( args.parse(arg1), res ))
-	assert(was.similar( args.parse(arg2, 2), res ))
+  assert(was.similar( args.parse(arg1), res ))
+  assert(was.similar( args.parse(arg2, 2), res ))
 end
 --}

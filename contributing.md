@@ -57,6 +57,19 @@ with `--{` and `--}`
 
 Use `./test/wax/json.lua` as reference.
 
+For C code, basically documenting for extraction purposes are only needed on
+the files under `src/w` folder. In this case, every comment is under multiline
+comment in this way:
+
+```
+/*
+//## This is a H2
+//| This is the content
+//$ void funsignature(lua_State *L)
+*/
+```
+
+
 
 
 ## Testing code
@@ -93,4 +106,4 @@ accostumed with other languages while also keeping code short for use in
 different screens, from mobile to desktop and easy to open side by side in
 different editors leaving to reader to choose how many spaces a indentation
 level should be presented.
-	
+  

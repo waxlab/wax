@@ -1,7 +1,10 @@
---
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
+
 -- LUA LEVELING
 -- Make a common place to work between different Lua versions
---
+
 local _load   -- load string as Lua function
     , _setenv -- defines a function environment
 

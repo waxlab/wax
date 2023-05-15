@@ -1,3 +1,6 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
 --| # wax.table
 --| Extends Lua standard library table module.
 
@@ -12,11 +15,11 @@ do
 --| Ex: `{a="A","word"}` becomes `"{\"word\",a=\"A\"}"`
 --{
 local t = {
-	a="A", b="B", "fst", [true]=10, ["a b"]=1, c={10,20}, {30,40},
-	[function() end] = function() end,
-	[function() end] = true,
-	[{2,4,6}] = true,
-	d = function() end
+  a="A", b="B", "fst", [true]=10, ["a b"]=1, c={10,20}, {30,40},
+  [function() end] = function() end,
+  [function() end] = true,
+  [{2,4,6}] = true,
+  d = function() end
 }
 local str = tbl.tostring(t)
 local load = require 'wax.compat'.load
@@ -31,9 +34,9 @@ assert(res[true] == 10 and res['a b'] == 1)
 -- As functions are system dependent, they are not converted to functions
 -- also tables on keys are not supported yet.
 for k,v in pairs(res) do
-	assert(type(k) ~= 'table')
-	assert(type(k) ~= 'function')
-	assert(type(v) ~= 'function')
+  assert(type(k) ~= 'table')
+  assert(type(k) ~= 'function')
+  assert(type(v) ~= 'function')
 end
 --}
 end
@@ -47,11 +50,11 @@ do
 --| `"hello = \"ok\"`
 --{
 local t = {
-	a="A", b="B", "fst", [true]=10, ["a b"]=1,
-	[function() end] = function() end,
-	[function() end] = true,
-	[{2,4,6}] = true,
-	c = function() end
+  a="A", b="B", "fst", [true]=10, ["a b"]=1,
+  [function() end] = function() end,
+  [function() end] = true,
+  [{2,4,6}] = true,
+  c = function() end
 }
 local str = tbl.tochunk(t)
 local load = require 'wax.compat'.load

@@ -1,3 +1,6 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
 --| # wax.fs
 --| File and directory management on filesystem.
 --|
@@ -9,21 +12,31 @@
 local fs = require("wax.fs")
 --}
 
-local user = require("wax.user")
+-- It may be not compiled, so we emulate it
+local user
+do
+  -- local user = require("wax.user")
+  local id, name, home = os.getenv "UID", os.getenv "USER", os.getenv "HOME"
+  user = {
+    id   = function() return id end,
+    name = function() return name end,
+    home = function() return home end
+  }
+end
 local lua = tonumber(_VERSION:gsub('%D',''), 10)
 
 -- Prepares the environment for following tests
 local testdir, testfile
 do
-	testdir = os.getenv("HOME").."/wax.fs_testdir_root"
-	os.execute( ("rm -rf %q"):format(testdir) )
-	os.execute( ("mkdir %q"):format(testdir) )
-	testfile = testdir.."/wax.fs_testfile"
-	local fh = io.open(testfile, "a")
-	if fh ~= nil then
-		fh:write("Lore ipsum\n")
-		fh:close()
-	end
+  testdir = os.getenv("HOME").."/wax.fs_testdir_root"
+  os.execute( ("rm -rf %q"):format(testdir) )
+  os.execute( ("mkdir %q"):format(testdir) )
+  testfile = testdir.."/wax.fs_testfile"
+  local fh = io.open(testfile, "a")
+  if fh ~= nil then
+    fh:write("Lore ipsum\n")
+    fh:close()
+  end
 end
 
 --|
@@ -36,7 +49,7 @@ end
 --| * Windows:         `"\"` (backslash)
 do
 --{
-	assert( fs.dirsep == "/" or fs.dirsep == "\\" )
+  assert( fs.dirsep == "/" or fs.dirsep == "\\" )
 --}
 end
 
@@ -50,11 +63,11 @@ end
 --| When not possible, returns false and a descriptive string.
 do
 --{
-	assert( fs.realpath("/usr/bin/")       == "/usr/bin")
-	assert( fs.realpath("/usr/bin/../lib") == "/usr/lib")
+  assert( fs.realpath("/usr/bin/")       == "/usr/bin")
+  assert( fs.realpath("/usr/bin/../lib") == "/usr/lib")
 
-	local res, err = fs.realpath("/a_/_b/c_/../_d")
-	assert( res == nil and type(err) == "string" )
+  local res, err = fs.realpath("/a_/_b/c_/../_d")
+  assert( res == nil and type(err) == "string" )
 --}
 end
 
@@ -62,12 +75,12 @@ end
 --| Get the dir part of the path and return it.
 do
 --{
-	assert( fs.dirname("/usr/lib") == "/usr" )
-	assert( fs.dirname("/usr/"   ) == "/"     )
-	assert( fs.dirname("usr"     ) == "."     )
-	assert( fs.dirname("/"       ) == "/"     )
-	assert( fs.dirname("."       ) == "."     )
-	assert( fs.dirname(".."      ) == "."     )
+  assert( fs.dirname("/usr/lib") == "/usr" )
+  assert( fs.dirname("/usr/"   ) == "/"     )
+  assert( fs.dirname("usr"     ) == "."     )
+  assert( fs.dirname("/"       ) == "/"     )
+  assert( fs.dirname("."       ) == "."     )
+  assert( fs.dirname(".."      ) == "."     )
 --}
 end
 
@@ -75,12 +88,12 @@ end
 --| Get the filename part of the path and return it.
 do
 --{
-	assert( fs.basename("/usr/lib") == "lib" )
-	assert( fs.basename("/usr/"   ) == "usr" )
-	assert( fs.basename("usr"     ) == "usr" )
-	assert( fs.basename("/"       ) == "/"   )
-	assert( fs.basename("."       ) == "."   )
-	assert( fs.basename(".."      ) ==  ".." )
+  assert( fs.basename("/usr/lib") == "lib" )
+  assert( fs.basename("/usr/"   ) == "usr" )
+  assert( fs.basename("usr"     ) == "usr" )
+  assert( fs.basename("/"       ) == "/"   )
+  assert( fs.basename("."       ) == "."   )
+  assert( fs.basename(".."      ) ==  ".." )
 --}
 end
 
@@ -90,36 +103,36 @@ do
 --| Basic Usage:
 --| 1. concatenate correctly the path elements
 --{
-	assert( fs.buildpath("1nd","2nd","3rd") == "1nd/2nd/3rd" )
+  assert( fs.buildpath("1nd","2nd","3rd") == "1nd/2nd/3rd" )
 --}
 --| 2. clear strange paths
 --{
-	assert( fs.buildpath("a//b////c/./d/") == "a/b/c/d")
+  assert( fs.buildpath("a//b////c/./d/") == "a/b/c/d")
 --}
 --| Expected behavior
 --| 1. Doesn't normalizes parent `..` entries
 --{
-	assert( fs.buildpath("a/../a")       == "a/../a" )
-	assert( fs.buildpath("..", "a", "b") == "../a/b" )
+  assert( fs.buildpath("a/../a")       == "a/../a" )
+  assert( fs.buildpath("..", "a", "b") == "../a/b" )
 --}
 --| 2. remove rightmost pending separator
 --{
-	assert( fs.buildpath("a/b/c/") == "a/b/c" )
+  assert( fs.buildpath("a/b/c/") == "a/b/c" )
 --}
 --| 3. remove duplicated separators
 --{
-	assert( fs.buildpath("a//","/b/","/c/") == "a/b/c"  )
-	assert( fs.buildpath("//a","b/c"      ) == "/a/b/c" )
+  assert( fs.buildpath("a//","/b/","/c/") == "a/b/c"  )
+  assert( fs.buildpath("//a","b/c"      ) == "/a/b/c" )
 --}
 --| 4. remove relative here dot `.` that is not the first char
 --{
-	assert( fs.buildpath(".", "a", "b"     ) == "./a/b"    )
-	assert( fs.buildpath(".", "a", ".", "b") == "./a/b"    )
-	assert( fs.buildpath("./a"," b/", "./c") == "./a/ b/c" )
-	assert( fs.buildpath("a", "..", "b"    ) == "a/../b"   )
-	assert( fs.buildpath("./", "a/", "b/"  ) == "./a/b"    )
-	assert( fs.buildpath("/./","a/","/b/"  ) == "/a/b"     )
-	assert( fs.buildpath("/a/b/./c","/./d" ) == "/a/b/c/d" )
+  assert( fs.buildpath(".", "a", "b"     ) == "./a/b"    )
+  assert( fs.buildpath(".", "a", ".", "b") == "./a/b"    )
+  assert( fs.buildpath("./a"," b/", "./c") == "./a/ b/c" )
+  assert( fs.buildpath("a", "..", "b"    ) == "a/../b"   )
+  assert( fs.buildpath("./", "a/", "b/"  ) == "./a/b"    )
+  assert( fs.buildpath("/./","a/","/b/"  ) == "/a/b"     )
+  assert( fs.buildpath("/a/b/./c","/./d" ) == "/a/b/c/d" )
 --}
 end
 
@@ -128,49 +141,49 @@ end
 do
 --| Usage example
 --{
-	local res, err
-	res, err = fs.stat( testfile )
+  local res, err
+  res, err = fs.stat( testfile )
 
-	assert(type(err) == "nil")   -- has no error
-	assert(type(res) == "table") -- the retrieved data
+  assert(type(err) == "nil")   -- has no error
+  assert(type(res) == "table") -- the retrieved data
 
-	-- Which are the fields returned?
+  -- Which are the fields returned?
 
-	assert(type(res.dev) == "string")  -- device id
-	assert(type(res.rdev) == "string") -- device id for special files
-	assert(res.ino		 >= 0)           -- inode
+  assert(type(res.dev) == "string")  -- device id
+  assert(type(res.rdev) == "string") -- device id for special files
+  assert(res.ino     >= 0)           -- inode
 
-	assert(res.mode == "644" ) -- octal permission
-	assert(res.type == "file") -- filetype
-	assert(res.nlink   >= 0)   -- number of hardlinks
-	assert(res.uid     >= 0)   -- user id of owner
-	assert(res.gid     >= 0)   -- group id of owner
-	assert(res.size    >= 0)   -- total size in bytes
-	assert(res.blksize >= 0)   -- block size for filesystem I/O
-	assert(res.blocks  >= 0)   -- number of blocks allocated
+  assert(res.mode == "644" ) -- octal permission
+  assert(res.type == "file") -- filetype
+  assert(res.nlink   >= 0)   -- number of hardlinks
+  assert(res.uid     >= 0)   -- user id of owner
+  assert(res.gid     >= 0)   -- group id of owner
+  assert(res.size    >= 0)   -- total size in bytes
+  assert(res.blksize >= 0)   -- block size for filesystem I/O
+  assert(res.blocks  >= 0)   -- number of blocks allocated
 
-	assert(res.atime   >= 0)   -- time of last access (unix secs)
-	assert(res.atimens >= 0)   -- nanoseconds part of atime
-	assert(res.ctime   >= 0)   -- time of last inode change (unix secs)
-	assert(res.ctimens >= 0)   -- nanoseconds part of ctime
-	assert(res.mtime   >= 0)   -- time of last modification (unix secs)
-	assert(res.mtimens >= 0)   -- nanoseconds part of mtime
+  assert(res.atime   >= 0)   -- time of last access (unix secs)
+  assert(res.atimens >= 0)   -- nanoseconds part of atime
+  assert(res.ctime   >= 0)   -- time of last inode change (unix secs)
+  assert(res.ctimens >= 0)   -- nanoseconds part of ctime
+  assert(res.mtime   >= 0)   -- time of last modification (unix secs)
+  assert(res.mtimens >= 0)   -- nanoseconds part of mtime
 --}
 
 --| Another example with the user home dir
 --{
-	if user.name() ~= "root" then
-		res, err = fs.stat(user.home())
-		assert(res.mode == "755")
-		assert(res.type == "dir")
-	end
+  if user.name() ~= "root" then
+    res, err = fs.stat(user.home())
+    assert(res.mode == "755")
+    assert(res.type == "dir")
+  end
 --}
 
 --| What happens when some stat error happens?
 --{
-	res, err = fs.stat("/some_invalid_path")
-	assert(type(res) == "nil")
-	assert(type(err) == "string")
+  res, err = fs.stat("/some_invalid_path")
+  assert(type(res) == "nil")
+  assert(type(err) == "string")
 --}
 
 --| Observations:
@@ -198,72 +211,72 @@ do
 --|
 --| To see some examples, consider these times in seconds since Unix epoch
 --{
-	local now = os.time(os.date("!*t"))
-	local yesterday = now - 86400
-	local lastweek  = now - (86400 * 7)
-	local lastmonth = now - (86400 * 31)
-	local lastyear  = now - (86400 * 366)
+  local now = os.time(os.date("!*t"))
+  local yesterday = now - 86400
+  local lastweek  = now - (86400 * 7)
+  local lastmonth = now - (86400 * 31)
+  local lastyear  = now - (86400 * 366)
 --}
 --| Example1: update mtime to yesterday and atime to lastweek
 --{
-	assert( fs.utime(testfile, yesterday, lastweek) )
+  assert( fs.utime(testfile, yesterday, lastweek) )
 
-	local stat1 = fs.stat(testfile)
-	assert(stat1.mtime == yesterday and stat1.atime == lastweek)
+  local stat1 = fs.stat(testfile)
+  assert(stat1.mtime == yesterday and stat1.atime == lastweek)
 --}
 --| Example2: just touch the access time, no mtime update.
 --{
-	assert( fs.utime(testfile) )
+  assert( fs.utime(testfile) )
 
-	local stat2 = fs.stat(testfile)
-	local diff2 = stat2.atime - now
-	assert(stat2.mtime == stat1.mtime) -- mtime was kept
-	assert(diff2 < 1 and diff2 >= 0)   -- is now!
+  local stat2 = fs.stat(testfile)
+  local diff2 = stat2.atime - now
+  assert(stat2.mtime == stat1.mtime) -- mtime was kept
+  assert(diff2 < 1 and diff2 >= 0)   -- is now!
 --}
 --| Example 3: keep current mtime but set a diffrent specific atime
 --{
-	assert( fs.utime(testfile, nil, lastmonth) )
+  assert( fs.utime(testfile, nil, lastmonth) )
 
-	local stat3 = fs.stat(testfile)
-	assert(stat3.atime == lastmonth)
-	assert(stat3.mtime == stat1.mtime)
+  local stat3 = fs.stat(testfile)
+  assert(stat3.atime == lastmonth)
+  assert(stat3.mtime == stat1.mtime)
 --}
 --| Example 4: update mtime to a specific time
 --| Observe that atime is always updated to now, unless it is specified
 --{
-	assert( fs.utime(testfile, lastyear) )
+  assert( fs.utime(testfile, lastyear) )
 
-	local stat4 = fs.stat(testfile)
-	local diff4 = stat4.atime - now
-	assert(stat4.mtime == lastyear)
-	assert(diff4 < 1 and diff4 >= 0)
+  local stat4 = fs.stat(testfile)
+  local diff4 = stat4.atime - now
+  assert(stat4.mtime == lastyear)
+  assert(diff4 < 1 and diff4 >= 0)
 --}
 --| Example 5: sets distinct time for access and modification using nsecs
 --| time should be informed as a tuple: { seconds, nanoseconds }
 --{
-	local atimeNew = { now + (86400*14), 123456789 }
-	local mtimeNew = { now + (86400*21), 987654321 }
+  local atimeNew = { now + (86400*14), 123456789 }
+  local mtimeNew = { now + (86400*21), 987654321 }
 
-	res, err = fs.utime(testfile, mtimeNew, atimeNew)
-	after = fs.stat(testfile)
-	assert(after.atime == atimeNew[1] or after.atime == mtimeNew[1])
-	assert(after.mtime == mtimeNew[1])
+  res, err = fs.utime(testfile, mtimeNew, atimeNew)
+  after = fs.stat(testfile)
+  assert(after.atime == atimeNew[1] or after.atime == mtimeNew[1])
+  assert(after.mtime == mtimeNew[1])
 
-	mtimeNewUs = math.floor(mtimeNew[2]/1000) * 1000
+  mtimeNewUs = math.floor(mtimeNew[2]/1000) * 1000
 
-	assert(after.atimens == atimeNew[2] -- fresh and good systems
-			or after.atimens == mtimeNew[2] -- in systems that mtime updates atime
-			or after.atimens == mtimeNewUs  -- systems with microsec resolution
-			or after.atimens == 0)          -- in systems with no resolution < 1sec
+  assert(after.atimens == atimeNew[2] -- fresh and good systems
+      or after.atimens == mtimeNew[2] -- in systems that mtime updates atime
+      or after.atimens == mtimeNewUs  -- systems with microsec resolution
+      or after.atimens == 0)          -- in systems with no resolution < 1sec
 
-	assert(after.mtimens == mtimeNew[2] -- fresh and good systems
-			or after.mtimens == mtimeNewUs  -- systems with microsec resolution
-			or after.mtimens == 0)          -- in systems with no resolution < 1sec
+  assert(after.mtimens == mtimeNew[2] -- fresh and good systems
+      or after.mtimens == mtimeNewUs  -- systems with microsec resolution
+      or after.mtimens == 0)          -- in systems with no resolution < 1sec
 --}
 --| Example 6: error example, trying against an inexistent file
 --{
-	local res, err = fs.utime("/some_inexistent_path", -1, 1)
-	assert(res == false and type(err) == "string")
+  local res, err = fs.utime("/some_inexistent_path", -1, 1)
+  assert(res == false and type(err) == "string")
 --}
 end
 
@@ -288,50 +301,50 @@ do
 --| Example 1: Some common uses
 --| Some systems may have different permissions under root
 --{
-	if user.name() ~= "root" then
-		assert(fs.access(testfile,"r")  == true)
-		assert(fs.access(testfile,"r")  == true)
-		assert(fs.access(testfile,"rx") == false)
-		assert(fs.access(testfile,"x")  == false)
-		assert(fs.access("/tmp","rwx")  == true)
-		assert(fs.access(user.home(),"rwx") == true)
-	end
+  if user.name() ~= "root" then
+    assert(fs.access(testfile,"r")  == true)
+    assert(fs.access(testfile,"r")  == true)
+    assert(fs.access(testfile,"rx") == false)
+    assert(fs.access(testfile,"x")  == false)
+    assert(fs.access("/tmp","rwx")  == true)
+    assert(fs.access(user.home(),"rwx") == true)
+  end
 --}
 --| Example 2: Different users, different privileges.
 --{
-	if user.name() == "root" then
-		assert(fs.access("/","rwx")     == true)
-		assert(fs.access("/root","rwx") == true)
-		assert(fs.access("/etc","rwx")  == true)
-	else
-		assert(fs.access("/root","w")  == false)
-		assert(fs.access("/","rx")     == true)
-		assert(fs.access("/","rwx")    == false)
-		assert(fs.access("/etc","rwx") == false)
-	end
+  if user.name() == "root" then
+    assert(fs.access("/","rwx")     == true)
+    assert(fs.access("/root","rwx") == true)
+    assert(fs.access("/etc","rwx")  == true)
+  else
+    assert(fs.access("/root","w")  == false)
+    assert(fs.access("/","rx")     == true)
+    assert(fs.access("/","rwx")    == false)
+    assert(fs.access("/etc","rwx") == false)
+  end
 --}
 
 --| Example 3: mode number correspondence to mode strings
 --{
-	for _,p in pairs{"/", "/home", "/root", "/tmp", testfile} do
-		assert(fs.access(p, "x")   == fs.access(p,1))
-		assert(fs.access(p, "w")   == fs.access(p,2))
-		assert(fs.access(p, "wx")  == fs.access(p,3))
-		assert(fs.access(p, "r")   == fs.access(p,4))
-		assert(fs.access(p, "rx")  == fs.access(p,5))
-		assert(fs.access(p, "rw")  == fs.access(p,6))
-		assert(fs.access(p, "rwx") == fs.access(p,7))
-	end
+  for _,p in pairs{"/", "/home", "/root", "/tmp", testfile} do
+    assert(fs.access(p, "x")   == fs.access(p,1))
+    assert(fs.access(p, "w")   == fs.access(p,2))
+    assert(fs.access(p, "wx")  == fs.access(p,3))
+    assert(fs.access(p, "r")   == fs.access(p,4))
+    assert(fs.access(p, "rx")  == fs.access(p,5))
+    assert(fs.access(p, "rw")  == fs.access(p,6))
+    assert(fs.access(p, "rwx") == fs.access(p,7))
+  end
 --}
 
 --| Example 4: Invalid modes; If wrong arguments are passed, throws error.
 --{
-	local res,err
+  local res,err
 
-	for _,invalidMode in pairs{"a", "rwz", 0, -1, 8, 100} do
-		res, err = pcall(fs.access,"/",invalidMode)
-		assert(res == false and type(err) == "string")
-	end
+  for _,invalidMode in pairs{"a", "rwz", 0, -1, 8, 100} do
+    res, err = pcall(fs.access,"/",invalidMode)
+    assert(res == false and type(err) == "string")
+  end
 --}
 end
 
@@ -341,12 +354,12 @@ end
 --| below and tha explanation of octal return on `wax.fs.chmod()`
 do
 --{
-	if user.name() ~= "root" then
-		-- depending on OS root can be 700 or 750
-		assert( fs.getmod(user.home()) == "755" )
-	end
-	assert( fs.getmod("/") == "755")
-	assert( fs.getmod("/tmp") == "777")
+  if user.name() ~= "root" then
+    -- depending on OS root can be 700 or 750
+    assert( fs.getmod(user.home()) == "755" )
+  end
+  assert( fs.getmod("/") == "755")
+  assert( fs.getmod("/tmp") == "777")
 --}
 end
 
@@ -368,27 +381,27 @@ do
 --|   | |____ 6 =  4   2   0
 --|   |______ 7 =  4   2   1
 --{ ```
-	local perm
+  local perm
 
-	perm = "755" -- (rwx,r-x,r-x)
-	assert( fs.chmod(testfile, perm) )
-	assert( fs.getmod(testfile) == perm )
+  perm = "755" -- (rwx,r-x,r-x)
+  assert( fs.chmod(testfile, perm) )
+  assert( fs.getmod(testfile) == perm )
 
-	perm = "000" -- (---,---,---)
-	assert( fs.chmod(testfile, perm) )
-	assert( fs.getmod(testfile) == perm )
+  perm = "000" -- (---,---,---)
+  assert( fs.chmod(testfile, perm) )
+  assert( fs.getmod(testfile) == perm )
 
-	perm = "123" -- (--x,-w-,-wx)
-	assert( fs.chmod(testfile, perm) )
-	assert( fs.getmod(testfile) == perm )
+  perm = "123" -- (--x,-w-,-wx)
+  assert( fs.chmod(testfile, perm) )
+  assert( fs.getmod(testfile) == perm )
 
-	perm = "466" -- (r--,rw-,rw-)
-	assert( fs.chmod(testfile, perm) )
-	assert( fs.getmod(testfile) == perm )
+  perm = "466" -- (r--,rw-,rw-)
+  assert( fs.chmod(testfile, perm) )
+  assert( fs.getmod(testfile) == perm )
 
-	perm = "644" -- (rw-,r--,r--)
-	assert( fs.chmod(testfile, perm) )
-	assert( fs.getmod(testfile) == perm )
+  perm = "644" -- (rw-,r--,r--)
+  assert( fs.chmod(testfile, perm) )
+  assert( fs.getmod(testfile) == perm )
 --}
 end
 
@@ -396,20 +409,20 @@ end
 --| Change path ownership. Group is optional.
 do
 --{
-	local testuser = "testuser"
+  local testuser = "testuser"
 
-	io.open(testfile,"w"):close()
+  io.open(testfile,"w"):close()
 
-	-- We need to be root to change file ownership on most of systems
-	if user.id() == 0 then
-		assert( fs.chown(testfile, 10000) == true )
-		assert( fs.stat(testfile).uid == 10000 )
-		assert( fs.chown(testfile, "root") == true )
-		assert( fs.stat(testfile).uid == 0 )
-		assert( fs.chown(testfile, testuser) == true )
-		assert( fs.stat(testfile).uid == 2000 )
-		assert( fs.chown(testfile, "root") == true )
-	end
+  -- We need to be root to change file ownership on most of systems
+  if user.id() == 0 then
+    assert( fs.chown(testfile, 10000) == true )
+    assert( fs.stat(testfile).uid == 10000 )
+    assert( fs.chown(testfile, "root") == true )
+    assert( fs.stat(testfile).uid == 0 )
+    assert( fs.chown(testfile, testuser) == true )
+    assert( fs.stat(testfile).uid == 2000 )
+    assert( fs.chown(testfile, "root") == true )
+  end
 --}
 end
 
@@ -423,22 +436,22 @@ end
 --| When not possible, returns nil and a descriptive string
 do
 --{
-	local curdir, newdir, destdir
-	curdir = fs.getcwd()
+  local curdir, newdir, destdir
+  curdir = fs.getcwd()
 
-	-- directory should be a non empty string
-	assert(type(curdir) == "string")
-	assert(#curdir > 0)
+  -- directory should be a non empty string
+  assert(type(curdir) == "string")
+  assert(#curdir > 0)
 
-	-- respect changings of the current path
-	destdir = "/tmp"
-	assert(fs.chdir(destdir) == true)
-	newdir = fs.getcwd()
-	assert(newdir == destdir)
+  -- respect changings of the current path
+  destdir = "/tmp"
+  assert(fs.chdir(destdir) == true)
+  newdir = fs.getcwd()
+  assert(newdir == destdir)
 
-	-- we reset the directory
-	assert(fs.chdir(curdir) == true)
-	assert(fs.getcwd() == curdir)
+  -- we reset the directory
+  assert(fs.chdir(curdir) == true)
+  assert(fs.getcwd() == curdir)
 --}
 end
 
@@ -447,14 +460,14 @@ end
 --| If path is directory returns true or returns false with error string
 do
 --{
-	-- When path exists and is a file
-	assert(fs.isdir(testdir) == true)
+  -- When path exists and is a file
+  assert(fs.isdir(testdir) == true)
 
-	-- When path exists and is not a file
-	assert(fs.isdir(testfile) == false)
+  -- When path exists and is not a file
+  assert(fs.isdir(testfile) == false)
 
-	-- When path not exists
-	assert(fs.isdir("/some_inexistent_dir_somewhere") == false)
+  -- When path not exists
+  assert(fs.isdir("/some_inexistent_dir_somewhere") == false)
 --}
 end
 
@@ -463,11 +476,11 @@ end
 --| Checks if path exists and returns true or returns false with error string
 do
 --{
-	assert(fs.exists("/") == true)
-	assert(fs.exists("/home") == true)
-	assert(fs.exists(testfile) == true)
-	local res, err = fs.exists("/inexistent_component")
-	assert(res == false and type(err) == "string")
+  assert(fs.exists("/") == true)
+  assert(fs.exists("/home") == true)
+  assert(fs.exists(testfile) == true)
+  local res, err = fs.exists("/inexistent_component")
+  assert(res == false and type(err) == "string")
 --}
 end
 
@@ -477,21 +490,21 @@ end
 --| When called without argument, returns the current umask.
 do
 --{
-	-- Sets the umask to 777 and retrieves current mask
-	local curmask = fs.umask("777")
-	local curmasknum = tonumber(curmask, 8)
-	local minmask, maxmask = 0, 511 -- 511 is the decimal of "777" octal
+  -- Sets the umask to 777 and retrieves current mask
+  local curmask = fs.umask("777")
+  local curmasknum = tonumber(curmask, 8)
+  local minmask, maxmask = 0, 511 -- 511 is the decimal of "777" octal
 
-	assert(#curmask == 3)
-	assert(curmasknum >= minmask and curmasknum <= maxmask)
+  assert(#curmask == 3)
+  assert(curmasknum >= minmask and curmasknum <= maxmask)
 
-	-- Reset the umask to the original
-	local newmask = fs.umask(curmask)
-	assert(newmask == "777")
+  -- Reset the umask to the original
+  local newmask = fs.umask(curmask)
+  assert(newmask == "777")
 
-	-- Check again the umask to test with no arguments
-	assert(fs.umask() == curmask) -- check if previous call take effect
-	assert(fs.umask() == curmask) -- check if previews empty not change
+  -- Check again the umask to test with no arguments
+  assert(fs.umask() == curmask) -- check if previous call take effect
+  assert(fs.umask() == curmask) -- check if previews empty not change
 --}
 end
 
@@ -501,12 +514,12 @@ end
 --| returns true on success or false and descriptive string
 do
 --{
-	local curdir = fs.getcwd()
-	local home = fs.realpath( user.home() )
-	assert(fs.chdir(home) == true)
-	assert(fs.getcwd() == home)
-	assert(fs.chdir(curdir) == true)
-	assert(fs.getcwd() == curdir)
+  local curdir = fs.getcwd()
+  local home = fs.realpath( user.home() )
+  assert(fs.chdir(home) == true)
+  assert(fs.getcwd() == home)
+  assert(fs.chdir(curdir) == true)
+  assert(fs.getcwd() == curdir)
 --}
 end
 
@@ -517,30 +530,30 @@ end
 --| The `mode` parameter is a string like "777".
 do
 --{
-	local testSubDir = fs.buildpath(testdir,"Sub","Dir")
-	local mode = "777";
-	local masked = ("%03o"):format( tonumber(mode,8) - tonumber(fs.umask(),8));
+  local testSubDir = fs.buildpath(testdir,"Sub","Dir")
+  local mode = "777";
+  local masked = ("%03o"):format( tonumber(mode,8) - tonumber(fs.umask(),8));
 
-	if fs.exists(testdir) then fs.rmdir(testdir) end
+  if fs.exists(testdir) then fs.rmdir(testdir) end
 
-	-- Success example
-	local newdir = fs.buildpath(testdir,"newdir")
-	assert(not fs.isdir(newdir))
-	assert(fs.mkdir(newdir,mode) == true)
-	assert(fs.isdir(newdir) == true)
+  -- Success example
+  local newdir = fs.buildpath(testdir,"newdir")
+  assert(not fs.isdir(newdir))
+  assert(fs.mkdir(newdir,mode) == true)
+  assert(fs.isdir(newdir) == true)
 
-	-- The umask is applyied on creation (usually 022). So 777 | 022 = 755
-	-- you can discover or set the umask using `wax.fs.umask()`
-	assert(fs.getmod(newdir) == masked)
+  -- The umask is applyied on creation (usually 022). So 777 | 022 = 755
+  -- you can discover or set the umask using `wax.fs.umask()`
+  assert(fs.getmod(newdir) == masked)
 
-	-- Error example (trying to create directly subdirectories)
-	local ok, err = fs.mkdir(testSubDir,mode)
-	assert(ok == false)
-	assert(type(err) == "string")
+  -- Error example (trying to create directly subdirectories)
+  local ok, err = fs.mkdir(testSubDir,mode)
+  assert(ok == false)
+  assert(type(err) == "string")
 
-	-- Another error examples
-	assert(not fs.mkdir(testdir,mode)) -- already exists
-	assert(not fs.mkdir(testfile,mode)) -- exists and is a file
+  -- Another error examples
+  assert(not fs.mkdir(testdir,mode)) -- already exists
+  assert(not fs.mkdir(testfile,mode)) -- exists and is a file
 --}
 end
 
@@ -550,41 +563,41 @@ end
 --| string. `mode` parameter is a string like "777".
 do
 --{
-	local uncle = fs.buildpath("..","uncleDir")
-	local cousin = fs.buildpath(uncle,"cousin")
-	assert(fs.mkdirs(cousin,"777"))
-	assert(fs.isdir(cousin))
-	assert(fs.rmdir(cousin))
-	assert(fs.rmdir(uncle))
+  local uncle = fs.buildpath("..","uncleDir")
+  local cousin = fs.buildpath(uncle,"cousin")
+  assert(fs.mkdirs(cousin,"777"))
+  assert(fs.isdir(cousin))
+  assert(fs.rmdir(cousin))
+  assert(fs.rmdir(uncle))
 
-	local mlangPathParts = {
-	--[[Arab      ]] "الدليل",
-	--[[Armenian  ]] "կատալոգ",
-	--[[Georgian  ]] "საქაღალდე",
-	--[[Hindi     ]] "फ़ोल्डर",
-	--[[Russian   ]] "каталог",
-	--[[S. Chinese]] "目录",
-	--[[Tamil     ]] "அடைவு",
-	}
+  local mlangPathParts = {
+  --[[Arab      ]] "الدليل",
+  --[[Armenian  ]] "կատալոգ",
+  --[[Georgian  ]] "საქაღალდე",
+  --[[Hindi     ]] "फ़ोल्डर",
+  --[[Russian   ]] "каталог",
+  --[[S. Chinese]] "目录",
+  --[[Tamil     ]] "அடைவு",
+  }
 
-	local unpack = unpack or table.unpack
+  local unpack = unpack or table.unpack
 
-	-- Create the entire path, wher each subfolder has a different glyph set
-	local mlangPath = fs.buildpath(testdir, unpack(mlangPathParts))
-	assert( fs.mkdirs(mlangPath,"777") )
+  -- Create the entire path, wher each subfolder has a different glyph set
+  local mlangPath = fs.buildpath(testdir, unpack(mlangPathParts))
+  assert( fs.mkdirs(mlangPath,"777") )
 
-	-- Cleanup the kitchen
-	for i=#mlangPathParts, 1, -1 do
-		mlangPath = fs.buildpath(testdir, unpack(mlangPathParts,1,i))
-		assert( fs.isdir(mlangPath) )
-		assert( fs.rmdir(mlangPath) )
-	end
+  -- Cleanup the kitchen
+  for i=#mlangPathParts, 1, -1 do
+    mlangPath = fs.buildpath(testdir, unpack(mlangPathParts,1,i))
+    assert( fs.isdir(mlangPath) )
+    assert( fs.rmdir(mlangPath) )
+  end
 
-	if user.name() ~= "root" then
-		res, err = fs.mkdirs("/some_dir","777")
-		assert(res == false)
-		assert(type(err) == "string")
-	end
+  if user.name() ~= "root" then
+    res, err = fs.mkdirs("/some_dir","777")
+    assert(res == false)
+    assert(type(err) == "string")
+  end
 --}
 end
 
@@ -592,24 +605,24 @@ end
 --| Remove directory if it is not empty.
 do
 --{
-	local dirParent = fs.buildpath( fs.getcwd(), "rmdirParent" )
-	local dirChild  = fs.buildpath( dirParent,"rmdirChild" )
-	assert(fs.mkdirs(dirChild,"777"))
+  local dirParent = fs.buildpath( fs.getcwd(), "rmdirParent" )
+  local dirChild  = fs.buildpath( dirParent,"rmdirChild" )
+  assert(fs.mkdirs(dirChild,"777"))
 
-	-- Error: Directory is not empty
-	local res, err = fs.rmdir(dirParent)
-	assert(res == false and type(err) == "string")
+  -- Error: Directory is not empty
+  local res, err = fs.rmdir(dirParent)
+  assert(res == false and type(err) == "string")
 
-	-- Success
-	assert(fs.rmdir(dirChild))
-	assert(not fs.isdir(dirChild))
+  -- Success
+  assert(fs.rmdir(dirChild))
+  assert(not fs.isdir(dirChild))
 
-	-- Error: Directory not exists
-	res, err = fs.rmdir(dirChild)
-	assert(res == false and type(err) == "string")
+  -- Error: Directory not exists
+  res, err = fs.rmdir(dirChild)
+  assert(res == false and type(err) == "string")
 
-	-- Success
-	assert(fs.rmdir(dirParent))
+  -- Success
+  assert(fs.rmdir(dirParent))
 --}
 end
 
@@ -620,44 +633,44 @@ end
 do
 --| Example 1: Basic usage
 --{
-	if fs.isdir("/") then
-		for entry in fs.list("/") do
-			-- do something with entry
-			assert(type(entry) == "string")
-		end
-	end
+  if fs.isdir("/") then
+    for entry in fs.list("/") do
+      -- do something with entry
+      assert(type(entry) == "string")
+    end
+  end
 --}
 --| Example 2: What fs.list() returns?
 --{
-	if fs.isdir("/") then
-		local iter = fs.list("/")
-		assert(type(iter) == "function")
-	end
+  if fs.isdir("/") then
+    local iter = fs.list("/")
+    assert(type(iter) == "function")
+  end
 --}
 --| Example 3: Root directory should have more than one entry
 --{
-	if fs.isdir("/") then
-		local count = 0;
-		for _ in fs.list("/") do
-			count = count + 1
-		end
-		assert(count > 0)
-	end
+  if fs.isdir("/") then
+    local count = 0;
+    for _ in fs.list("/") do
+      count = count + 1
+    end
+    assert(count > 0)
+  end
 --}
 --| Example 4: Observe that in above examples we checked with fs.isdir()
 --| before iterate with fs.list(). If you don't do that you can break the
 --| Lua execution. Other way to avoid the fs.isdir() check is to use
 --| pcall() but it is not so clear as the above:
 --{
-	local ok, iter, data = pcall(fs.list,"/baaa/beeeh/biii/boooh/bum!")
+  local ok, iter, data = pcall(fs.list,"/baaa/beeeh/biii/boooh/bum!")
 
-	if ok then
-		for entry in iter, data do
-			print(entry)
-		end
-	else
-		assert(ok == false and type(iter) == "string")
-	end
+  if ok then
+    for entry in iter, data do
+      print(entry)
+    end
+  else
+    assert(ok == false and type(iter) == "string")
+  end
 --}
 end
 
@@ -684,37 +697,37 @@ do
 --| Example 1.
 --| Basic usage
 --{
-	for matched in fs.glob("/*") do
-		-- do something with the matched
-		assert(type(matched) == "string")
-	end
+  for matched in fs.glob("/*") do
+    -- do something with the matched
+    assert(type(matched) == "string")
+  end
 --}
 --| Example 2.
 --| What fs.glob() returns?
 --{
-	local func = fs.glob('/*')
-	assert(type(func) == "function")
+  local func = fs.glob('/*')
+  assert(type(func) == "function")
 --}
 --| Example 3.
 --| If the path doesn't exists glob() doesnt throws
 --{
-	local count = 0
-	for _ in fs.glob('/some/inexistent/path/*/*/*/*') do
-		count = count + 1
-	end
-	assert(count == 0)
+  local count = 0
+  for _ in fs.glob('/some/inexistent/path/*/*/*/*') do
+    count = count + 1
+  end
+  assert(count == 0)
 --}
 --| Example 4.
 --| `fs.glob()` always returns the entire path matched for entries.
 --| So if you search "../something/*" and there are matches, all the entries
 --| will have the "../something" as its prefix.
 --{
-	local queries = { "./*", "../*", "/b*" }
-	for _, query in ipairs(queries) do
-		for entry in fs.glob(query) do
-			assert( entry:sub(1,2) == query:sub(1,2) )
-		end
-	end
+  local queries = { "./*", "../*", "/b*" }
+  for _, query in ipairs(queries) do
+    for entry in fs.glob(query) do
+      assert( entry:sub(1,2) == query:sub(1,2) )
+    end
+  end
 --}
 --| Observe that unlike `fs.list()` we didn't check if directory exists or
 --| if we have permission to access it. This relaxed nature allows you to
@@ -731,25 +744,25 @@ os.exit(0)
 --| ## Symbolic links handling
 --|
 
-	--$ fs.islink(path: string) : boolean
+  --$ fs.islink(path: string) : boolean
 --| checks if the path exists and is a link
 do
 --{
-	assert(fs.islink("/somelink") == true)
+  assert(fs.islink("/somelink") == true)
 
-	local ok, errstr
+  local ok, errstr
 --}
 --| Existent path but not directory:
 --{
-	ok, errstr = fs.islink("/some_not_link")
-	assert(ok == false)
-	assert(type(errstr) == "nil")
+  ok, errstr = fs.islink("/some_not_link")
+  assert(ok == false)
+  assert(type(errstr) == "nil")
 --}
 --| Inexistent path:
 --{
-	ok, errstr = fs.islink("/some_inexistent_path")
-	assert(ok == false);
-	assert(type(errstr) == "nil")
+  ok, errstr = fs.islink("/some_inexistent_path")
+  assert(ok == false);
+  assert(type(errstr) == "nil")
 --}
 end
 
@@ -767,7 +780,7 @@ end
 --| When not possible, returns nil and a descriptive string.
 do
 --{
-	assert(fs.linkStat("/"))
+  assert(fs.linkStat("/"))
 --}
 end
 
@@ -781,7 +794,7 @@ do
 --| Note that "reachable" doesn't means "writable". If script has not access to
 --| path resolution, the function also returns an error string.
 --{
-	assert(fs.isfile(testfile))
+  assert(fs.isfile(testfile))
 --}
 end
 
@@ -790,7 +803,7 @@ end
 --| When it is not possible, returns false and a descriptive string.
 do
 --{
-	assert(fs.unlink())
+  assert(fs.unlink())
 --}
 end
 
@@ -803,7 +816,7 @@ end
 --$ fs.ispipe(path: string) : boolean
 do
 --{ Check if the file is a pipe (FIFO)
-	assert(fs.ispipe("/pipe"))
+  assert(fs.ispipe("/pipe"))
 --}
 end
 
@@ -812,7 +825,7 @@ end
 --| a descriptive string on error.
 do
 --{
-	assert(fs.makepipe())
+  assert(fs.makepipe())
 --}
 end
 
@@ -827,7 +840,7 @@ end
 --| printer, screen, speakers, mouse, keyboard etc.
 do
 --{
-	assert(fs.ischardev("/dev/tty"))
+  assert(fs.ischardev("/dev/tty"))
 --}
 end
 
@@ -837,7 +850,7 @@ end
 --| like USB, SD, HDD etc.
 do
 --{
-	assert(fs.isblockdev("/dev/sda"))
+  assert(fs.isblockdev("/dev/sda"))
 --}
 
 

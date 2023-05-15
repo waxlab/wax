@@ -1,77 +1,117 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
 local make, help = {},{}
+local config = require 'etc.run.config'
+local sh = require 'etc.run.sh'
 local DEBUG    = os.getenv('DEBUG')    -- debug flags (with gdb and more verbose)
 local WAXTFLAG = os.getenv('WAXTFLAG') -- test flags (force -std=gnu89)
 local OBJ_EXTENSION = os.getenv 'OBJ_EXTENSION'
 local LIB_EXTENSION = os.getenv 'LIB_EXTENSION'
-local SINGLE_MODULE = os.getenv 'SINGLE_MODULE'
+local SINGLE_PACKAGE = os.getenv 'SINGLE_PACKAGE'
 local LUA_VERSION = os.getenv 'LUA_VERSION'
-local config = require 'etc.run.config'
-local outdir = LUA_VERSION and 'out/'..LUA_VERSION or 'out'
+local SRCDIR = './src'
+local OUTDIR = './out'
+local COUTDIR = LUA_VERSION and OUTDIR..'/'..LUA_VERSION or OUTDIR
+
+
 
 -----------------------------------------------------------
 -- HELPERS ------------------------------------------------
 -----------------------------------------------------------
-local _x = os.execute
-local function x(cmd, ...)
-	cmd=cmd:format(...)
-	if DEBUG then print(cmd, ...) end
-	assert(_x(cmd))
+
+local exec, isdir, getenv
+do
+  exec = sh.exec
+
+  function isdir(path)
+    local p = io.popen(('file -i %q'):format(path),'r')
+    if p then
+      local mime = p:read('*a')
+      mime = mime:gsub('^[^:]*:%s*',''):gsub('%s*;[^;]*$','')
+      if mime == 'inode/directory' then
+        return true
+      end
+    end
+    return false
+  end
+
+  function env(var, def)
+    local val = os.getenv(var)
+    if not val or val:len() < 1 then
+      if not def then error('No env var "'..var..'"',2) end
+      val = def
+    end
+    return val
+  end
 end
-local function isdir(path)
-	local p = io.popen(('file -i %q'):format(path),'r')
-	if p then
-		local mime = p:read('*a')
-		mime = mime:gsub('^[^:]*:%s*',''):gsub('%s*;[^;]*$','')
-		if mime == 'inode/directory' then
-			return true
-		end
-	end
-	return false
-end
-
-
-local
-function env(var, def)
-	local val = os.getenv(var)
-	if not val or val:len() < 1 then
-		if not def then error('No env var "'..var..'"',2) end
-		val = def
-	end
-	return val
-end
-
-
 
 -----------------------------------------------------------
 -- INSTALL ------------------------------------------------
 -----------------------------------------------------------
 do
+  local inst = {}
+  function make.install ()
+    local mods = config.modules
 
-	help.install = 'Install the Lua files and compiled binaries and libraries'
-	function make.install ()
-		local verbose = DEBUG and 'v' or ''
-		if isdir('lib') then
-			x( 'cp -rf%s lib/* %q || :', verbose, env('INST_LUADIR') )
-		end
-		if isdir('bin') then
-			x( 'cp -rf%s bin/* %q || :', verbose, env('INST_BINDIR') )
-		end
+    -- As Luarocks wipes the previous installed files,
+    -- we reinstall all ready files, so we can test a single
+    -- modules that depends on other modules.
+    for _, pkg  in pairs(mods) do
+      for _, mod in pairs(pkg) do
+        if inst[mod.type] then inst[mod.type](mod) end
+      end
+    end
 
-		if config.clib and #config.clib > 0 then
-			x( 'cp -rf%s %s/lib/* %q', verbose, outdir, env('INST_LIBDIR') )
-		end
+    --[[
+    if isdir('bin') then
+      exec( 'cp -rf%s bin/* %q || :', verbose, env('INST_BINDIR') )
+    end
 
-		if config.cbin and #config.cbin > 0 then
-			x( 'cp -rf%s %s/bin/* %q', verbose, outdir, env('INST_BINDIR') )
-		end
-	end
+    if config.cbin and #config.cbin > 0 then
+      exec( 'cp -rf%s %s/bin/* %q', verbose, COUTDIR, env('INST_BINDIR') )
+    end
+    ]]
+  end
+  function inst.lua(mod)
+    local src = SRCDIR..'/'..mod[1]
+    local dst = env('INST_LUADIR')..'/'..(mod.name:gsub('%.','/'))..'.lua'
+    exec('mkdir -p %q', (dst:gsub('/[^/]*$','')))
+    exec('cp -rf%s %q %q', DEBUG and 'v' or '', src, dst)
+  end
+
+  function inst.c(mod)
+    local src = COUTDIR..'/lib/'..mod.name:gsub('%.','/')..'.so'
+    local dst = env('INST_LIBDIR')..'/'..(mod.name:gsub('%.','/'))..'.so'
+    exec('mkdir -p %q', (dst:gsub('/[^/]*$','')))
+    exec('cp -rf%s %q %q', DEBUG and 'v' or '', src, dst)
+  end
+
+  help.install = 'Install the Lua files and compiled binaries and libraries'
 end
 
 -----------------------------------------------------------
 -- CLEAN --------------------------------------------------
 -----------------------------------------------------------
 function make.clean()
-	x('rm -rf ./out* ./tmp ./src/*.o')
+  print("Cleaning project")
+  local paths = {
+    {within = './',
+     './tree', './lua', './luarocks', './lua_modules', './.luarocks', OUTDIR},
+
+    {within = SRCDIR,
+     '*.out', '*.o', '*.a', '*.so' }
+  }
+
+  local rm = [[find %q -depth -%s '%s' -exec rm -rf {} \;]]
+--  local rm = [[find %q %s]]
+  for _, loc in ipairs(paths) do
+    for _, pat in ipairs(loc) do
+      if pat:match("'") then error "Invalid character" end
+      local cmd = rm:format(loc.within, pat:find '/' and 'wholename' or 'name', pat)
+      os.execute(cmd)
+    end
+  end
 end
 
 
@@ -80,125 +120,129 @@ end
 -- BUILD --------------------------------------------------
 -----------------------------------------------------------
 do
-	local cc = {}
-	function cc.cc(o)
-		return o.cc
-				or env('CC','gcc')
-	end
+  local cc = {}
+  function cc.cc(o)
+    return o.cc
+        or env('CC','gcc')
+  end
 
-	-- lflags      = link flags
-	-- tflags      = testing flags to enforce code standards
-	-- sharedflags = shared object flags
-	function cc.tflags() return os.getenv('WAXTFLAG') and '-std=gnu89' or '' end
-	function cc.lflags(item) return item.lflags or '' end
-	function cc.sharedflag() return env('LIBFLAG', '-shared') end
+  -- lflags      = link flags
+  -- tflags      = testing flags to enforce code standards
+  -- sharedflags = shared object flags
+  function cc.tflags() return os.getenv('WAXTFLAG') and '-std=gnu89' or '' end
+  function cc.lflags(item) return item.lflags or '' end
+  function cc.sharedflag() return env('LIBFLAG', '-shared') end
 
-	-- Compilation flags
-	function cc.cflags(o)
-		local debug = os.getenv("CC_DEBUG") and ' -g ' or ''
-		local flags
-		if o.flags then
-			if type(o.flags) == 'table'
-				then
-					flags = debug..table.concat(o.flags, ' ')
-				else
-					flags = debug..tostring(o.flags)
-			end
-		else
-			flags = env('CFLAGS', debug)
-			flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
-					 .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
-		end
-		return flags
-	end
+  -- Compilation flags
+  function cc.cflags(mod)
+    local debug = os.getenv("CC_DEBUG") and ' -g ' or ''
+    local flags
+    if mod.flags then
+      flags = type(mod.flags) == 'table'
+        and debug..table.concat(mod.flags, ' ')
+        or  debug..tostring(mod.flags)
+    else
+      flags = env('CFLAGS', debug)
+      flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
+           .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
+    end
+    return flags
+  end
 
-	function cc.debug(item) return DEBUG and '-g' or '' end
+  function cc.debug(item) return DEBUG and '-g' or '' end
 
 
-	function cc.src(item)
-		local t, f = {}, nil
-		f = type(item.src) == 'table' and item.src or { tostring(item.src) }
+  function cc.src(mod)
+    local list, f = {}, nil
 
-		for i,v in ipairs(f) do
-			if v:find('%.%.')
-				then error(('invalid filename: %q'):format(v))
-			end
-			t[#t+1] = 'src/'..v
-		end
+    for i,file in ipairs(mod) do
+      if file:find('%.%.') then
+        util.die('invalid filename: %q', file)
+      end
+      list[i] = SRCDIR..'/'..file
+    end
 
-		return table.concat(t,' ')
-	end
-
-
-	function cc.incdir()
-		local incdir = env('LUA_INCDIR',nil)
-		return incdir and '-I'..incdir or ''
-	end
+    return table.concat(list,' ')
+  end
 
 
-	function cc.srcout(item)
-		if item:find('%.%.') then
-			error(('invalid filename: %q'):format(item))
-		end
-		return table.concat {
-			' -c src/',item,
-			' -o src/',(item:gsub('[^.]+$',OBJ_EXTENSION))
-		}
-	end
-
-	function cc.libout(item)
-		local path = outdir..'/lib/'..item.mod:gsub('%.','/') -- 'wax.x' to 'wax/x'
-		x('mkdir -p %q', path:gsub('/[^/]*$',''))
-		local libfile = path..'.'..LIB_EXTENSION
-		return libfile;
-	end
-
-	function cc.binout(o) return outdir..'/bin/'..o[1] end
+  function cc.incdir()
+    local incdir = env('LUA_INCDIR',nil)
+    return incdir and '-I'..incdir or ''
+  end
 
 
-	local
-	function clib(config)
-		local cmd_obj   = '@cc @debug @tflags @cflags @incdir @srcout'
-		local cmd_shobj = '@cc @tflags @sharedflag -o @libout @src @lflags'
+  function cc.srcout(item)
+    if item:find('%.%.') then
+      error(('invalid filename: %q'):format(item))
+    end
+    return table.concat {
+      ' -c src/',item,
+      ' -o src/',(item:gsub('[^.]+$',OBJ_EXTENSION))
+    }
+  end
 
-		if config.clib then
-			x('mkdir -p %s/lib', outdir)
+  function cc.libout(mod)
+    local dest = COUTDIR..'/lib/'..mod.name:gsub('%.','/')
+    -- 'wax.x' to 'wax/x'
+    exec('mkdir -p %q', dest:gsub('/[^/]*$',''))
+    return dest..'.'..LIB_EXTENSION
+  end
 
-			for _,item in ipairs(config.clib) do
-				if not SINGLE_MODULE or SINGLE_MODULE == item.mod then
-					for s, src in ipairs(item.src) do
-						-- compile each .c to .o
-						x((cmd_obj:gsub('@(%w+)', function(p) return cc[p](src) end)))
-						-- replace the name from .c to .o
-						item.src[s] = src:gsub('[^.]$',OBJ_EXTENSION)
-					end
-					x((cmd_shobj:gsub('@(%w+)',function(p) return cc[p](item) end)))
-					if SINGLE_MODULE then return true end
-				end
-			end
+  function cc.binout(o) return COUTDIR..'/bin/'..o[1] end
 
-			if SINGLE_MODULE then return false end
-		end
 
-		return true
-	end
+  local
+  function clib(mod)
+    local create_o  = '@cc @debug @tflags @cflags @incdir @srcout'
+    local create_so = '@cc @tflags @sharedflag -o @libout @src @lflags'
 
-	local
-	function cbin(config)
-		local cmd = '@cc @debug @incdir @flags @src -o @binout'
-		if config.cbin and #config.cbin > 0 then
-			x('mkdir -p %s/bin', outdir)
-			for _,o in ipairs(config.cbin) do
-				x((cmd:gsub('@(%w+)',function(p) return cc[p](o) end)))
-			end
-		end
-	end
+    exec('mkdir -p %s/lib', COUTDIR)
+    -- For each component of the module
+    for s, src in ipairs(mod) do
+      -- For each source code
+        -- compile each .c to .o
+        exec((create_o:gsub('@(%w+)', function(p) return cc[p](src) end)))
+        -- replace the name from .c to .o
+        mod[s] = src:gsub('[^.]$',OBJ_EXTENSION)
+    end
+    -- Build compiled items into shared object
+    exec((create_so:gsub('@(%w+)',function(p) return cc[p](mod) end)))
 
-	help.build = "Compile C code"
-	function make.build ()
-		if not clib(config) then print('MODULE NOT FOUND') os.exit(1) end
-		cbin(config)
-	end
+    return true
+  end
+
+  local
+  function cbin(config)
+    local cmd = '@cc @debug @incdir @flags @src -o @binout'
+    if config.cbin and #config.cbin > 0 then
+      exec('mkdir -p %s/bin', COUTDIR)
+      for _,o in ipairs(config.cbin) do
+        exec((cmd:gsub('@(%w+)',function(p) return cc[p](o) end)))
+      end
+    end
+  end
+
+  help.build = "Compile C code"
+  function make.build ()
+    local mods = config.modules
+    local single = SINGLE_PACKAGE
+    if single then
+      if mods[single] and mods[single].type == 'lua' then
+        local pkgcfg = mods[single]
+        for _, mod in pairs(pkgcfg) do
+          return clib(mod)
+        end
+      end
+    else
+      for pkg, pkgcfg in pairs(mods) do
+        for _, mod in pairs(pkgcfg) do
+          if mod.type == 'c' then clib(mod) end
+        end
+      end
+    end
+    cbin(config)
+  end
 end
 
 
@@ -207,8 +251,8 @@ end
 -----------------------------------------------------------
 
 if not make[arg[1]] then
-	print('You need to use this script with one of the follow:')
-	for cmd,_ in pairs(make) do print(cmd, help[cmd]) end
+  print('You need to use this script with one of the follow:')
+  for cmd,_ in pairs(make) do print(cmd, help[cmd]) end
 else
-	make[arg[1]]()
+  make[arg[1]]()
 end

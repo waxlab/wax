@@ -1,3 +1,6 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
 --| # wax.compat
 --| Tools to enhance compatibility with different Lua versions.
 --|
@@ -16,13 +19,13 @@ local compat = require 'wax.compat'
 --| Load the string chunk `chunk` as a function using `env` table as environment
 do
 --{
-	local env = {}
-	local fn, err = compat.load([[myvar = { key = "value" }]], env )
-	assert(fn() == nil, err == nil)  -- Function does not return anything
-	assert(env.myvar.key == "value") -- But its environment is affected
+  local env = {}
+  local fn, err = compat.load([[myvar = { key = "value" }]], env )
+  assert(fn() == nil, err == nil)  -- Function does not return anything
+  assert(env.myvar.key == "value") -- But its environment is affected
 
-	local fn, err = compat.load([[ return myvar.key .. myvar.key ]], env )
-	assert(fn() == 'valuevalue')
+  local fn, err = compat.load([[ return myvar.key .. myvar.key ]], env )
+  assert(fn() == 'valuevalue')
 --}
 end
 
@@ -32,10 +35,10 @@ end
 do
 local luafile = require 'wax.fs'.getcwd()..'/etc/example/luafile.lua'
 --{
-	local env = {}
-	local fn, err = compat.loadfile(luafile, env)
-	assert(fn() == 'returned value')
-	assert(env.somevar == 'some value')
+  local env = {}
+  local fn, err = compat.loadfile(luafile, env)
+  assert(fn() == 'returned value')
+  assert(env.somevar == 'some value')
 --}
 end
 

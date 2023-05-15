@@ -2,23 +2,14 @@
 
 # Wax
 
-The word Wax: increasing of size, development, prosperity and strength,
-also the word used to describe the Moon phase and planets like Venus and Mercury.
+Wax is a Lua package, that aims to provide increasing support to the most
+common scripting tasks. Its name comes from the astronomical term used to
+describe a planetary body that looks to be "waxing" or "crescent" as its
+surface is revealed by its main star light.
 
-Wax is a Lua package containing a set of modules to extend the Lua standard
-library for multipurpose programming. It aims to enforce some good practices
-and take advantage of the Lua way of doing things.
-
-By now, it is fully supported under Linux and the major BSD representants
-(FreeBSD, OpenBSD, Dragonfly BSD and NetBSD).
-
-|               |                                                                 |                                                                 |                                                                           |
-|---------------|-----------------------------------------------------------------|-----------------------------------------------------------------|---------------------------------------------------------------------------|
-| Documentation | [GitHub](https://github.com/waxlab/wax/wiki)                    | [GitLab](https://gitlab.com/waxlab/wax/wiki)                    | [Codeberg](https://codeberg.org/waxlab/wax/wiki)                          |
-| Roadmap       | [GitHub](https://github.com/waxlab/wax/tree/meta/roadmap/)      | [GitLab](https://gitlab.com/waxlab/wax/tree/meta/roadmap/)      | [Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/roadmap/)      |
-| Issues        | [GitHub](https://github.com/waxlab/wax/tree/meta/issues/)       | [GitLab](https://gitlab.com/waxlab/wax/tree/meta/issues/)       | [Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/issues/)       |
-| Contributors  | [GitHub](https://github.com/waxlab/wax/tree/meta/contributors/) | [GitLab](https://gitlab.com/waxlab/wax/tree/meta/contributors/) | [Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/contributors/) |
-| Donate        | [Liberapay](https://liberapay.com/WaxLab/donate)                |                                                                 |                                                                           |
+Wax contains a set of subpackages or modules to extend the Lua standard
+library for multipurpose programming. Also, its source code, provide a simple
+C header libraries to help when developing Lua C modules.
 
 
 ## Quickstart
@@ -39,6 +30,41 @@ Binary modules are tested on different Unix systems:
 * BSDs (FreeBSD, OpenBSD, NetBSD and Dragonfly) as root and common user.
 
 
+## Systems Support
+
+By now, it is fully supported under Linux.
+BSD's support was dropped, so some adjusts may be needed on building process.
+Windows support is not on plans due to the expensiveness development cost on
+OS register, and also by WSL offering ways to use it natively as it would
+a Linux system.
+
+
+
+* Documentation:
+[GitHub](https://github.com/waxlab/wax/wiki)
+[GitLab](https://gitlab.com/waxlab/wax/wiki)
+[Codeberg](https://codeberg.org/waxlab/wax/wiki)
+
+* Roadmap:
+[GitHub](https://github.com/waxlab/wax/tree/meta/roadmap/)
+[GitLab](https://gitlab.com/waxlab/wax/tree/meta/roadmap/)
+[Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/roadmap/)
+
+* Issues:
+[GitHub](https://github.com/waxlab/wax/tree/meta/issues/)
+[GitLab](https://gitlab.com/waxlab/wax/tree/meta/issues/)
+[Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/issues/)
+
+* Contributors:
+[GitHub](https://github.com/waxlab/wax/tree/meta/contributors/)
+[GitLab](https://gitlab.com/waxlab/wax/tree/meta/contributors/)
+[Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/contributors/)
+
+* Donate:
+[Liberapay](https://liberapay.com/WaxLab/donate)
+
+
+
 ## Principles
 
 * If developed then documented.
@@ -51,23 +77,19 @@ Binary modules are tested on different Unix systems:
 * Intuitivity and previsibility. The siblings of the consistency.
 
 
+
 ## Versioning
 
-The versioning uses a mix of year and features. So is really easy to understand
-what is going on.
+There are two main branches: `latest` and `dev`.
 
-```
-1.10-5
-|  | '--- 5th correction of 1.10
-|  '----- 10th feature implemented
-'-------- 1st year of module.
-```
+* `latest` contains the latest public release.
+* `dev` is the recipient of the development on other branches.
 
-The development version should be got directly from the repository under the
-`dev` branch.
+When developing a feature, ex. `wax.os.pipeline()`, use a separate branch like
+`dev-os.pipeline` that should be merged with `dev` **only** after developed,
+just for tests before to be released as a version.
 
-While the `latest` branch contains the latest tested code, it may be slightly
-newer than the lastest rock found under Luarocks.
+Each version has its own tag, and Luarocks rockspec points to that.
 
 
 ## Running tests under multiple Linuxes
@@ -77,15 +99,15 @@ needed are found under the assets folder.
 
 To list available dockerfiles:
 
-	`lua ./run dbuild`
+  `lua ./run dbuild`
 
 To run the tests under the docker instance:
 
-	`lua ./run dtest`
+  `lua ./run dtest`
 
 To enter on docker and test:
 
-	`lua ./run drun`
+  `lua ./run drun`
 
 Observe than `./run drun` expects that the instance has bash installed.
 
@@ -95,12 +117,12 @@ Observe than `./run drun` expects that the instance has bash installed.
 To see a list of functions in all modules of Wax package, you can clone this
 repository and execute the script at its root directory:
 
-	./run help
+  ./run help
 
 Also there is a simple navigation tool as script. To run it you need bash, fzf,
 grep and sed. Like before, head to the root directory of the wax and execute:
 
-	./view
+  ./view
 
 Then you can filter while previewing the help and tests for the functions.
 
