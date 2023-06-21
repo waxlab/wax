@@ -25,6 +25,24 @@ do
 end
 
 
+--$ os.pipeline { {cmd, ... : string}, stdout="", stdin="" }
+
+local x = {}
+for k,v in pairs(wax.os) do print(k,v) end
+
+local res = wax.os.pipeline {
+  {"a","b"},
+  {"c","d"}
+}
+
+print('pipeline result:', res)
+
+
+
+
+
+
+
 ---------------------------------------------------------------
 ------ ATENTION: THIS SHOULD BE THE LAST TEST OF SCRIPT -------
 ---------------------------------------------------------------

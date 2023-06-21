@@ -34,6 +34,7 @@ modules = {
   ['wax.os'] = {
     init  = 'os/init.lua',
     initc = 'os/init.c',
+    pipeline = 'os/pipeline.c'
   },
 
   ['wax.sql'] = {
