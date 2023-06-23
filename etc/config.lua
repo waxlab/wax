@@ -9,11 +9,8 @@ modules = {
     init     = 'wax/init.lua',
     args     = 'wax/args.lua',
     lazy     = 'wax/lazy.lua',
-    compat   = 'wax/compat.lua',
     html     = 'wax/html.lua',
-    table    = 'wax/table.lua',
     template = 'wax/template.lua',
-    was      = 'wax/was.lua',
   },
 
   ['wax.csv'] = {

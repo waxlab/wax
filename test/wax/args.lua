@@ -52,8 +52,8 @@
 --| should start.
 --{
 do
-  local was = require "wax.was"
-  local args = require "wax.args"
+  local wax = require 'wax'
+  local args = wax.args
 
   local arg1, arg2, res
 
@@ -65,8 +65,8 @@ do
     arg = { 'a1','a2' }
   }
 
-  assert(was.similar( args.parse(arg1), res ))
-  assert(was.similar( args.parse(arg2,2), res ))
+  assert(wax.similar( args.parse(arg1), res ))
+  assert(wax.similar( args.parse(arg2,2), res ))
 
   -- after the first non option assumes the remaining are all arguments
   arg1 = {'somevalue','--opt1','--opt2','val2','a1','a2'}
@@ -76,7 +76,7 @@ do
     arg = {'somevalue','--opt1','--opt2','val2','a1','a2'}
   }
 
-  assert(was.similar( args.parse(arg1), res ))
-  assert(was.similar( args.parse(arg2, 2), res ))
+  assert(wax.similar( args.parse(arg1), res ))
+  assert(wax.similar( args.parse(arg2, 2), res ))
 end
 --}

@@ -149,12 +149,163 @@ end
 
 
 
-
 --$ wax.script()
 --| Returns the full path for the current script file
 --| where it was called.
 do
 --{
   assert(wax.script():match('test/wax.lua$'))
+--}
+end
+
+
+
+--$ wax.similar( t1: any, t2: any )
+--| Checks if t1 and t2 have similar contents.
+--| It checks recursively on tables instead of just copare the tables with `==`.
+--| For other types the comparison is just like `==`; It is useful specially
+--| for assertions.
+do
+--{
+  -- Behaves like `==` for numbers, strings, booleans, userdata and functions.
+  assert( wax.similar("hi", "hi") )
+  assert( not wax.similar("Hi", "hi") )
+  assert( wax.similar(10, 10.0) )
+  assert( wax.similar(false, false) )
+  assert( not wax.similar(true, false) )
+  assert( not wax.similar(false, nil) )
+
+  local ud1, ud2 = io.open('/dev/null'), io.open('/dev/null')
+  assert( type(ud1) == type(ud2) and wax.similar(ud1, ud2) == (ud1 == ud2) )
+
+  local f1, f2 = function() end, function() end
+  assert( f1 ~= f2 and not wax.similar(f1,f2))
+
+  -- Tables and functions are not compared by their pointer like in `==` but by
+  -- their internal value.
+  local t1, t2 = {}, {}
+  assert( (t1 == t2) == false )
+  assert( wax.similar(t1,t2) == true)
+
+  -- To be similar, both tables need to share the same metatable
+  setmetatable(t1,{})
+  setmetatable(t2,{})
+  assert( wax.similar(t1, t2) == false)
+
+  setmetatable(t2,getmetatable(t1))
+  assert( wax.similar(t1, t2) == true)
+
+  -- The test of similarity extends deeply (be careful with circular references)
+  t1 = { a = {1,2,3}, '', 10.0, {true} }
+  t2 = { a = {1,2,3}, '', 10, {true} }
+  assert( wax.similar(t1, t2) )
+
+  t2 = { a = {1,2,3}, '', 10, {true}, c={} }
+  assert( not wax.similar(t1, t2) )
+--}
+end
+
+
+
+--$ wax.tostring(data: any) : string
+--| Serialize a value to a string, stripping functions and userdata.
+do
+--| Ex: `{a="A","word"}` becomes `"{\"word\",a=\"A\"}"`
+--{
+local t = {
+  a="A", b="B", "fst", [true]=10, ["a b"]=1, c={10,20}, {30,40},
+  [function() end] = function() end,
+  [function() end] = true,
+  [{2,4,6}] = true,
+  d = function() end
+}
+local str = wax.tostring(t)
+local res = wax.load('return '..str)()
+assert(res)
+assert(res[1] == 'fst')
+assert(res[2][1] == 30 and res[2][2] == 40)
+assert(res.a == 'A' and res.b == 'B')
+assert(res.c[1] == 10 and res.c[2] == 20)
+assert(res[true] == 10 and res['a b'] == 1)
+
+-- As functions are system dependent, they are not converted to functions
+-- also tables on keys are not supported yet.
+for k,v in pairs(res) do
+  assert(type(k) ~= 'table')
+  assert(type(k) ~= 'function')
+  assert(type(v) ~= 'function')
+end
+--}
+end
+
+--$ wax.tochunk(data: any) : string
+--| Convert data to string as if it were a chunk of a Lua code.
+do
+--| The first level of the table become a declaration without the `local`
+--| keyword, i.e., only the keys with letters, numbers and underline.
+--| Ex: `{ "hi", ["hello world"]="value", hello="ok" }` becomes
+--| `"hello = \"ok\"`
+--{
+  local t = {
+    a="A", b="B", "fst", [true]=10, ["a b"]=1,
+    [function() end] = function() end,
+    [function() end] = true,
+    [{2,4,6}] = true,
+    c = function() end
+  }
+  local str = wax.tochunk(t)
+  local res = {}
+  wax.load(str,res)()
+  assert(res.a == "A" and res.b == "B")
+  assert(res[1] == nil)
+  assert(res[true] == nil and res["a b"] == nil)
+--}
+end
+
+
+
+--$ wax.load(chunk: string, env: table)
+--| Load the string chunk `chunk` as a function using `env` table as environment.
+--| This is a polyfill function for code that should run between different
+--| Lua versions.
+do
+--{
+  local env = {}
+  local fn, err = wax.load([[myvar = { key = "value" }]], env )
+  assert(fn() == nil, err == nil)  -- Function does not return anything
+  assert(env.myvar.key == "value") -- But its environment is affected
+
+  local fn, err = wax.load([[ return myvar.key .. myvar.key ]], env )
+  assert(fn() == 'valuevalue')
+--}
+end
+
+
+
+--$ wax.loadfile(filename: string, envt: table)
+--| Does the same as the `wax.load` but loading from a file instead.
+--| This is a polyfill function for code that should run between different
+--| Lua versions.
+do
+local luafile = require 'wax.fs'.getcwd()..'/etc/example/luafile.lua'
+--{
+  local env = {}
+  local fn, err = wax.loadfile(luafile, env)
+  assert(fn() == 'returned value')
+  assert(env.somevar == 'some value')
+--}
+end
+
+
+
+--$ wax.setfenv(fn: function, envt: table)
+--| Set the `envt` table as environment for the function `fn`.
+--| This is a polyfill function for code that should run between different
+--| Lua versions.
+do
+--{
+local function fn() return value end
+wax.setfenv(fn,{value=10})
+assert(fn() == 10)
 --}
 end
