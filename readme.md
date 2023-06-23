@@ -39,30 +39,49 @@ OS register, and also by WSL offering ways to use it natively as it would
 a Linux system.
 
 
+## Help and Documentation
 
-* Documentation:
-[GitHub](https://github.com/waxlab/wax/wiki)
-[GitLab](https://gitlab.com/waxlab/wax/wiki)
-[Codeberg](https://codeberg.org/waxlab/wax/wiki)
+To see a list of functions in all modules of Wax package, you can clone this
+repository and execute the script at its root directory:
 
-* Roadmap:
-[GitHub](https://github.com/waxlab/wax/tree/meta/roadmap/)
-[GitLab](https://gitlab.com/waxlab/wax/tree/meta/roadmap/)
-[Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/roadmap/)
+  ./run help
 
-* Issues:
-[GitHub](https://github.com/waxlab/wax/tree/meta/issues/)
-[GitLab](https://gitlab.com/waxlab/wax/tree/meta/issues/)
-[Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/issues/)
+Also there is a simple navigation tool as script. To run it you need bash, fzf,
+grep and sed. Like before, head to the root directory of the wax and execute:
 
-* Contributors:
-[GitHub](https://github.com/waxlab/wax/tree/meta/contributors/)
-[GitLab](https://gitlab.com/waxlab/wax/tree/meta/contributors/)
-[Codeberg](https://codeberg.org/waxlab/wax/src/branch/meta/contributors/)
+  ./view
 
-* Donate:
-[Liberapay](https://liberapay.com/WaxLab/donate)
+Then you can filter while previewing the help and tests for the functions.
 
+The `run help` and `view` scripts are just a temporary improvisation to get the
+access to the documentation as a documentation extraction, conversion and a
+simple viewer for console should take its way to the project some day in future.
+
+This documentation is also extracted and published at:
+[Codeberg](https://codeberg.org/waxlab/wax/wiki),
+[GitHub](https://github.com/waxlab/wax/wiki) or
+[GitLab](https://gitlab.com/waxlab/wax/wiki).
+
+
+## Waxing and Evolving
+
+The official home of source code of Wax is on
+(Codeberg Repo)[https://codeberg.org/waxlab/wax].
+
+To suggest features, discuss implementations or report issues, please
+head to these places:
+
+* (Issues)[https://codeberg.org/waxlab/wax/issues]
+* (Milestones)[https://codeberg.org/waxlab/wax/milestones]
+
+
+## Contribute
+
+This project expect to help many end users and developers being
+provided freely, but it costs time and personal resources.
+
+If Wax is useful for you, you can
+[Donate or Sponsor](https://liberapay.com/WaxLab/donate).
 
 
 ## Principles
@@ -85,8 +104,8 @@ There are two main branches: `latest` and `dev`.
 * `latest` contains the latest public release.
 * `dev` is the recipient of the development on other branches.
 
-When developing a feature, ex. `wax.os.pipeline()`, use a separate branch like
-`dev-os.pipeline` that should be merged with `dev` **only** after developed,
+When developing a feature, ex. `wax.fs.list()`, use a separate branch like
+`dev-os.list` that should be merged with `dev` **only** after developed,
 just for tests before to be released as a version.
 
 Each version has its own tag, and Luarocks rockspec points to that.
@@ -112,21 +131,4 @@ To enter on docker and test:
 Observe than `./run drun` expects that the instance has bash installed.
 
 
-## Help and Documentation
-
-To see a list of functions in all modules of Wax package, you can clone this
-repository and execute the script at its root directory:
-
-  ./run help
-
-Also there is a simple navigation tool as script. To run it you need bash, fzf,
-grep and sed. Like before, head to the root directory of the wax and execute:
-
-  ./view
-
-Then you can filter while previewing the help and tests for the functions.
-
-The `run help` and `view` scripts are just a temporary improvisation to get the
-access to the documentation as a documentation extraction, conversion and a
-simple viewer for console should take its way to the project some day in future.
 
