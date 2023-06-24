@@ -6,11 +6,20 @@ rockspec = 'wax-latest-1.rockspec'
 
 modules = {
   ['wax'] = {
-    init     = 'wax/init.lua',
-    args     = 'wax/args.lua',
-    lazy     = 'wax/lazy.lua',
-    html     = 'wax/html.lua',
-    template = 'wax/template.lua',
+    init  = 'wax/init.lua',
+    lazy  = 'wax/lazy.lua',
+  },
+
+  ['wax.args'] = {
+    init  = 'args/init.lua',
+  },
+
+  ['wax.html'] = {
+    init  = 'html/init.lua',
+  },
+
+  ['wax.template'] = {
+    init  = 'template/init.lua'
   },
 
   ['wax.csv'] = {
