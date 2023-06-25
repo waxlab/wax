@@ -8,6 +8,7 @@ modules = {
   ['wax'] = {
     init  = 'wax/init.lua',
     lazy  = 'wax/lazy.lua',
+    show  = 'wax/show.lua',
   },
 
   ['wax.args'] = {

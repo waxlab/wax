@@ -10,6 +10,7 @@ local wax = require "wax"
 --}
 
 
+
 --$ `wax.argerror(argnum: integer, expected: string) : void`
 --| This function simplify the error throwing with a more luaish message.
 --| The `argnum` represents which argument to the function is wrong while
@@ -309,3 +310,82 @@ wax.setfenv(fn,{value=10})
 assert(fn() == 10)
 --}
 end
+
+
+
+--$ wax.show(data: any [, handler: file])
+--| Show `data` structure in a human readable way. By defaut it writes
+--| to `io.stdout` unless you specify an opened file `handler`.
+do
+  local f = io.tmpfile()
+  local stdout = io.stdout
+  io.stdout = f
+--{
+  local data = {
+    [ true ] = "truly",
+    [ false ] = "untrue",
+    [ "type name" ] = "a string",
+    tree = { "a", "sub", what="table", { edge=2 }, [true]="ok" },
+    action = function() print 'hello' end,
+    nothing = nil,
+    userdata = io.stdout,
+    'first',
+    'second',
+    true,
+    false,
+    0,
+    3.141592
+  }
+
+  -- We add a circular reference
+  data.ref = data.tree[3] -- circular reference
+  data.tree.file = data.userdata
+
+  -- Then print to the output
+  wax.show(data)
+
+--}
+  f:seek('set', 0)
+  assert(f:read('*a'):len() > 100)
+  f:close()
+  io.stdout = stdout
+end
+--| It should write the data content resembling a Lua table:
+--|
+--| ```
+--| {
+--|   [1] = "first",
+--|   [2] = "second",
+--|   [3] = true,
+--|   [4] = false,
+--|   [5] = 0,
+--|   [6] = 3.141592,
+--|   [false] = "not truly",
+--|   [true] = "truly",
+--|   tree = {
+--|     [1] = "a",
+--|     [2] = "sub",
+--|     [3] = {
+--|       edge = 2,
+--|     },
+--|     [true] = "ok",
+--|     what = "table",
+--|     file = file (0x7f488c189760),
+--|   },
+--|   ref = @.tree[3],
+--|   userdata = file (0x7f488c189760),
+--|   ["type name"] = "a string",
+--|   action = function: 0x5601bb16b470,
+--| }
+--| ```
+--|
+--| To avoid infinite loops on tables that has self reference
+--| it is printed the tree path to the table in its first occurence
+--| preceded by an "@" like `@.ref` that points to `@.tree[3]`.
+--|
+--| Different calls to the same result should list the same entries
+--| although it may occur in different order due to internal
+--| functioning of pairs() Lua function.
+
+
+
