@@ -1,0 +1,28 @@
+wax.dirconf
+  A parser for config files based on directives to be parsed sequentially with
+  immediate error report (stop parsing on error) with strict predefined
+  directives and completely Lua syntax compatible
+
+waxp test
+  Find tests based on configuration directive ^^module^^
+
+type annotations
+  use ``--@`` comment to indicate the line has a type annotation. It should be
+  run by ``waxp test`` and be linked to the next function tests. In theory it
+  can assert if under expected passed values a previsible value.
+
+  This annotation can also be used to generate report on which functions made
+  public by the module were not tested or if these tests failed.
+
+  --@ wax.list(a:string|number) string|number
+
+  has a different meaning as
+
+  --@ wax.list(a:string) : string
+  --@ wax.list(a:number) : number
+
+  Consider using it do documentation also, as it is much more unambiguous. As
+  the identifier part %w+%.%[%w%.]+ should be capable to unify different
+  annotations under a signature block to be used as documentation.
+
+waxp build
