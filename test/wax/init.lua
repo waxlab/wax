@@ -319,7 +319,7 @@ Does the same as the ``wax.load`` but loading from a file instead.
 This is a polyfill function for code that should run between different
 Lua versions.
 --]]
-local luafile = require 'wax.fs'.getcwd()..'/etc/example/luafile.lua'
+local luafile = require 'wax.fs'.getcwd()..'/test/wax/_assets/luafile.lua'
 --{
   local env = {}
   local fn, err = wax.loadfile(luafile, env)
