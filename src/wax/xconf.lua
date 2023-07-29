@@ -1,5 +1,6 @@
-local confex = {}
+local xconf = {}
 local orec = require 'wax.ds.orecord'
+local wax  = require 'wax'
 
 -- if cond true returns cond and remaining parameters or throws error
 local
@@ -40,24 +41,32 @@ function buildenv(spec)
 end
 
 
-function confex.loadfile(file, spec)
-  local res, env
+local
+function load(where, what, spec)
+  local res, env, fn, err
   res, env = buildenv(spec)
-  assertl(0, require 'wax'.loadfile(file, env))()
+  fn, err =  wax[where == 'file' and 'loadfile' or 'load'](what, env)
+  if not fn then return nil, err end
+  fn, err = pcall(fn)
+  if not fn then return nil, err end
   if res.___ then
-    error('unfinished directive at end of '..file, 0)
+    return nil, (
+      where == 'file'
+        and 'unfinished directive at end of '..what
+        or  'unfinished directive at end of config string'
+    )
   end
   return res
 end
 
 
-function confex.load(str, spec)
-  local res, env
-  res, env = buildenv(spec)
-  assertl(0, require 'wax'.load(str, env))()
-  if res.___ then
-    error('unfinished directive at end of config string', 0)
-  end
+function xconf.loadfile(file, spec)
+  return load('file', file, spec)
 end
 
-return confex
+
+function xconf.load(str, spec)
+  return load('str', str, spec)
+end
+
+return xconf
