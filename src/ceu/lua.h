@@ -165,7 +165,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 #endif
 
 
-// Not used, yet.
+/* Not used, yet. */
 
 #if defined(_WIN32) || defined(WIN64)
   #define PLAT_WINDOWS
