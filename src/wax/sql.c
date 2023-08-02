@@ -2,8 +2,8 @@
 SPDX-License-Identifier: AGPL-3.0-or-later
 Copyright 2022-2023 - Thadeu de Paula and contributors
 */
-#include "../w/lua.h"
-#include "../w/arr.h"
+#include <ceu/lua.h>
+#include <ceu/array.h>
 #include <sqlite3.h>
 #include <math.h>
 
@@ -33,9 +33,7 @@ typedef struct waxSql {
 } waxSql;
 
 
-/* Describes a statement bind/ing strategy: anonymous our named */
-
-
+/* Describes a statement binding strategy: anonymous our named */
 typedef struct waxSqlStmt {
   sqlite3_stmt  *S;
   int           cols;
@@ -43,16 +41,14 @@ typedef struct waxSqlStmt {
 
   enum bindtype { STMT_PNAME, STMT_PANON, } btype;
   union {
-    int
-      bpos;
-    const char
-      **bnames;
+    int   bpos;
+    const char **bnames;
   };
 } waxSqlStmt;
 
 
 int
-luaopen_wax_sql_initc(lua_State *L);
+luaopen_wax_sql(lua_State *L);
 
 Lua
 wax_sql_open    (lua_State *L),
@@ -125,7 +121,7 @@ LuaReg wax_sql_stmtmt[] = {
 /*//////// IMPLEMENTATION ////////*/
 
 
-int luaopen_wax_sql_initc(lua_State *L) {
+int luaopen_wax_sql(lua_State *L) {
   wLua_newuserdata_mt(L, UD_SQL,      wax_sql_mt);
   wLua_newuserdata_mt(L, UD_SQL_STMT, wax_sql_stmtmt);
   wLua_export(L, module);
@@ -240,14 +236,14 @@ wax_sql_prep(lua_State *L) {
 
   if (is_name_param(name)) {
 
-    S->bnames = wArr_new(*S->bnames, 4);
-    wArr_push(S->bnames, (const char *) &name[1]);
+    S->bnames = carray_new(*S->bnames, 4);
+    carray_push(S->bnames, (const char *) &name[1]);
 
     for (i=2; i <= bpos; i++) {
       name = sqlite3_bind_parameter_name(S->S, i);
       wLua_assert(L,is_name_param(name), "Mixes named and unamed parameters");
       wLua_assert(L,
-                 wArr_push(S->bnames, (const char *) &name[1]),
+                 carray_push(S->bnames, (const char *) &name[1]),
                  strerror(errno));
     }
     
@@ -280,7 +276,7 @@ Lua
 wax_sql_final(lua_State *L) {
   waxSqlStmt *S = luaL_checkudata(L, 1, UD_SQL_STMT);
   if (S->S != NULL) {
-    if (S->btype == STMT_PNAME) wArr_clear(S->bnames);
+    if (S->btype == STMT_PNAME) carray_clear(S->bnames);
     int rc = sqlite3_finalize(S->S);
     S->S = NULL;
     if (SQLITE_OK == rc) {
@@ -463,7 +459,7 @@ static int bindnames(waxSqlStmt *S, lua_State *L) {
   if (lua_type(L,2) != LUA_TTABLE)
     luaL_error(L,"Named parameters require a record table with values");
 
-  for (i = wArr_len(S->bnames); i > 0; i--) {
+  for (i = carray_len(S->bnames); i > 0; i--) {
     lua_getfield(L, 2, S->bnames[i-1]);
     switch(lua_type(L,-1)) {
       case LUA_TNUMBER:

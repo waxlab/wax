@@ -1,0 +1,1 @@
+CPATH="$(pwd)/src"

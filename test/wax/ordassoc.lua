@@ -1,7 +1,7 @@
 --[[
 
-Ordered Record
---------------
+Ordered Associative Arrays
+--------------------------
 
 This is a data structure divided in a string keyed record part and a list
 pointing to the keys.
@@ -27,14 +27,14 @@ directly this way.
 
 --]]
 
-local orecord = require 'wax.type.orecord'
-local x = orecord.new()
-x(10,2)  -- error key cannot be number
+local oas = require 'wax.ordassoc'
+local x = oas.new()
+--x(10,2)  -- error key cannot be number
 x('a',1) -- ok
 x('a',2) -- error duplicate
 x('a',nil) -- error needs value
 print(x['a']) -- get the value
 print(x[1])   -- get the first key
-orecord.remove(x, 'a') -- remove record for a key
-orecord.remove(x, 1 ) -- remove 1st record
-orecord.insert(x, 'a', 3, 1) --insert record a, with value 3 at pos 1
+oas.remove(x, 'a') -- remove record for a key
+oas.remove(x, 1 ) -- remove 1st record
+oas.insert(x, 'a', 3, 1) --insert record a, with value 3 at pos 1

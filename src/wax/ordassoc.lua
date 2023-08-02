@@ -11,20 +11,20 @@ end
 
 
 local
-function orec_pairs(t)
+function oas_pairs(t)
   local i,d=0,rawget(t, '__data')
   return function() local k=d[i] return k, d[k] end
 end
 
 
 local
-function orec_ipairs(t)
+function oas_ipairs(t)
   return ipairs(rawget(t,'__data'))
 end
 
 
 local
-function orec_insert(t, k, v, i, l)
+function oas_insert(t, k, v, i, l)
   local d = rawget(t, '__data')
   if k == nil then err(l, 'attempt to use nil as record key') end
   if type(k) == 'number' then err(l, 'attemt to use number as record key') end
@@ -36,7 +36,7 @@ end
 
 
 local
-function orec_call(t, k, v)
+function oas_call(t, k, v)
   if k == nil then return #(rawget(t, '__data')) end
   if v == nil then return rawget(t, '__data')[k] end
   if type(k) == 'number' then
@@ -48,13 +48,13 @@ end
 
 
 local
-function orec_index(t, k)
+function oas_index(t, k)
   return rawget(t, '__data')[k]
 end
 
 
 local
-function orec_remove(t, k)
+function oas_remove(t, k)
   local d = rawget(t, '__data')
   if k == nil or type(k) == 'number' then
     d[k]=nil
@@ -70,28 +70,37 @@ function orec_remove(t, k)
 end
 
 local
-function orec_unwrap(t)
+function oas_unwrap(t)
   return rawget(t,'__data')
 end
 
 
 local OrderedRecord = {
   __name = 'OrderedRecord',
-  __call     = orec_call,
-  __pairs    = orec_pairs,
-  __newindex = orec_insert,
-  index      = orec_index,
-  ipairs     = orec_ipairs,
-  pairs      = orec_pairs,
-  insert     = orec_insert,
-  remove     = orec_remove,
-  unwrap     = orec_unwrap,
+  __call     = oas_call,
+  __pairs    = oas_pairs,
+  __newindex = oas_insert,
+  index      = oas_index,
+  ipairs     = oas_ipairs,
+  pairs      = oas_pairs,
+  insert     = oas_insert,
+  remove     = oas_remove,
+  unwrap     = oas_unwrap,
 }
 
 OrderedRecord.__index = OrderedRecord
 
-function OrderedRecord.new()
+local
+function oas_new()
   return setmetatable({__data={}}, OrderedRecord)
 end
 
-return OrderedRecord
+return {
+  new    = oas_new,
+  index  = oas_index,
+  ipairs = oas_ipairs,
+  pairs  = oas_pairs,
+  insert = oas_insert,
+  remove = oas_remove,
+  unwrap = oas_unwrap,
+}

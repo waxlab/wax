@@ -1,5 +1,5 @@
 local xconf = {}
-local orec = require 'wax.ds.orecord'
+local oas = require 'wax.ordassoc'
 local wax  = require 'wax'
 
 -- if cond true returns cond and remaining parameters or throws error
@@ -25,7 +25,7 @@ function buildenv(spec)
           conf[dtv] = fn(v1)
         end
     elseif np == 2 then
-      local data = orec.new()
+      local data = oas.new()
       conf[dtv]=data:unwrap()
       parser[dtv] =
         function(a)

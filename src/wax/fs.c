@@ -5,7 +5,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 #define _POSIX_C_SOURCE 200809L
 #define _XOPEN_SOURCE 500
 
-#include "../w/lua.h"
+#include <ceu/lua.h>
 #include <stdlib.h>    /* realpath */
 #include <sys/param.h> /* pmax Posix */
 #include <sys/stat.h>  /* stat */
@@ -27,7 +27,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 
 /* ///////// DECLARATION ///////// */
 
-int luaopen_wax_fs_initc(lua_State *);
+int luaopen_wax_fs(lua_State *);
 
 Lua
 wax_fs_access     (lua_State *),
@@ -140,7 +140,7 @@ LuaReg module[] = {
 
 /* ///////// IMPLEMENTATION ///////// */
 int
-luaopen_wax_fs_initc(lua_State *L) {
+luaopen_wax_fs(lua_State *L) {
 
   wLua_newuserdata_mt(L, glob_mt, wax_fs_glob_mt);
   wLua_newuserdata_mt(L, list_mt, wax_fs_list_mt);
@@ -191,11 +191,10 @@ wax_fs_buildpath(lua_State *L) {
       waxerr = 0,
       i;
 
-  luaL_checkstring(L,1);
-
-
   const char *name;
   char path[PATH_MAX] = "\0";
+  char res[PATH_MAX];
+  luaL_checkstring(L,1);
 
   for (i = 1; i <= lua_gettop(L); i++) {
     name = luaL_checkstring(L,i);
@@ -213,7 +212,6 @@ wax_fs_buildpath(lua_State *L) {
     }
   }
 
-  char res[PATH_MAX];
   aux_fssanitize(path, res);
   lua_pushstring(L,res);
   r = 1;
@@ -245,9 +243,8 @@ Lua
 wax_fs_stat(lua_State *L) {
   struct stat sb;
   const char *path = luaL_checkstring(L,1);
-  wLua_failnil(L, stat(path, &sb) == -1);
-
   char tstr[30];
+  wLua_failnil(L, stat(path, &sb) == -1);
 
   lua_createtable(L,0,16);
 
@@ -382,9 +379,9 @@ wax_fs_access(lua_State *L) {
 Lua
 wax_fs_getmod(lua_State *L) {
   struct stat sb;
+  char mode[4];
   wLua_failnil(L, stat(luaL_checkstring(L,1), &sb) < 0);
 
-  char mode[4];
   sprintf(mode, "%03o", sb.st_mode & 0777);
   lua_pushstring(L, mode);
 
@@ -451,6 +448,8 @@ wax_fs_exists(lua_State *L) {
 Lua
 wax_fs_umask(lua_State *L) {
   int omask;
+  char mask[4];
+
   if ( lua_gettop(L) == 0 ) {
     omask = umask(0022);
     if (omask != 0022) umask(omask);
@@ -458,7 +457,6 @@ wax_fs_umask(lua_State *L) {
     omask = umask(aux_checkmode(L,1));
   }
 
-  char mask[4];
   sprintf(mask, "%03o", omask & 0777);
   lua_pushstring(L,mask);
   return 1;
@@ -544,9 +542,9 @@ wax_fs_unlink(lua_State *L) {
 Lua
 iter_list(lua_State *L) {
   filels *data = lua_touserdata(L, lua_upvalueindex(1));
-  errno = 0;
   struct dirent *entry;
 
+  errno = 0;
   entry = readdir(data->handler);
 
   if (entry == NULL) {

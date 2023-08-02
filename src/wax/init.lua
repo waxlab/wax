@@ -5,11 +5,9 @@ local wax = {}
 
 local unpack = table.unpack or unpack
 
-local fs_realpath = require 'wax.fs'.realpath
-
 function wax.script()
   local s = debug.getinfo(2,'S')
-  if s then return fs_realpath(s.short_src) end
+  if s then return wax.fs.realpath(s.short_src) end
   return nil
 end
 

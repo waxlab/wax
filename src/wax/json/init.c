@@ -2,7 +2,7 @@
 SPDX-License-Identifier: AGPL-3.0-or-later
 Copyright 2022-2023 - Thadeu de Paula and contributors
 */
-#include "../w/lua.h"
+#include <ceu/lua.h>
 #include <stdlib.h>    /* realpath */
 #include <stdio.h>
 #include <string.h>

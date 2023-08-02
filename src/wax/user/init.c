@@ -7,7 +7,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 #include <sys/types.h>
 #include <grp.h>
 #include <pwd.h>
-#include "../w/lua.h"
+#include <ceu/lua.h>
 
 
 /* //// DECLARATION //// */

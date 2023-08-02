@@ -1,16 +1,15 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 -- Copyright 2022-2023 - Thadeu de Paula and contributors
 
---| # wax.fs
---| File and directory management on filesystem.
---|
---| Filesystem handling library to list, create, remove, set and get
---| permissions of files and directories.
+--[[
+Filesystem utilities
+--------------------
 
---| ## Basic usage
---{
-local fs = require("wax.fs")
---}
+Use ``wax.fs`` module to to list, create, remove, set and get permissions of
+files and directories.
+--]]
+
+local fs = require 'wax.fs'
 
 -- It may be not compiled, so we emulate it
 local user
@@ -23,12 +22,11 @@ do
     home = function() return home end
   }
 end
-local lua = tonumber(_VERSION:gsub('%D',''), 10)
 
 -- Prepares the environment for following tests
 local testdir, testfile
 do
-  testdir = os.getenv("HOME").."/wax.fs_testdir_root"
+  testdir = '.local/tmp'
   os.execute( ("rm -rf %q"):format(testdir) )
   os.execute( ("mkdir %q"):format(testdir) )
   testfile = testdir.."/wax.fs_testfile"
@@ -39,24 +37,12 @@ do
   end
 end
 
---|
---| ## Constants
---|
-
 --$ fs.dirsep : string
 --| Directory separator, that can change accordingly to the system.
 --| * BSD, Linux etc.: `"/"` (slash)
 --| * Windows:         `"\"` (backslash)
-do
---{
-  assert( fs.dirsep == "/" or fs.dirsep == "\\" )
---}
-end
+do assert( fs.dirsep == "/" or fs.dirsep == "\\" ) end
 
-
---|
---| ## Path handling
---|
 
 --$ fs.realpath( path: string ) : string | (nil, string)
 --| Resolves the realpath of the `path` and returns true.
@@ -70,6 +56,7 @@ do
   assert( res == nil and type(err) == "string" )
 --}
 end
+
 
 --$ fs.dirname(path: string) : string
 --| Get the dir part of the path and return it.
@@ -211,7 +198,7 @@ do
 --|
 --| To see some examples, consider these times in seconds since Unix epoch
 --{
-  local now = os.time(os.date("!*t"))
+  local now = os.time(os.date("*t"))
   local yesterday = now - 86400
   local lastweek  = now - (86400 * 7)
   local lastmonth = now - (86400 * 31)

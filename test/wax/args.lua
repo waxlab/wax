@@ -3,7 +3,7 @@
 
 --[[
 Parsing command line arguments
-==============================
+------------------------------
 
 Suppose you are writing a time tracking app, where you can add tasks you did
 with some facilities like task start time and end time. You could call it
@@ -39,8 +39,7 @@ do
     { 'start' },
     { 'end' },
   }
-
-  local options = wax.arg.parse(spec, arg)
+  local options = wax.args(spec, arg)
 
   assert(options.done == true)
   assert(options.start == '11:00')
@@ -49,31 +48,49 @@ do
 end
 
 --[[
-$ wax.arg.parse(spec:table, arg:table [, argidx:number]) : table | nil, string
+$ (@spec, arg:t)        -> (res:t, help:f)
+$ (@spec, arg:t)        -> (res:_, help:f, hint:s)
+$ (@spec, arg:t, idx:n) -> (res:t, help:f)
+$ (@spec, arg:t, idx:n) -> (res:_, help:f, hint:s)
 
-The ``spec`` is a table containing a list of rules for options. Each rule also
-cconsists in a table with both, a list and an associative part.
+* ``@spec`` is a table containing a list of rules for options. Each rule
+  also consists in a table with both, a list and an associative part.
+* ``arg`` is a list, like the global ``arg``
+* ``idx`` specify the initial index to parsing.
+* ``res`` is a table with arguments in its list part and parsed options at
+  the record part. It is nil when error occur on parsing.
+* ``help`` is a function that you can call if you want to show the user the
+  available options.
+* ``hiht`` is a string returned when the function returns ``res`` as nil,
+  so you can print to user and explain what is wrong.
 
-```
-spec = {
-  { longopt:string, shortopt:string, flag:string }, -- this is a rule
-  ...
+$ @spec {
+  { @long?, @short?, @flag?,
+    desc    ? @desc,
+    default ? @default,
+  }, ... }
 }
-```
 
-The first three list items of rule table are the name of the long option,
-the name of the short option and a option mode indicator:
+The first three list items of rule item are the name the long representation of
+the option, the short representation and the mode indicator.
 
+$ @long string
 
-The ``longopt`` refers to the name part of an option captured from the
-arguments list. If you inform in this field the word ``done``, it will
-represent the argument ``--done`` to be captured from cli.
+If long option is filled with ``"myoption"`` it will be used to capture the
+option you use on command line as ``--myoption``.
 
-The ``shortopt`` refers to a single character from a-z, A-Z or 0-9. If you
-inform in this field the letter ``d``, it will represent the argument ``-d``
-to be captured from cli.
+$ @short string
 
-The ``flag`` can be:
+The short option should be informed as a single character from a-z, A-Z or 0-9.
+If want to accept the command line the option ``-m`` (with single dash) you must
+fill this rule entry with ``"m"``.
+
+$ @flag  "+" | "-" | "*" | "!"
+
+The flag is a string with a single character used to indicate the behavior of
+the option.
+
+Flags can be:
 
 - ``-`` for switches (captured as boolean).
 - ``+`` for options allowed to appear more then once per call.
@@ -82,13 +99,6 @@ The ``flag`` can be:
 As the ``-`` means the inverse of the default value, it cannot be combined
 with ``!`` pr ``+`` as doesn't make sense to have always the opposite to the
 default value.
-
-The ``arg``, also a table, is a list with each command line argument, it is
-similar to the Lua global variable ``arg``.
-
-The ``argidx`` is optional, being its value equal to 1. You can use this
-argument do indicate to the parser the specific index of the ``arg`` from
-,which it should starts, for example:
 
 ```
 track.lua addtask --done --start 11:00 --end 14:30 what I did
@@ -105,18 +115,27 @@ do
     { 'end' },
   }
 
-  local options = wax.arg.parse(spec, arg, 2)
+  local res, help, hint = wax.args(spec, arg, 2)
 
-  assert(options.done == true)
-  assert(options.start == '11:00')
-  assert(options['end'] == '14:30')
+  assert(res.done == true)
+  assert(res.start == '11:00')
+  assert(res['end'] == '14:30')
+  assert(type(help) == 'function')
+  assert(hint == nil) -- there is no error
 --}
 end
 
 do
 --[[
-The function returns a table populated with its associative part containing
-pairs of option/value and its list part containing all remaining non-options.
+When it successfully parses arguments it returns a table and the help function,
+otherwise returns nil, the help function and a string with the hints on the
+error.
+
+The table is populated with its associative part containing pairs of
+option/value and its list part containing all remaining non-options.
+
+The help function can be called to show a convenient representation about which
+options are supported by your program.
 
 Short option is a ``-`` followed by a short option character, while long
 option is a ``--`` followed by a character from a-z, A-Z or 0-9 followed by
@@ -143,7 +162,7 @@ that comes after an option value.
     { '-v', '-m', '-M', '--other','saturn', '-o','jupiter', '-ouranus' },
   }
   for _, arg in pairs(cli_calls) do
-    local x = wax.arg.parse(spec, arg)
+    local x = wax.args(spec, arg)
     assert(x.moon == x.mars == x.venus == true)
     assert(x.other[1] == 'saturn')
     assert(x.other[2] == 'jupiter')
@@ -186,6 +205,9 @@ We can also add some more specific details to the spec argument:
 --}
 
 --[[
+
+$ @default string
+
 The ``default`` spec field says which value should be used when the option is
 ommited:
 
@@ -203,12 +225,12 @@ ommited:
   in this list and, in the absence of option between arguments will lead
   to the last list item be used as default.
 
-Considering the last ``spec`` above, we have as example:
+Considering the spec used above, we have as example:
 --]]
   do
   --{
     local args = { '-e','Telescope','-t','reflector', '-f' }
-    local opt = wax.arg.parse(spec,args)
+    local opt = wax.args(spec,args)
 
     assert(opt.equipment == 'Telescope')
     assert(opt.type == 'reflector')
@@ -218,22 +240,26 @@ Considering the last ``spec`` above, we have as example:
     assert(opt['with-finder'] == true)
   --}
   end
---| The following lead to an error because we give a value that is not in the
---| set:
+--[[
+The following doesn't work because we give a value that is not in the set:
+--]]
   do
   --{
     local args = { '-e','Telescope','-t','ccd' }
-    local opt, err = wax.arg.parse(spec, args)
-    assert(not opt and err)
+    local res, help, err = wax.args(spec, args)
+    assert (
+      not res
+      and type(help) == 'function'
+      and type(err) == 'string'
+    )
   --}
   end
 --[[
+
+@desc string
+
 The ``desc`` spec field is used to give a short description about the purpose of
-the option. See `wax.arg.help` for more.
-
-$ wax.arg.help(spec:table, [out:file]) : nil
-
+the option. It works as a documentation for you and is printed to the user when
+you call the returned help function.
 --]]
-wax.arg.help(spec)
-
 end

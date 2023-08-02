@@ -1,10 +1,10 @@
 --[[
-Confex
-------
+Explicit Configurations
+-----------------------
 
-Confex is a module to load configurations explicitly. The configurations has a
-valid Lua syntax and are processed under a sandboxed environment that receives
-only the functions to be used for configuration value parsing.
+``wax.xconf`` is a module to load configurations explicitly. The configurations
+has a valid Lua syntax and are processed under a sandboxed environment that
+receives only the functions to be used for configuration value parsing.
 
 Confex proposes an improved way over the traditional use of plain Lua as
 configurations because:

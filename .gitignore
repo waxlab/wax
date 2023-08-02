@@ -4,8 +4,8 @@
 /.luarocks
 /out
 /tree
-**/*.o
-**/*.so
-**/*.out
+.cache
+.clangd
 .ccls*
+.local
 **/*.src.rock

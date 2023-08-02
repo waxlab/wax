@@ -4,8 +4,8 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 */
 #define _POSIX_C_SOURCE 200112L
 
-#include "../w/lua.h"
-#include "../w/arr.h"
+#include <ceu/lua.h>
+#include <ceu/array.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -40,18 +40,18 @@ Lua
 wax_os_exec(lua_State *L) {
   char **argv;
   size_t idx = 0;
-  wLua_assert(L, (argv = wArr_new(*argv,2)) != NULL, strerror(errno));
-  wArr_push(argv, (char *)luaL_checkstring(L,1));
+  wLua_assert(L, (argv = carray_new(*argv,2)) != NULL, strerror(errno));
+  carray_push(argv, (char *)luaL_checkstring(L,1));
 
   if (lua_istable(L, 2)) {
     for (idx=1; idx <= wLua_rawlen(L,2); idx++) {
       lua_rawgeti(L, 2, idx);
-      wArr_push(argv, (char *)luaL_checkstring(L, -1));
+      carray_push(argv, (char *)luaL_checkstring(L, -1));
     }
   }
-  wArr_push(argv, NULL);
+  carray_push(argv, NULL);
   execvp(argv[0], argv);
-  wArr_free(argv);
+  carray_free(argv);
 
   // Only here on error. If execvp succeds, this block will never run
   lua_pushstring(L,strerror(errno));

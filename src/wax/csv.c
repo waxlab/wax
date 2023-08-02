@@ -3,8 +3,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 Copyright 2022-2023 - Thadeu de Paula and contributors
 */
 
-#include "../w/lua.h"
-#include "../w/arr.h"
+#include <ceu/lua.h>
+#include <ceu/array.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
@@ -83,7 +83,6 @@ aux_allockeys (struct ud_csv *u, size_t len);
 static void
 aux_resetkeys (struct ud_csv *u);
 
-
 #define aux_nextchar(udcsv) ( \
   (fread(&udcsv->chr, 1, 1, udcsv->fp)) == 0 \
     ? (udcsv->chr = '\0') \
@@ -112,7 +111,7 @@ wax_csv_open(lua_State *L) {
   u->quo    = lua_isstring(L, 2) ? luaL_checkstring(L, 3)[0] : '"';
   u->valloc = 0;
   u->vlen   = 0;
-  u->val    = wArr_new(u->val,1);
+  u->val    = carray_new(u->val,1);
   u->keys   = NULL;
   u->ended  = 0;
 
@@ -136,7 +135,7 @@ wax_csv_close(lua_State *L) {
       u->fp = NULL;
     }
 
-    wArr_free(u->val);
+    carray_free(u->val);
     lua_pushboolean(L, 1);
   }
   return 1;
@@ -168,7 +167,7 @@ iter_lists(lua_State *L) {
 
   do {
     no_eor = aux_walk(u, u->sep, u->quo);
-    wArr_push(u->val, '\0');
+    carray_push(u->val, '\0');
     wLua_pair_is(L, idx++, u->val);
   } while (no_eor);
 
@@ -194,10 +193,10 @@ wax_csv_records(lua_State *L) {
 
     do {
       noeor = aux_walk(u, u->sep, u->quo);
-      wArr_push(u->val,'\0');
-      field = wArr_new(*field, wArr_len(u->val));
+      carray_push(u->val,'\0');
+      field = carray_new(*field, carray_len(u->val));
       strcpy(field, u->val);
-      wLua_assert(L, wArr_push(u->keys, field), strerror(errno));
+      wLua_assert(L, carray_push(u->keys, field), strerror(errno));
     } while(noeor);
 
   } else { /* table argument as result key */
@@ -211,7 +210,7 @@ wax_csv_records(lua_State *L) {
 
     for (k=1, l=wLua_rawlen(L,-2); k <= l; k++) {
       lua_rawgeti(L,-1,k);
-      wLua_assert(L, wArr_push(u->keys, (char *)luaL_checkstring(L,-1)), strerror(errno));
+      wLua_assert(L, carray_push(u->keys, (char *)luaL_checkstring(L,-1)), strerror(errno));
       lua_pop(L,1);
     }
     lua_pop(L,1);
@@ -233,14 +232,14 @@ iter_records(lua_State *L) {
 
   int noeor;
   size_t k = 0;
-  size_t l = wArr_len(u->keys);
+  size_t l = carray_len(u->keys);
 
   lua_newtable(L);
 
   do {
     noeor = aux_walk(u, u->sep, u->quo);
     if (k < l) {
-      wArr_push(u->val, '\0');
+      carray_push(u->val, '\0');
       wLua_pair_ss(L, u->keys[k], u->val);
       k++;
     }
@@ -253,7 +252,7 @@ iter_records(lua_State *L) {
 static int
 aux_reset(struct ud_csv *u) {
   if (u->fp != NULL) fclose(u->fp);
-  if (u->keys != NULL) wArr_free(u->keys);
+  if (u->keys != NULL) carray_free(u->keys);
 
   u->fp = fopen(u->fname, "r");
   if (u->fp == NULL) return 0;
@@ -267,12 +266,12 @@ aux_resetkeys(struct ud_csv *u) {
    * ignoring the ones informed with Lua table as argument */
   if (u->kisalloc == 1) {
 
-    size_t i = wArr_len(u->keys);
+    size_t i = carray_len(u->keys);
 
     do { free(u->keys[--i]); } while(i>0);
 
   }
-  wArr_clear(u->keys);
+  carray_clear(u->keys);
 }
 
 
@@ -281,10 +280,10 @@ aux_allockeys(struct ud_csv *u, size_t len) {
 
   if (u->keys != NULL) {
     aux_resetkeys(u);
-    return wArr_capsz(u->keys, len);
+    return carray_capsz(u->keys, len);
   }
 
-  u->keys = wArr_new(u->keys, len);
+  u->keys = carray_new(u->keys, len);
   if (u->keys == NULL) return 0;
   return 1;
 }
@@ -298,7 +297,7 @@ static int
 aux_walk(struct ud_csv *CSV, const char sep, const char quo) {
   char chr = CSV->chr;
   char *val = CSV->val;
-  wArr_clear(val);
+  carray_clear(val);
 
   if (chr == quo ) goto get_quoted_value;
   if (chr == '\0') goto END_RECORD;
@@ -308,7 +307,7 @@ aux_walk(struct ud_csv *CSV, const char sep, const char quo) {
     if (chr == '\n') goto LF;
     if (chr == '\r') goto CR;
     if (chr == '\0') goto EOV; /* on loop is needed */
-    wArr_push(val,chr);
+    carray_push(val,chr);
     chr = aux_nextchar(CSV);
     goto simple_value;
 
@@ -316,7 +315,7 @@ aux_walk(struct ud_csv *CSV, const char sep, const char quo) {
     chr = aux_nextchar(CSV);
     if (chr == '\0') goto END_RECORD;
     if (chr == quo && (chr = aux_nextchar(CSV)) != quo) goto find_delim;
-    wArr_push(val,chr);
+    carray_push(val,chr);
     goto get_quoted_value;
 
   find_delim:
@@ -340,12 +339,12 @@ aux_walk(struct ud_csv *CSV, const char sep, const char quo) {
     goto END_RECORD;
 
   END_RECORD: /* Record ends with the this field */
-    wArr_push(val, '\0');
+    carray_push(val, '\0');
     CSV->val = &val[0];
     return 0;
 
   EOV: /* Field ends but not the record */
-    wArr_push(val, '\0');
+    carray_push(val, '\0');
     CSV->val = &val[0];
     return 1;
 }

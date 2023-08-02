@@ -1,17 +1,6 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 -- Copyright 2022-2023 - Thadeu de Paula and contributors
 
-local guard = require 'waxp.guard'
-local cliopt = {}
-local show  = require 'wax'.show
-
-
-
-
-local function hint(msg, ...)
-  error(msg:format(...),100000)
-end
-
 
 local out = io.stdout
 
@@ -25,30 +14,18 @@ local E_switchnreq = [[Spec #%d (%q): switchs cannot be mandatory]]
 
 local HINT_restrict = '--%s must have one of these values:\n * %s'
 local HINT_invalid  = 'Invalid option %q, see --help for more'
-local HINT_reqdswitch = [[--%s is a switch, so shouldn't be required]]
 local HINT_required   = [[option --%s must be informed]]
-local HINT_shrswitch  = [[%q is not a short option]]
 
-local HELP_shrswitch = "  -%s\n  --%s\n"
-local HELP_lngswitch = "  --%s\n"
-local HELP_shropt    = "  -%s <value>\n"
-local HELP_lngopt    = "  --%s <value>\n"
-local HELP_shrlist   = "  -%s < %s >\n"
-local HELP_lnglist   = "  --%s < %s >\n"
-local HELP_shrmulti  = "  -%s <value> -%s ...\n"
-local HELP_lngmulti  = "  --%s <value> --%s ...\n"
-local HELP_desc      = "     %s"
-
-local HELP_short = '-%s'
-local HELP_long  = '--%s'
+local concat, insert, remove = table.concat, table.insert, table.remove
 
 
-local function HELP_print(header, rules)
+local
+function HELP_print(header, rules)
   out:write '\n' out:write(header) out:write '\n'
-  local value, default
+  local value
   for _,r in ipairs(rules) do
     if r.set then
-      value = table.concat(r.default, '|')
+      value = concat(r.default, '|')
     elseif r.multi then
       value = 'value'
     else
@@ -79,9 +56,10 @@ local function HELP_print(header, rules)
 end
 
 
-function cliopt.help(spec)
+local
+function help(spec, hint)
   local required, optional = {}, {}
-  for _, rule in ipairs(spec) do
+  for _, rule in ipairs(spec.all) do
     if rule.required
       then required[#required+1]=rule
       else optional[#optional+1]=rule
@@ -92,16 +70,23 @@ function cliopt.help(spec)
 end
 
 
+local
+function hint(spec, msg, ...)
+  return nil, function() help(spec) end, msg:format(...)
+end
+
+
 -- expand grouped short options from a single argument into various
 -- including the ones with glued value
-local function parse_short(arg, idx, spec, oname)
+local
+function parse_short(arg, idx, spec, oname)
   local chars, charidx, char, rule = #oname
 
   -- If only one letter doesn't need to be treated here...
   if chars == 1 then return spec.short[oname], oname end
 
   -- The actual index will be replaced by the first expanded...
-  table.remove(arg, idx)
+  remove(arg, idx)
 
   -- Treats each letter
   charidx=1
@@ -111,12 +96,12 @@ local function parse_short(arg, idx, spec, oname)
 
     -- Abort if option is not supported
     if not rule then return nil, char end
-    table.insert(arg, idx, '-'..char)
+    insert(arg, idx, '-'..char)
     idx, charidx = idx+1, charidx+1
 
     -- If option is not a switch, treat all remaining charaters a its value
     if not rule.switch and charidx <= chars then
-      table.insert(arg, idx, oname:sub(charidx))
+      insert(arg, idx, oname:sub(charidx))
       idx, charidx = idx+1, chars+1 -- jump to the end to abort while.
     end
   end
@@ -150,7 +135,7 @@ function parse_args(R, arg, idx, spec, rule)
     -- stop parsing after a unamed ``--`` or after first no option/value
     if not odash or odash == '--' and oname == '' then
       local rnum = 1
-      local idx = odash and idx+1 or idx
+      idx = odash and idx+1 or idx
       while arg[idx] do
         R[rnum], rnum, idx = arg[idx], rnum+1, idx+1
       end
@@ -163,7 +148,7 @@ function parse_args(R, arg, idx, spec, rule)
     end
 
     if not rule
-      then hint(HINT_invalid, oname)
+      then return hint(spec, HINT_invalid, oname)
     elseif rule.switch
       then R[rule.name], rule = not rule.default, nil
     end
@@ -179,7 +164,7 @@ function parse_args(R, arg, idx, spec, rule)
         return parse_args(R, arg, idx+1, spec)
       end
     end
-    hint(HINT_restrict, rule.long, table.concat(rule.default,'\n * '))
+    return hint(spec, HINT_restrict, rule.long, concat(rule.default,'\n * '))
   elseif rule.multi then
     if not R[rule.name]
       then R[rule.name] = {argitem}
@@ -226,18 +211,18 @@ function parse_spec(spec)
   return {long=long, short=short, all=spec}
 end
 
-
-function cliopt.parse(spec, arg, idx)
+-- wax.args
+return function (spec, arg, idx)
   assert(type(spec) == 'table')
-  local spec = parse_spec(spec)
-  local ok, res = pcall(parse_args, {}, arg, idx or 1, spec)
-  if not ok then return nil, res end
+  spec = parse_spec(spec)
+  local res, fn, msg = parse_args({}, arg, idx or 1, spec)
+  if not res then return res, fn, msg end
 
   -- Adds default values and checks for required.
   for _, rule in ipairs(spec.all) do
     if res[rule.name] == nil then
       if rule.required then
-        hint(HINT_required, rule.name)
+        return hint(spec, HINT_required, rule.name)
       elseif rule.set then
         local default = rule.default[#rule.default]
         res[rule.name] = rule.multi
@@ -250,8 +235,5 @@ function cliopt.parse(spec, arg, idx)
       end
     end
   end
-  return res
+  return res, function() help(spec) end
 end
-
-
-return cliopt
