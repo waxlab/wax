@@ -1,70 +1,77 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 -- Copyright 2022-2023 - Thadeu de Paula and contributors
 
-local
-collect,
-kstr
+local fmt   = string.format
+local cat   = table.concat
+local tpair = '%s%s = %s,\n'
+local ttbl  = '{\n%s%s}'
+local key   = '[%s]'
+local tab   = '  '
+
+local dump
 
 
-local cat = table.concat
-local wrt = io.stdout.write
-local fmt = string.format
-local fnd = string.find
-local rep = string.rep
-local sub = string.sub
-local tostring, type, pairs
-    = tostring, type, pairs
+function dump(what, refs, lvl, path)
+  local t = type(what)
+  local ref
 
-
-function collect(data, write, path, p, refs)
-  local t = type(data)
   if t == 'string' then
-    return write(fmt('%q', data))
-  elseif t == 'number' or t == 'boolean' then
-    return write(tostring(data))
-  elseif t ~= 'table' then
-    return write(tostring(data))
-  end
-
-  -- From tables --
-  local r = tostring(data)
-  if not refs[r] then
-    refs[r] = cat(path, '', 1, p)
-    write '{\n'
-    local indent = rep("  ", p)
-    for key, val in pairs(data) do
-      write (indent) ( kstr (key, path, p+1) ) ' = '
-      collect(val, write, path, p+1, refs)
-      write ',\n'
+    if path then
+      return fmt('%q',what)
+    elseif what:match('^[^%l_][%w_]*$') then
+      return fmt('[%q]',what)
+    else
+      return what
     end
-    write (sub(indent, 1,-3)) '}'
-  else
-    write (refs[r])
+
+  elseif t == 'number' or t == 'boolean' then
+    return path and tostring(what) or key:format(tostring(what))
   end
+
+  if refs[what] then return '@'..refs[what] end
+
+  if not path then
+    ref = #refs+1
+    refs[what] = ref
+  else
+    refs[what] = path
+  end
+
+  local res,s = {},1
+
+  if t == 'table' then
+    for k, v in pairs(what) do
+      k = dump(k, refs, 2)
+      v = dump(v, refs, lvl+1, (ref and '@'..ref or path)..'.'..k)
+      res[s], s = tpair:format(tab:rep(lvl), k, v) , s+1
+    end
+    res = ttbl:format(cat(res), tab:rep(lvl-1))
+  else
+    res = tostring(what)
+  end
+  if ref then
+    refs[ref], res = res, '@'..ref
+  end
+  return res
 end
 
 
-function kstr(data, path, p)
-  local result
-  if type(data) ~= 'string' then
-    result  = fmt('[%s]', tostring(data))
-    path[p] = result
-  elseif fnd(data, '%W') then
-    result  = fmt('[%q]',data)
-    path[p] = result
-  else
-    result  = tostring(data)
-    path[p] = '.'..result
-  end
-  return result
-end
-
-
-return function(data, out)
-  local write
+return function(what, out)
   out = out or io.stdout
-  function write (d) wrt(out,d) return write end
-  collect(data, write, {"@"}, 1, {})
-  write '\n'
-  out:flush()
+  local refs = {}
+  local res = dump(what, refs, 1,'')
+
+  out:write '\nData = '
+  out:write (res)
+  if #refs > 0 then
+    print '\n\nReferences:'
+    for i, v in ipairs(refs) do
+      out:write '  @'
+      out:write (i)
+      out:write ' = '
+      out:write (v)
+    end
+  end
+  out:write '\n'
 end
+
