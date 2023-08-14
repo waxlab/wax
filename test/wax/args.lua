@@ -48,10 +48,10 @@ do
 end
 
 --[[
-$ (@spec, arg:t)        -> (res:t, help:f)
-$ (@spec, arg:t)        -> (res:_, help:f, hint:s)
-$ (@spec, arg:t, idx:n) -> (res:t, help:f)
-$ (@spec, arg:t, idx:n) -> (res:_, help:f, hint:s)
+$ (@spec, arg t)        -> (res t, help f)
+$ (@spec, arg t)        -> (res _, help f, hint s)
+$ (@spec, arg t, idx n) -> (res t, help f)
+$ (@spec, arg t, idx n) -> (res _, help f, hint s)
 
 * ``@spec`` is a table containing a list of rules for options. Each rule
   also consists in a table with both, a list and an associative part.
@@ -65,9 +65,9 @@ $ (@spec, arg:t, idx:n) -> (res:_, help:f, hint:s)
   so you can print to user and explain what is wrong.
 
 $ @spec {
-  { @long?, @short?, @flag?,
-    desc    ? @desc,
-    default ? @default,
+  { @long?; @short?; @flag?;
+    "desc" @desc,
+    default s ? @default,
   }, ... }
 }
 

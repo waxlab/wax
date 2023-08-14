@@ -331,7 +331,7 @@ to ``io.stdout`` unless you specify an opened file ``handler``.
     tree = { "a", "sub", what="table", { edge=2 }, [true]="ok" },
     action = function() print 'hello' end,
     nothing = nil,
-    userdata = io.stdout,
+    udata = io.stdout,
     'first',
     'second',
     true,
@@ -342,7 +342,10 @@ to ``io.stdout`` unless you specify an opened file ``handler``.
 
   -- We add a circular reference
   data.ref = data.tree[3] -- circular reference
-  data.tree.file = data.userdata
+  data.tree.file = data.udata
+  data[data.udata] = 'key is userdata'
+  data[data.action] = 'key is function'
+  data[data] = 'itself'
 
   -- Then print to the output
   wax.show(data)
