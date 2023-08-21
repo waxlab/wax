@@ -1,183 +1,400 @@
+-- luacheck: ignore 311
 local wax = require 'wax'
-local sign
-
-local
-function show(res, sign)
-  print '-------'
-  print(sign)
-  wax.show(res)
-end
-
+local at = wax.attest
+local R
 
 -- Primitives
-do sign = 'boolean'  -- {t='boolean'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'boolean' and res.v == nil and #res == 0)
-end
-do sign = 'function' -- {t='function'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'function' and res.v == nil and #res == 0)
-end
-do sign = 'number'   -- {t='number'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'number' and res.v == nil and #res == 0)
-end
-do sign = 'table'    -- {t='table'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'table' and res.v == nil and #res == 0)
-end
-do sign = 'string'   -- {t='string'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'string' and res.v == nil and #res == 0)
-end
-do sign = 'thread'   -- {t='thread'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'thread' and res.v == nil and #res == 0)
-end
-do sign = 'userdata' -- {t='userdata'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'userdata' and res.v == nil and #res == 0)
+do
+-- {t='boolean'}
+R = at( wax.kind.ast 'boolean' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'boolean' : back()
+: key 'v' : eq (nil)
+
+-- {t='function'}
+R = at( wax.kind.ast 'function' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'function' : back()
+: key 'v' : eq (nil)
+
+-- {t='number'}
+R = at( wax.kind.ast 'number' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'number' : back()
+: key 'v' : eq (nil)
+
+-- {t='table'}
+R = at( wax.kind.ast 'table' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'table' : back()
+: key 'v' : eq (nil)
+
+-- {t='string'}
+R = at( wax.kind.ast 'string' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'string' : back()
+: key 'v' : eq (nil)
+
+-- {t='thread'}
+R = at( wax.kind.ast 'thread' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'thread' : back()
+: key 'v' : eq (nil)
+
+-- {t='userdata'}
+R = at( wax.kind.ast 'userdata' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'userdata' : back()
+: key 'v' : eq (nil)
 end
 
 -- Equals
-do sign = '"moon"'  -- {t='eq', v='moon'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'eq' and res.v == 'moon' and #res == 0)
+do
+-- {t='eq', v=true}
+R = at( wax.kind.ast 'true' )
+: type 'table' : ipairs (0)
+: key 't' : eq 'eq' : back()
+: key 'v' : eq (true)
+
+-- {t='eq', v=false}
+R = at( wax.kind.ast 'false' )
+: type 'table' : ipairs(0)
+: key 't' : eq 'eq' : back()
+: key 'v' : eq (false)
+
+-- {t='eq', v='moon'}
+R = at( wax.kind.ast '"moon"' )
+: type 'table' : ipairs(0)
+: key't' : eq'eq' : back()
+: key'v' : eq'moon'
+
+-- {t='eq', v='true'}
+R = at( wax.kind.ast '"true"' )
+: type'table' : ipairs(0)
+: key't' : eq'eq' : back()
+: key'v' : eq'true'
+
+-- {t='eq', v='table'}
+R = at( wax.kind.ast '"table"' )
+: type'table' : ipairs(0) : pairs(2)
+: key 't' : eq 'eq' : back()
+: key 'v' : eq 'table'
+
+-- {t='eq', v=10}
+R = at( assert( wax.kind.ast '10' ) )
+: type'table'
+: key 't' : eq 'eq' : back ()
+: key 'v' : eq (10) : back ()
+
+-- {t='eq', v='@ Asteróides'}
+R = at( assert( wax.kind.ast '"@ Asteróides"' ) )
+: type 'table' : ipairs(0)
+: key 't' : eq 'eq' : back()
+: key 'v' : eq '@ Asteróides'
 end
-do sign = '"true"'  -- {t='eq', v='true'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'eq' and res.v == 'true' and #res == 0)
+
+
+-- List
+do
+R = at( wax.kind.ast '{1,20,300,04}' )
+: type 'table' : ipairs(0) : pairs(2)
+: key 't' : eq 'table' : back()
+: key 'v' : type 'table' : ipairs(4) : pairs(4)
+  : key (1) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (1) : back()
+    : back()
+  : key (2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (20) : back()
+    : back()
+  : key (3) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (300) : back()
+    : back()
+  : key (4) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (4) : back()
+    : back()
+
+R = at( wax.kind.ast '{true, 10, "hi", false}' )
+: type 'table' : ipairs(0) : pairs(2)
+: key 't' : eq 'table' : back()
+: key 'v' : type 'table' : ipairs(4) : pairs(4)
+  : key (1) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (true) : back()
+    : back()
+  : key (2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (10) : back()
+    : back()
+  : key (3) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'hi' : back()
+    : back()
+  : key (4) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (false) : back()
+    : back()
 end
-do sign = '"table"' -- {t='eq', v='table'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'eq' and res.v == 'table' and #res == 0)
-end
-do sign = 'true'    -- {t='eq', v=true}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'eq' and res.v == true and #res == 0)
-end
-do sign = 'false'   -- {t='eq', v=false}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'eq' and res.v == false and #res == 0)
-end
-do sign = '10'      -- {t='eq', v=10}
-  local res = assert( wax.kind.ast(sign) )
-  assert( type(res) == 'table' )
-  assert( res.t == 'eq' and res.v == 10)
-end
-do sign = '"@ Asteróides"' -- {t='eq', v='@ Asteróides'}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'eq' and res.v == '@ Asteróides' and #res == 0)
-end
+
 
 -- Table
-do sign='{"a","b"}' -- {t='table', v={[1]={t='eq',v='a'}, [2]={t='eq',v='b'}}}
-  local res = assert( wax.kind.ast (sign) )
-  assert(res.t == 'table' and type(res.v) == 'table' and #res.v == 2)
-  assert(res.v[1].t == 'eq' and res.v[1].v == 'a')
-  assert(res.v[2].t == 'eq' and res.v[2].v == 'b')
-end
-do sign='{"planet":"earth"}'
-  -- {t='table', v={[{t='eq',v='planet'}] = {t='eq',v='earth'}}}
-  local res = assert( wax.kind.ast (sign) )
+do
 
-  assert(type(res) == 'table')
-  assert(type(res.v) == 'table')
-  assert(res.t == 'table')
-  for key,val in pairs(res.v) do
-    assert(key.t == 'eq' and key.v == 'planet')
-    assert(val.t == 'eq' and val.v == 'earth')
-  end
-end
-do sign='{"string":10}'
-  -- {t='table', v={[{t='eq',v='string'}]={t='eq',v=10}}}
-  local res = assert( wax.kind.ast (sign) )
+-- {t='table', v={[1]={t='eq',v='a'}, [2]={t='eq',v='b'}}}
+R = at( wax.kind.ast '{"a","b"}' )
+: type 'table' : ipairs(0)
+: key 't' : eq 'table' : back()
+: key 'v' : ipairs(2)
+  : key(1)
+    : key 't' : eq 'eq' : back ()
+    : key 'v' : eq 'a' : back ()
+    : back ()
+  : key(2)
+    : key 't' : eq 'eq' : back ()
+    : key 'v' : eq 'b' : back ()
+    : back ()
 
-  assert(type(res) == 'table')
-  assert(type(res.v) == 'table')
-  assert(res.t == 'table')
-  for key,val in pairs(res.v) do
-    assert(key.t == 'eq' and key.v == 'string')
-    assert(val.t == 'eq' and val.v == 10)
+-- {t='table', v={[{t='eq',v='planet'}] = {t='eq',v='Earth'}}}
+R = at( wax.kind.ast '{"planet" : "Earth"}' )
+: type 'table' : ipairs(0)
+: key 't' : eq 'table' : back()
+: key 'v' : type 'table'
+
+  for left,right in pairs(R : node()) do
+    at(left) : type 'table' : ipairs (0)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'planet'
+    at(right) : type 'table' : ipairs (0)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'Earth'
   end
-end
-do sign='{123:456}'          -- { [{t='eq',v=123}] = {t='eq',v=456} }
-  local res = assert( wax.kind.ast (sign) )
-  assert(type(res) == 'table')
-  assert(type(res.v) == 'table')
-  assert(res.t == 'table')
-  for key,val in pairs(res.v) do
+
+-- {t='table', v={[{t='eq',v='string'}]={t='eq',v=10}}}
+R = at( wax.kind.ast '{"string" : 10}' )
+: type 'table' : ipairs(0) : pairs(2)
+: key 't' : eq 'table' : back()
+: key 'v' : type 'table' : pairs(1)
+
+  for left,right in pairs(R : node()) do
+    at(left) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'string'
+        at(right) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (10)
+  end
+
+-- {t='table', v={[{t='eq',v=123}] = {t='eq',v=456} }}
+R = at( wax.kind.ast '{123 : 456}' )
+: type 'table' : ipairs(0) : pairs(2)
+: key 't' : type 'string' : eq 'table' : back()
+: key 'v' : type 'table' : ipairs(0) : pairs(1)
+  for key,val in pairs(R : node()) do
     assert(key.t == 'eq' and key.v == 123)
     assert(val.t == 'eq' and val.v == 456)
   end
-end
-do sign='{{123:"hi"}}'
-  -- { t='table',
-  --   v={
-  --     [1] = {
-  --       t='table',
-  --       v={
-  --         [{t='eq',v=123}] = {t='eq',v=456}
-  --       }
-  --     }
-  --   }
-  -- }
-  local res = assert( wax.kind.ast (sign) )
-  assert(type(res) == 'table' and res.t == 'table')
-  assert(type(res.v) == 'table' and #res.v == 1)
-  assert(type(res.v[1]) == 'table' and res.v[1].t == 'table')
-  assert(type(res.v[1].v) == 'table')
-  for key,val in pairs(res.v[1].v) do
-    assert(key.t == 'eq' and key.v == 123)
-    assert(val.t == 'eq' and val.v == 'hi')
-  end
-end
-do sign='{{100,200},true:false}'
-  -- { t='table',
-  --   v = {
-  --     [1] = {
-  --       t = 'table'
-  --       v = {
-  --         [1] = { t = 'eq', v = 100 }
-  --         [2] = { t = 'eq', v = 200 }
-  --       }
-  --     },
-  --     [{t:'eq', v=true}] = {
-  --       t:'eq',
-  --       v:false
-  --     }
-  --   }
-  -- }
-  local res = assert( wax.kind.ast (sign) )
-  assert(type(res) == 'table' and res.t == 'table')
-  assert(type(res.v) == 'table' and #res.v == 1)
-  assert(type(res.v[1]) == 'table' and res.v[1].t == 'table')
-  assert(type(res.v[1].v) == 'table' and #res.v[1].v == 2)
 
-  local items = 0
-  wax.show(res)
-  for _ in pairs(res.v) do 
-    items = items+1
-  end
-  for key,val in pairs(res.v) do
-    if key ~= 1 then
-      assert(key.t == 'eq' and key.v == true)
-      assert(val.t == 'eq' and val.v == false)
+-- {t='table', v={ { t='table', v={ [{t='eq',v=123}] = {t='eq',v=456} } } }}
+R = at( wax.kind.ast '{{123 : "hi"}}' )
+: type 'table' : ipairs(0) : pairs(2)
+: key 't' : eq 'table' : back()
+: key 'v' : type 'table' : ipairs(1) : pairs(1)
+  : key (1) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'table' : back()
+    : key 'v' : type 'table' : ipairs(0) : pairs(1)
+    for K,V in pairs(R : node()) do
+      K = at(K) : type 'table' : ipairs(0) : pairs(2)
+        K : key 't' : type 'string' : eq 'eq' : back()
+        K : key 'v' : eq (123)
+      V = at(V) : type 'table'
+        V : key 't' : eq 'eq' : back()
+        V : key 'v' : eq 'hi'
     end
-  end
-  assert(items == 2)
+
+-- { t='table',
+--   v = {
+--     { t='table', v={ { t='eq', v=100 }, { t='eq', v=200 } } },
+--     { t='table', v={
+--       [{t='eq', v=true}] = { t='eq', v=false },
+--       [{t='eq', v='say'}] = { t='eq', v='hello' }
+--     } },
+--     { t='eq', v='hi' }
+--   }
+-- }
+R = at( wax.kind.ast '{{100,200},{true : false, "say" : "hello"},"hi"}' )
+: type 'table' : ipairs(0) : pairs(2)
+: key 't' : eq 'table' : back()
+: key 'v' : type 'table' : ipairs(3) : pairs(3)
+  : key(1) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'table' : back()
+    : key 'v' : type 'table' : ipairs(2) : pairs(2)
+      : key(1) : type 'table' : ipairs(0) : pairs(2)
+        : key 't' : eq 'eq' : back()
+        : key 'v' : eq(100) : back()
+        : back()
+      : back()
+    : back()
+  : key(2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'table' : back()
+    : key 'v' : type 'table' : ipairs(0) : pairs(2)
+    for K,V in pairs(R:node()) do
+      if K.v == true then
+        K = at(K) : ipairs(0) : pairs(2)
+          K : key 't' : eq 'eq' : back()
+          K : key 'v' : eq(true)
+        V = at(V) : ipairs(0) : pairs(2)
+          V : key 't' : eq 'eq' : back()
+          V : key 'v' : eq (false)
+      else
+        K = at(K) : ipairs(0) : pairs(2)
+          K : key 't' : eq 'eq' : back()
+          K : key 'v' : eq 'say'
+        V = at(V) : ipairs(0) : pairs(2)
+          V : key 't' : eq 'eq' : back()
+          V : key 'v' : eq 'hello'
+      end
+    end
+
+-- { t='table',
+--   v = {
+--     {t='table', v={
+--       { t='eq', v=100 },
+--       { t='eq', v=200 },
+--     } },
+--     [{t='eq', v=true}] = { t='eq',v=false }
+--   }
+-- }
+for _, sign in pairs{ '{{10,20},true:false}', '{true:false, {10,20}}' } do
+  R = at (wax.kind.ast( sign ))
+  : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'table' : back()
+    : key 'v' : type 'table' : ipairs(1) : pairs(2)
+      : key(1) : type 'table' : ipairs(0) : pairs(2)
+        : key 't' : eq 'table' : back()
+        : key 'v' : type 'table' : ipairs(2) : pairs(2)
+          : key(1) : type 'table' : ipairs(0) : pairs(2)
+            : key 't' : eq 'eq' : back()
+            : key 'v' : eq (10) : back()
+          : back()
+          : key(2) : type 'table' : ipairs(0) : pairs(2)
+            : key 't' : eq 'eq' : back()
+            : key 'v' : eq (20) : back()
+          : back()
+        : back()
+      : back()
+      for K,V in pairs(R:node()) do
+        if K ~= 1 then
+          K = at(K) : type 'table' : ipairs(0) : pairs(2)
+            K : key 't' : eq 'eq' : back()
+            K : key 'v' : eq (true)
+          V = at(V) : type 'table' : ipairs(0) : pairs(2)
+            V : key 't' : eq 'eq' : back()
+            V : key 'v' : eq (false)
+        end
+      end
 end
-os.exit(0)
+
+end
 
 
---sign = '{ "hi":"hello" }'
---res = wax.kind.ast {sign}
---assert(res[1][1].t == 'table' and res[1][1][1].hi == 'hello')
+-- Function
+do
+-- { t='function',
+--   a={ {t='eq', v='a'}, {t='eq', v='b'}, },
+--   r={ {t='eq', v='c'}, {t='eq', v=true}, },
+-- }
+R = at( wax.kind.ast '("a","b") -> ("c",true)' )
+: type 'table' :ipairs(0) :pairs(3)
+: key 't' : eq 'function'
+: back()
+: key 'a' : type 'table' : ipairs(2) : pairs(2)
+  : key(1) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'a' : back()
+  : back()
+  : key(2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'b' : back()
+  : back()
+: back()
+: key 'r' : type 'table' : ipairs(2) : pairs(2)
+  : key(1) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'c' : back()
+  : back()
+  : key(2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (true) : back()
+
+-- { t='function',
+--   a={
+--     [1]= {
+--       t = 'function',
+--       a = { {t='eq',v=true}, {t='eq',v=10} },
+--       r = { {t='eq',v=20} } },
+--     [2]= {t='eq', v='b'}
+--   },
+--   r={
+--     { t='function', a={ {t='eq', v='c'} }, r={ {t='eq', v=true} } }
+--   },
+-- }
+
+R = at( wax.kind.ast '((true,10) -> (20),"b") -> (("c")->(true), false)' )
+: type 'table' : ipairs(0) : pairs(3)
+: key 't' : eq 'function' : back()
+: key 'a' : type 'table' : ipairs(2) : pairs(2)
+  : key(1) : type 'table' : ipairs(0) : pairs(3)
+    : key 't' : eq 'function' : back()
+    : key 'a' : type 'table' : ipairs(2) : pairs(2)
+      : key (1) : type 'table' : ipairs(0) : pairs(2)
+        : key 't' : eq 'eq' : back()
+        : key 'v' : eq (true) : back()
+        : back()
+      : key (2) : type 'table' : ipairs(0) : pairs(2)
+        : key 't' : eq 'eq' : back()
+        : key 'v' : eq (10) : back()
+        : back()
+      : back()
+    : key 'r' : type 'table' : ipairs(1) : pairs(1)
+      : key (1) : type 'table' : ipairs(0) : pairs(2)
+        : key 't' : eq 'eq' : back()
+        : key 'v' : eq (20) : back()
+        : back()
+      : back()
+    : back()
+  : key(2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq 'b' : back()
+    : back()
+  : back()
+: key 'r' : type 'table' : ipairs(2) : pairs(2)
+  : key (1) : type 'table' : ipairs(0) : pairs (3)
+    : key 't' : eq 'function' : back()
+    : key 'a' : type 'table' : ipairs(1) : pairs(1)
+      : key (1) : type 'table' : ipairs(0) : pairs(2)
+        : key 't' : eq 'eq' : back()
+        : key 'v' : eq 'c'  : back()
+        : back ()
+      : back()
+    : key 'r' : type 'table' : ipairs(1) : pairs(1)
+      : key (1) : type 'table' : ipairs(0) : pairs (2)
+        : key 't' : eq 'eq' : back()
+        : key 'v' : eq (true) : back()
+        : back()
+      : back()
+    : back()
+  : key (2) : type 'table' : ipairs(0) : pairs(2)
+    : key 't' : eq 'eq' : back()
+    : key 'v' : eq (false) : back()
+  : back()
+: back()
+
+end
 
 
-
-
---show(res, sign)
 
 --[[
 wax.kind.match({
@@ -186,3 +403,4 @@ wax.kind.match({
   "'a'",
 }, 'a')
 --]]
+print('end ok')

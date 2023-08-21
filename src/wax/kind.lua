@@ -16,9 +16,10 @@ kind.t = kind.table
 -- Accessories
 local walk, step, ast
 -- Tokens
-local tkQuote, tkTable, tkTableEnd, tkPair, tkSep,
-      solveData,
-      tokens
+local tokens,    solveData
+    , tkQuote,   tkSep
+    , tkTable,   tkTableEnd, tkPair
+    , tkFnGroup, tkFnGroupEnd
 
 function tkQuote(R, str, len, pos, data, tk)
   if data then return nil, pos, 'Unexpected quote' end
@@ -36,9 +37,9 @@ function tkQuote(R, str, len, pos, data, tk)
   return nil, pos, 'Unclosed string'
 end
 
-function tkTable(R, str, len, start, data, tk) -- luacheck: ignore 212
+function tkTable(R, str, len, pos, data, tk) -- luacheck: ignore 212
   local tbl = {t='table', v={}}
-  local pos, msg, ok = start
+  local msg, ok
 
   if data then
     return nil, pos, 'Unexpected '..tkTable
@@ -56,17 +57,22 @@ end
 function tkSep(R, str, len, pos, data, tk)
   if R.t == 'table' then
     return tkTableEnd(R, str, len, pos, data, tk)
-  else
-    if data and not R[1] then
-      push(R.v, data)
-    elseif not data and R[1] then
-      push(R.v, pop(R))
-    else
-      return nil, pop, 'Unexpected '..tokens[tkSep]
-    end
-    if R.unpaired then -- x:y as x being a doc name and y the kind
-      R[-#R] = R.unpaired
-    end
+  -- Adicionar checagens quando for uma função.
+  -- Outros casos devem incorrer em erro
+  -- else
+  --   if data and not R[1] then
+  --     push(R.v, data)
+  --   elseif not data and R[1] then
+  --     push(R.v, pop(R))
+  --   else
+  --     return nil, pop, 'Unexpected '..tokens[tkSep]
+  --   end
+  --   if R.unpaired then -- x:y as x being a doc name and y the kind
+  --     R[-#R] = R.unpaired
+  --   end
+  --
+  elseif R.t == 'function' then
+    return tkFnGroupEnd(R, str, len, pos, data, tk)
   end
   R.unpaired = nil
   return true, pos
@@ -114,7 +120,6 @@ function tkTableEnd(R, str, len, pos, data, tk) -- luacheck: ignore 212
   return true, pos
 end
 
-
 function solveData(data)
   if kind[data] then return kind[data] end
   if tonumber(data) then
@@ -126,11 +131,51 @@ function solveData(data)
   end
 end
 
+function tkFnGroup(R, str, len, pos, data, tk)
+  local msg, ok
+  if data ~= nil then
+    return nil, pos, 'Unexpected '..tk
+  end
+
+  local fun = {t='function', a={}, r={}}
+  ok, pos, msg = walk(fun, str, len, pos, tkFnGroupEnd)
+  if not ok then return ok, pos, msg end
+
+  for i,v in ipairs(fun) do
+    fun.a[i] = v
+    fun[i] = nil
+  end
+
+  local _,r = str:find('^%s*%->%s*%(',pos)
+  if not r then return nil, pos 'Missing the kind of function return' end
+
+  ok, pos, msg = walk(fun, str, len, r+1, tkFnGroupEnd)
+  if not ok then return ok, pos, msg end
+
+  for i,v in ipairs(fun) do
+    fun.r[i] = v
+    fun[i] = nil
+  end
+  push(R, fun)
+  return ok, pos, msg
+end
+
+function tkFnGroupEnd(R,_,_,pos,data)
+  if data ~= nil then
+    push(R, solveData(data))
+  end
+  return true, pos
+end
+
+
+
+
+
 --$ step(str:s, len:n, pos:n)(pos:n, data:s|n, tk:s|n)
 function step(str, len, pos)
   local l, r, tk = str:find('%s*([^@.%w])%s*', pos)
   l, r = l and l-1 or len, r and r+1 or len+1
-  local data = l>pos and str:sub(pos, l) or nil
+  local data = l>=pos and str:sub(pos, l) or nil
   return r, data, tk
 end
 
@@ -141,7 +186,7 @@ function walk(R, str, len, start, delim)
   while ok and pos <= len do
     pos, data, tk = step(str, len, pos)
     if tk then
-      if delim and tk==delim then
+      if delim and tokens[tk] == delim then
         return tokens[tk](R, str, len, pos, data, tk)
       elseif tokens[tk] then
         ok, pos, E = tokens[tk](R, str, len, pos, data, tk)
@@ -171,16 +216,14 @@ end
 kind.ast = ast
 
 
-function kind.match(signlist, target)
-  local s = ast(signlist)
-end
-
 tokens = {
   ['"'] = tkQuote,
   ["'"] = tkQuote,
   ['{'] = tkTable,
   [':'] = tkPair,
   ['}'] = tkTableEnd,
+  ['('] = tkFnGroup,
+  [')'] = tkFnGroupEnd,
   [','] = tkSep,
   [tkTable]    = '{',
   [tkPair]     = ':',
