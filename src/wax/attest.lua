@@ -38,14 +38,27 @@ local Tree = {
     error( cat(S._path,'.')..' is not a tree', 2)
   end,
 
-  ipairs = function(S, expected)
-    return S:test(expected, #S:node(), 'Count of ipairs')
+  isTable = function(S, expi, expk)
+    S:test('table', type(S:node()), 'Type of')
+    if expi then
+      S:test(expi, #S:node(), 'List length')
+    end
+    if expk then
+      local val=0
+      for _ in pairs(S:node()) do val=val+1 end
+      return S:test(expk, val, 'Record count')
+    end
+    return S
   end,
 
-  pairs = function(S,expected)
-    local val = 0
-    for _ in pairs(S:node()) do val=val+1 end
-    return S:test(expected, val, 'Count of pairs')
+  len = function(S, expi, expk)
+    S:test(expi, #S:node(), 'List length')
+    if expk then
+      local val=0
+      for _ in pairs(S:node()) do val=val+1 end
+      return S:test(expk, val, 'Record count')
+    end
+    return S
   end,
 
   eq = function(S, expected)

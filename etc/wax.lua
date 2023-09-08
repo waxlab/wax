@@ -2,6 +2,8 @@ luaver { '5.1', '5.2', '5.3', '5.4' }
 
 module 'wax.init'      { src = 'src/wax/init.lua'     }
 module 'wax.lazy'      { src = 'src/wax/lazy.lua'     }
+module 'wax.attest'    { src = 'src/wax/attest.lua'   }
+module 'wax.kind'      { src = 'src/wax/kind.lua'     }
 module 'wax.args'      { src = 'src/wax/args.lua'     }
 module 'wax.ordassoc'  { src = 'src/wax/ordassoc.lua' }
 module 'wax.show'      { src = 'src/wax/show.lua'     }

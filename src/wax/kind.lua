@@ -1,7 +1,52 @@
-local wax = require 'wax'
-local push, pop = table.insert, table.remove
+-- lua check:: ignore 212 (unused arguments)
 
-local kind = {
+local wax = require 'wax'
+local push, pop, tsub = table.insert, table.remove
+local walk, step, ast
+local kind, parse, tokens
+
+local tkEnum           = '|'
+local tkFuncGroupClose = ')'
+local tkFuncGroupOpen  = '('
+local tkQuoteDouble    = '"'
+local tkQuoteSingle    = "'"
+local tkSeparator      = ','
+local tkTableClose     = '}'
+local tkTableOpen      = '{'
+local tkPair           = ':'
+local tkFinish         = {}
+-- tkFinish and tkMain use a unique table as ref for comparison 
+-- so we not use a string neither a boolean which could be result
+-- of a wrong test or decay from a test with another type.
+
+local Ast = {
+  err =
+    function(self, e)
+      self.error = e
+      return nil
+    end,
+  top =
+    function(self)
+      return self[#self]
+    end,
+  bottom =
+    function(self)
+      return self[1] or self
+    end,
+}
+function Ast.new(str)
+  return setmetatable({
+    str = str,
+    len = #str,
+    pos = 0,
+    E   = false,
+    {t='main'}
+  }, Ast )
+end
+Ast.__index = Ast
+
+
+kind = {
   ['boolean' ] = {t='boolean' },
   ['function'] = {t='function'},
   ['number'  ] = {t='number'  },
@@ -10,225 +55,245 @@ local kind = {
   ['thread'  ] = {t='thread'  },
   ['userdata'] = {t='userdata'}
 }
-kind.s = kind.string
-kind.n = kind.number
-kind.t = kind.table
--- Accessories
-local walk, step, ast
--- Tokens
-local tokens,    solveData
-    , tkQuote,   tkSep
-    , tkTable,   tkTableEnd, tkPair
-    , tkFnGroup, tkFnGroupEnd
 
-function tkQuote(R, str, len, pos, data, tk)
-  if data then return nil, pos, 'Unexpected quote' end
-  local exp = tk == "'" and [[(\*)']] or [[(\*)"]]
-  local p,m,_ = pos
-  while p < len do
-    _,p,m = str:find(exp, p)
-    if not p then return nil, pos, 'Unclosed string' end
-    if m and #m % 2 == 0 then
-      R[#R+1] = {t='eq', v=str:sub(pos, p-1)}
-      return true, p+1
+parse = {
+  enum = function(R, tk)
+    local node, parent
+    node = R:top()
+
+    -- Needs a previous value (it is infix)
+    if #node == 0 then
+      R:err 'Missing enum value'
+      return
     end
-    p=p+1
-  end
-  return nil, pos, 'Unclosed string'
-end
 
-function tkTable(R, str, len, pos, data, tk) -- luacheck: ignore 212
-  local tbl = {t='table', v={}}
-  local msg, ok
+    -- Create
+    if tkEnum == tk and node.t ~= 'enum' then
+      push(R, {t='enum', v={pop(node)}})
+      return true
+    end
 
-  if data then
-    return nil, pos, 'Unexpected '..tkTable
-  end
+    -- Add item
+    push(node.v, pop(node))
 
-  ok, pos, msg = walk(tbl, str, len, pos, tkTableEnd)
-  if R.t == 'table' then
-    push(R.v, tbl)
-  else
-    push(R, tbl)
-  end
-  return ok, pos, msg
-end
-
-function tkSep(R, str, len, pos, data, tk)
-  if R.t == 'table' then
-    return tkTableEnd(R, str, len, pos, data, tk)
-  -- Adicionar checagens quando for uma função.
-  -- Outros casos devem incorrer em erro
-  -- else
-  --   if data and not R[1] then
-  --     push(R.v, data)
-  --   elseif not data and R[1] then
-  --     push(R.v, pop(R))
-  --   else
-  --     return nil, pop, 'Unexpected '..tokens[tkSep]
-  --   end
-  --   if R.unpaired then -- x:y as x being a doc name and y the kind
-  --     R[-#R] = R.unpaired
-  --   end
-  --
-  elseif R.t == 'function' then
-    return tkFnGroupEnd(R, str, len, pos, data, tk)
-  end
-  R.unpaired = nil
-  return true, pos
-end
-
-function tkPair(R, str, len, pos, data, tk) -- luacheck: ignore 212
-  if R.t == 'table' then
-    if data then
-      -- if has data, cannot have pending item or key
-      if not R[1] and not R.unpaired then
-        R.unpaired = solveData(data)
-        return true, pos
-      end
-      return nil, pos, 'Expected '..tokens[tkSep]..' or '..tokens[tkTableEnd]
-    else
-      -- otherwise must have a pending item but not pending key
-      if R[1] and not R.unpaired then
-        R.unpaired = pop(R)
-        return true, pos
+    -- Finish
+    if tkEnum ~= tk then
+      pop(R)
+      parent = R:top()
+      push(parent, node)
+      if parent.t == 'main'
+        then return true
+        else return parse[parent.t](R, tk)
       end
     end
-  end
-  return nil, pos, 'Unexpected '..tkPair
-end
+    return true
+  end,
 
-function tkTableEnd(R, str, len, pos, data, tk) -- luacheck: ignore 212
-  if R.t == 'table' then
-    if R.unpaired then -- x:y as x being the key and y being the value kind
-      if data then
-        R.v[R.unpaired] = solveData(data)
-      elseif R[1] then
-        R.v[R.unpaired] = pop(R)
+  func = function(R, tk)
+    local node = R:top()
+    -- Create the function kind
+    if tk == tkFuncGroupOpen then
+      if #node > 0 then return R:err 'Unexpected function' end
+      push(R, {t='func', a={}})
+      return true
+    end
+
+    if tkFinish == tk then
+      return R:err 'Unfinished function'
+    end
+
+    if node.t ~= 'func' then
+      if node.t == 'main'          then return R:err 'Unfinished function' end
+      return parse[node.t](R, tk)
+    end
+
+    -- Push last content
+    if tkSeparator == tk then
+      if #node == 0 then
+        if node.r
+          then return R:err 'Missing function return spec item'
+          else return R:err 'Missing function argument spec item'
+        end
+      end
+      push(node.r or node.a, pop(node))
+      return true
+    end
+
+    if tkFuncGroupClose == tk then
+      if #node > 0 then
+        push(node.r or node.a, pop(node))
+      end
+      if not node.r then
+        local _,r = R.str:find('^%s*%->%s*%(',R.pos)
+        if not r then return R:err 'Unexpected function end' end
+        R.pos, node.r = r+1, {}
       else
-        return nil, pos, 'Unexpected '..tk..' after unpaired key'
+        pop(R)
+        push(R:top(), node)
       end
-      R.unpaired = nil
+      return true
+    end
+  end,
+
+  quote = function(R, tk)
+    local node = R:top()
+    if #node > 0 then
+      R:err('Unexpected quote')
+    end
+    local exp = tk == "'" and [[(\*)']] or [[(\*)"]]
+    local pos, len, str, m, _ = R.pos, R.len, R.str
+
+    while pos <= len do
+      _,pos,m = str:find(exp, pos)
+      if not pos then return R:err 'Unclosed string' end
+      if m and #m % 2 == 0 then
+        push(node, {t = 'eq', v = str:sub(R.pos, pos-1)})
+        R.pos = pos+1
+        return true
+      end
+      pos = pos+1
+    end
+
+    R:err 'Unclosed string'
+    return false
+  end,
+
+  separator = function(R, tk)
+    parse[R:top().t](R, tk)
+  end,
+
+  table = function(R, tk)
+    local node = R:top()
+
+    if tkTableOpen == tk then
+      if #node > 0 then return R:err 'Unexpected table opening' end
+      push(R, {t='table', v={}})
+      return true
+    end
+
+    if tkFinish == tk then
+      return R:err 'Unfinished table'
+    end
+
+    while node.t ~= 'table' do
+      if node.t == 'main'         then return R:err 'Unfinished table' end
+      if not parse[node.t](R, tk) then return end
+      node = R:top()
+    end
+
+    -- From here... node.t == 'table'
+
+    if tkPair == tk then
+      if node.key ~= nil then return R:err 'Unfinished pair' end
+      if #node == 0      then return R:err 'Missing left hand pair value' end
+      node.key = pop(node)
+      return true
+    end
+
+    if tkSeparator == tk then
+      if #node == 0 then return R:err 'Missing table value' end
+      if node.key
+        then node.v[node.key], node.key = pop(node), nil
+        else push(node.v, pop(node))
+      end
+      return true
+    end
+
+    if tkTableClose == tk then
+      -- For pending pair
+      if node.key then
+        if #node == 0 then return R:err 'Missing right hand pair value' end
+        node.v[node.key], node.key = pop(node), nil
+      -- It may be an empty table so...
+      elseif #node > 0 then
+        push(node.v, pop(node))
+      end
+      pop(R)
+      push(R:top(), node)
+      return true
+    end
+    return R:err 'Invalid token on table scope'
+  end,
+
+}
+
+tokens = {
+  [tkEnum]           = parse.enum,
+  [tkQuoteSingle]    = parse.quote,
+  [tkQuoteDouble]    = parse.quote,
+  [tkFuncGroupOpen]  = parse.func,
+  [tkFuncGroupClose] = parse.func,
+  [tkSeparator]      = parse.separator,
+  [tkTableOpen]      = parse.table,
+  [tkTableClose]     = parse.table,
+  [tkPair]           = parse.table
+}
+
+function walk(R)
+  local tk
+  local len = R.len
+  while not R.E and R.pos <= len do
+    tk = step(R)
+
+    if not tk then return true end
+    if tokens[tk] then
+      tokens[tk](R, tk)
     else
-      if data and not R[1] then
-        push(R.v, solveData(data))
-      elseif not data and R[1] then
-        push(R.v, pop(R))
-      end
+      return R:err('Token '..tk..' not found')
     end
   end
-  return true, pos
 end
 
-function solveData(data)
-  if kind[data] then return kind[data] end
-  if tonumber(data) then
-    return { t='eq', v=tonumber(data) }
-  elseif data:match('^true$') then
-    return { t='eq', v=true }
-  elseif data:match('^false$') then
-    return { t='eq', v=false }
-  end
-end
-
-function tkFnGroup(R, str, len, pos, data, tk)
-  local msg, ok
-  if data ~= nil then
-    return nil, pos, 'Unexpected '..tk
+function step(R)
+  local left, right, tk = R.str:find('([^@.%w%s])', R.pos)
+  local top = R:top()
+  if not tk then
+    left = R.len+1
+    right = left
   end
 
-  local fun = {t='function', a={}, r={}}
-  ok, pos, msg = walk(fun, str, len, pos, tkFnGroupEnd)
-  if not ok then return ok, pos, msg end
+  local buf = R.str
+      :sub  (R.pos, left-1)
+      :gsub ('^%s*','')
+      :gsub ('%s*$','')
 
-  for i,v in ipairs(fun) do
-    fun.a[i] = v
-    fun[i] = nil
-  end
-
-  local _,r = str:find('^%s*%->%s*%(',pos)
-  if not r then return nil, pos 'Missing the kind of function return' end
-
-  ok, pos, msg = walk(fun, str, len, r+1, tkFnGroupEnd)
-  if not ok then return ok, pos, msg end
-
-  for i,v in ipairs(fun) do
-    fun.r[i] = v
-    fun[i] = nil
-  end
-  push(R, fun)
-  return ok, pos, msg
-end
-
-function tkFnGroupEnd(R,_,_,pos,data)
-  if data ~= nil then
-    push(R, solveData(data))
-  end
-  return true, pos
-end
-
-
-
-
-
---$ step(str:s, len:n, pos:n)(pos:n, data:s|n, tk:s|n)
-function step(str, len, pos)
-  local l, r, tk = str:find('%s*([^@.%w])%s*', pos)
-  l, r = l and l-1 or len, r and r+1 or len+1
-  local data = l>=pos and str:sub(pos, l) or nil
-  return r, data, tk
-end
-
---$ walk(R:t, str:s, len:n, start:n, delim:s) (R:t, pos:n)
---$ ! walk() (nil, pos:n, err:s)
-function walk(R, str, len, start, delim)
-  local ok, pos, data, tk, E = true, start
-  while ok and pos <= len do
-    pos, data, tk = step(str, len, pos)
-    if tk then
-      if delim and tokens[tk] == delim then
-        return tokens[tk](R, str, len, pos, data, tk)
-      elseif tokens[tk] then
-        ok, pos, E = tokens[tk](R, str, len, pos, data, tk)
-      else
-        pos = str:find(tk,pos,true)
-        return nil, pos, 'Token '..tk..' not found'
-      end
-    else
-      R[#R+1] = solveData(data)
-      return R, len+1
+  if buf ~= '' then
+    if pop(top) then
+      return R:err 'Expected token'
     end
+    local num = tonumber(buf)
+    local val = kind[buf]
+      or  ( buf:match('^true$')  and { t='eq', v=true } )
+      or  ( buf:match('^false$') and { t='eq', v=false } )
+      or  ( num and { t = 'eq', v=num } )
+      or  buf
+
+    push (top,val)
   end
-  return ok, pos, E
+  R.pos = right+1
+  return tk
 end
+
 
 
 function ast(str)
   if type(str) ~= 'string' then error('ast arg #1: string expected',2) end
 
-  local sign, ok, pos, E = {}
-  ok, pos, E = walk(sign, str, #str, 1)
-  if not ok then
-    return nil, ('%s\nError at character %d: %q'):format(str, pos, E)
+  local R = Ast.new(str)
+  if not walk(R) and R.E
+    then return nil
+        , ('%s\nError at character %d: %q')
+          : format(R.str, R.pos, R.E or 'Error on R.E')
   end
-  return not sign.t and sign[1] or sign
+
+  local node = R:top()
+  while node.t ~= 'main' do
+    parse[node.t](R, tkFinish)
+    node = R:top()
+  end
+  return pop(node)
 end
+
+
 kind.ast = ast
-
-
-tokens = {
-  ['"'] = tkQuote,
-  ["'"] = tkQuote,
-  ['{'] = tkTable,
-  [':'] = tkPair,
-  ['}'] = tkTableEnd,
-  ['('] = tkFnGroup,
-  [')'] = tkFnGroupEnd,
-  [','] = tkSep,
-  [tkTable]    = '{',
-  [tkPair]     = ':',
-  [tkTableEnd] = '}',
-  [tkSep]      = ','
-}
-
 return kind

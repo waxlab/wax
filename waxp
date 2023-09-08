@@ -1,0 +1,236 @@
+#!/usr/bin/env lua
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- Copyright 2022-2023 - Thadeu de Paula and contributors
+
+--[[
+  It is an automation system for development and code publishing
+
+  * clean      Remove compile and test stage artifacts
+  * dockbuild  Build Docker instance for tests
+  * docklist   List available Docker confs
+  * dockrun    Run command on Docker test instance
+  * docktest   Run Lua deva files through the Docker test instance
+  * howl       Update documentation using howl
+  * help       Retrieve the list of documented items
+  * install    Install the rockspec for all Lua versions
+  * remove     Uninstall the rockspec for all Lua versions
+  * sparse     Run semantic parser for C
+  * test       Compile, and run Lua deva files
+--]]
+
+local waxp
+do
+  local p = io.popen(('realpath %q'):format(arg[0]))
+  if p then _G.arg[0] = p:read() p:close() end
+  waxp = assert(loadfile( (arg[0]:gsub('[^/]+$','src/waxp/init.lua')) ))()
+end
+
+local sh = require 'waxp.sh'
+
+local wax = require 'wax'
+
+-- Public actions
+-- Below functions are used as actions called directly from Ex:
+-- ./run docklist
+
+local cmdlist = {
+  clean   = 'waxp.cmd.clean',
+  help    = 'waxp.help',
+  install = 'waxp.cmd.install',
+  remove  = 'waxp.cmd.remove',
+  sparse  = 'waxp.cmd.sparse',
+  test    = 'waxp.cmd.test',
+}
+
+local cmd = arg[1]
+
+if cmd ~= 'help' and cmdlist[cmd] then
+  return require(cmdlist[cmd]).main(arg, 2)
+else
+  local target = arg[2] or arg[0]
+  return require(cmdlist.help).main(target)
+end
+
+
+
+--[=[
+function command.clean()
+  arg[1] = 'clean'
+  require 'etc.run.make'
+  os.exit(0)
+end
+function command.help()
+cmd = ([[
+{ cat $(find %s -name '*.lua') | \
+    grep '^\s*\--\$' | \
+    cut -d\$ -f2- |\
+    cut -d' ' -f2-;
+  cat $(find %s -name '*.md') | grep '######'|cut -d' ' -f2- | tr -d '`';
+} 2> /dev/null | fzf
+  ]]):format(testdir,mandir)
+  os.execute(cmd)
+end
+
+do
+  local test_build, test_lua
+  function command.test(mod)
+    local mods = config.modules
+    -- Single module test
+    if mod then
+      if not mods[mod] then
+        die('Unavailable module: %s', mod)
+      end
+      for _, luaver in ipairs(config.lua) do
+        test_build(luaver, mod)
+        test_lua(luaver, mod)
+      end
+    -- All modules test
+    else
+      for _, luaver in ipairs(config.lua) do
+        test_build(luaver)
+        test_lua(luaver)
+      end
+    end
+  end
+
+  function test_build(luaver, modules)
+    sh.printhead("Compiling for Lua "..luaver)
+    if (module) then
+      sh.exec("SINGLE_PACKAGE=%q LUA_VERSION=%q WAXTFLAG=1 luarocks --tree ./tree --lua-version %s make %s",module, luaver, luaver, config.rockspec)
+    else
+      sh.exec("LUA_VERSION=%q WAXTFLAG=1 luarocks --tree ./tree --lua-version %s make %s",luaver,luaver,config.rockspec)
+    end
+    sh.printfoot()
+  end
+
+  
+  function test_lua(luaver,module)
+    local lbin  = luabin[luaver]
+    local lpath = ("./tree/share/lua/%s/?.lua;./tree/share/lua/%s/?/init.lua"):format(luaver,luaver)
+    local cpath = ("./tree/lib/lua/%s/?.so" ):format(luaver)
+    local cmd = ('find %q -name "*.lua" 2>/dev/null'):format(testdir)
+    if module then
+      cmd = ("%s| grep '^%s/%s$'"):format(cmd, testdir, (module:gsub('%.', '/')..'.lua'))
+    end
+
+    local p = io.popen(cmd:format(testdir, module),"r")
+    if p == nil then return end
+
+    sh.printhead("Testing with Lua "..luaver)
+    testnum = 0
+    local file = p:read()
+    while file do
+      testnum = testnum + 1
+      sh.printbody((
+        file:gsub('./test/','')
+            :gsub('%.lua$', '')
+            :gsub('/','.')
+      ))
+      sh.exec(
+        [[ TZ=UTC+0 %s -e 'package.path=%q package.cpath=%q' %q ]],
+        lbin, lpath, cpath, file
+      )
+      file = p:read()
+    end
+    sh.printbody ''
+    sh.printfoot (('%d tests'):format(testnum))
+  end
+end
+
+
+function command.dockbuild()
+  local img = docker_image(arg[2])
+  if img then
+    sh.rexec([[docker rmi "%s:latest"]],img)
+    sh.exec([[docker build -t "%s:latest" -f "etc/docker/%s.dockerfile" .]], imgname, imgname)
+  else
+    command.docklist()
+  end
+end
+
+
+docker_run_cmd = [[docker run -ti --rm --mount=type=bind,source=%q,target=/devel %q %s]]
+function command.dockrun()
+  local img = docker_image(arg[2])
+
+  local runcmd = docker_run_cmd:format(sh.PWD, img, "bash")
+  os.execute(runcmd)
+end
+
+
+function command.docktest()
+  local strgetimg = "docker images | grep %q | awk '{print $1}'"
+  local strcmd    = [[bash -c "cd /devel && TERM=%q ./run test || exit 1; ./run clean"]]
+  local strnotimg = "Try build first with:\n\n\t./run dockbuild %s\n"
+
+  local imgname = arg[2] or "luawax_debian"
+
+  if imgname and docker_names()[imgname] then
+    imgname = sh.rexec(strgetimg, imgname)[1]
+    if not imgname then
+      print(strnotimg:format(arg[2]))
+      os.exit(1)
+    end
+    local cmd = strcmd:format(sh.TERM) -- run inside docker
+    sh.exec(docker_run_cmd:format(sh.PWD, imgname, cmd))
+  end
+end
+
+function command.install()
+  local cmd = 'luarocks --lua-version %q make %q'
+  for k,_ in pairs(luabin) do
+    os.execute(cmd:format(k, config.rockspec))
+  end
+end
+
+function command.remove(rockspec)
+  local cmd = 'luarocks --lua-version %q remove --force %q'
+  for k,_ in pairs(luabin) do
+    os.execute(cmd:format(k, rockspec or config.rockspec))
+  end
+end
+
+function command.ref()
+  local p = io.popen[[grep -n '^[-/]\{2\}\$' -R  | fzf --delimiter='[^\$]\s*\$' --with-nth=2]]
+  local option = p:read()
+  p:close()
+  if option then
+    local file, target = option:match('^([^:]+):(%d+)')
+    local f = io.open(file)
+    local l, line = 0
+    target = tonumber(target)
+    while true do
+      line = f:read()
+      if not line then return end
+      l = l+1
+      if l >= target then
+        local content = line:match('^%-%-[%$|](.+)')
+        if content or line:match('^%s*$') then
+          print(content)
+        else
+          return
+        end
+      end
+    end
+  end
+
+end
+if not arg[1] then
+  print 'Missing command for waxdev\n'
+  help()
+  os.exit(1)
+end
+
+if arg[1] == '-h' then
+  help(arg[2])
+  os.exit(0)
+end
+
+local ok, cmd = pcall(require, 'waxp.cmd.'..arg[1])
+if ok then
+  cmd( (table.unpack or unpack)(arg,2) )
+  os.exit(0)
+else
+  print(ok)
+end
+--]=]
