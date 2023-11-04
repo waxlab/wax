@@ -29,12 +29,40 @@ directly this way.
 
 local oas = require 'wax.ordassoc'
 local x = oas.new()
---x(10,2)  -- error key cannot be number
-x('a',1) -- ok
-x('a',2) -- error duplicate
-x('a',nil) -- error needs value
-print(x['a']) -- get the value
-print(x[1])   -- get the first key
-oas.remove(x, 'a') -- remove record for a key
-oas.remove(x, 1 ) -- remove 1st record
-oas.insert(x, 'a', 3, 1) --insert record a, with value 3 at pos 1
+
+-- inner data representation
+local data = x:unwrap()
+
+x.insert = 'Auriga' -- index 1 is 'insert', key 'insert' has 'Auriga' value
+x.remove = 'Bootes' -- index 2 is 'remove', key 'remove' has 'Bootes' value
+x.alpha  = 'Sirius'
+x.beta   = 'Canopus'
+assert(data[1] == 'insert' and data.insert == 'Auriga')
+assert(data[2] == 'remove' and data.remove == 'Bootes')
+assert(data[3] == 'alpha'  and data.alpha  == 'Sirius')
+assert(data[4] == 'beta'   and data.beta   == 'Canopus')
+
+x:remove('insert')
+assert(data.insert == nil)  -- key was removed
+assert(data[1] == 'remove' and #data == 3) -- list was resized
+
+x:insert('gama', 'Alpha Centauri')
+assert(data[4] == 'gama')
+assert(data.gama == 'Alpha Centauri')
+
+x:remove('remove')
+
+
+for i,v in x:ipairs() do
+  assert(i and v)
+  if i == 1 then assert(v == 'alpha') end
+  if i == 2 then assert(v == 'beta') end
+  if i == 3 then assert(v == 'gama') end
+end
+
+for k,v in x:pairs() do
+  assert(k and v)
+  if k == 'alpha' then assert(v == 'Sirius') end
+  if k == 'beta'  then assert(v == 'Canopus') end
+  if k == 'gama'  then assert(v == 'Alpha Centauri') end
+end

@@ -579,13 +579,3 @@ R = at( assert( wax.kind.ast '((true,10) -> (20),"b") -> (("c")->(true), false)'
 
 end
 
-
-
---[[
-wax.kind.match({
-  'string',
-  '"a"',
-  "'a'",
-}, 'a')
---]]
-print('end ok')

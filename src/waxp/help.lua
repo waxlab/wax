@@ -29,7 +29,7 @@ function help.main(identifier)
     file = wax.searchpath(identifier, package.path)
   end
   if not file then
-    file = waxp.isfile(identifier)
+    file = waxp.isfile(identifier) and identifier
   end
   local f = io.open(file,'r')
   local isdoc = false

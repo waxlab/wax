@@ -315,7 +315,7 @@ end
 do
 --| See the section "Template files" above to know the differences from
 --| template strings.
-templatefile = require 'wax.fs'.getcwd()..'/etc/example/template.lua'
+templatefile = require 'wax.fs'.getcwd()..'/test/wax/_assets/template.lua'
 --{
 local tpl = template.loadfile(templatefile)
 assert( tpl({'Tupã'}) == 'hello!\nTupã is a star on Crux' )

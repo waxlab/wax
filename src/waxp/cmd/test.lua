@@ -47,7 +47,6 @@ function runtest(luaver, mod)
   end
 end
 
--- ppart is to be used when building partial packages.
 
 local
 function main()
@@ -76,11 +75,12 @@ function main()
 
   for _, luaver in ipairs(luatarget) do
     for _, mod in ipairs(target) do
-      print(luaver, mod)
+      print('Building', luaver, mod)
       local src = target[mod].src
       waxp.build.compile(mod, target[mod], luaver, args, cfg)
     end
     for _, mod in ipairs(target) do
+      print('Testing', luaver, mod)
       runtest(luaver, mod, args.debug)
     end
   end

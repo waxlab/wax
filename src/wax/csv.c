@@ -18,7 +18,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 /*//////// DECLARATIONS ////////*/
 
 int
-luaopen_wax_csv_initc(lua_State *L);
+luaopen_wax_csv(lua_State *L);
 
 Lua
 wax_csv_open(lua_State *L),
@@ -93,7 +93,7 @@ aux_resetkeys (struct ud_csv *u);
 /*//////// IMPLEMENTATION ////////*/
 
 int
-luaopen_wax_csv_initc(lua_State *L) {
+luaopen_wax_csv(lua_State *L) {
   wLua_newuserdata_mt(L, UD_CSV, ud_csv_mt);
   wLua_export(L, module);
   return 1;

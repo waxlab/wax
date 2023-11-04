@@ -64,7 +64,7 @@ return function(what, out)
   out:write '\nData = '
   out:write (res)
   if #refs > 0 then
-    print '\n\nReferences:'
+    out:write '\n\nReferences:'
     for i, v in ipairs(refs) do
       out:write '  @'
       out:write (i)

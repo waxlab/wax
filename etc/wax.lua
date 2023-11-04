@@ -26,7 +26,7 @@ module 'wax.json' {
 }
 
 
-module 'wax.user' { src = 'src/wax/user/init.c' }
+module 'wax.user' { src = 'src/wax/user.c' }
 
 -- replace it
 module 'wax.template'   { src = 'src/wax/template/init.lua' }

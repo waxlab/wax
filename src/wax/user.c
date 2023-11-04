@@ -12,7 +12,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 
 /* //// DECLARATION //// */
 
-int luaopen_wax_user_initc (lua_State *L);
+int luaopen_wax_user (lua_State *L);
 
 Lua
 wax_user_id     (lua_State *L),
@@ -34,7 +34,7 @@ LuaReg module[] = {
 
 /* //// IMPLEMENTATION //// */
 
-int luaopen_wax_user_initc(lua_State *L) {
+int luaopen_wax_user(lua_State *L) {
   wLua_export(L, module);
   return 1;
 }

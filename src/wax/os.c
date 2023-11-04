@@ -17,7 +17,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 
 
 int
-luaopen_wax_os_initc(lua_State *L);
+luaopen_wax_os(lua_State *L);
 
 Lua
 wax_os_exec(lua_State *L),
@@ -31,7 +31,7 @@ LuaReg module[] = {
 
 /* //// IMPLEMENTATION //// */
 
-int luaopen_wax_os_initc(lua_State *L) {
+int luaopen_wax_os(lua_State *L) {
   wLua_export(L, module);
   return 1;
 }

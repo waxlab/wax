@@ -18,7 +18,7 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 typedef struct { int used; int limit; } stack_s;
 
 
-int luaopen_wax_json_initc(lua_State *L);
+int luaopen_wax_json(lua_State *L);
 
 Lua
 wax_json_decode(lua_State *L),
@@ -45,7 +45,7 @@ LuaReg module[] = {
 
 
 int
-luaopen_wax_json_initc(lua_State *L) {
+luaopen_wax_json(lua_State *L) {
   wLua_export(L, module);
   lua_pushlightuserdata(L, (void *) &waxJsonNull);
   lua_setfield(L,-2, "null");
