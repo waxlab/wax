@@ -60,7 +60,6 @@ function help.main(identifier)
       p = line:match('^(%s*)%-%-%[%[')
       if p then isdoc, pad = true, p end
     end
-    out:write('\n\n')
   end
 end
 
