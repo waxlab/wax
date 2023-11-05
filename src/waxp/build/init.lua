@@ -1,8 +1,8 @@
 local sh = require 'waxp.sh'
 
-
+local outprefix = '.local/lua%s'
 local objpath = '.local/cache/lua%s/%s.o'
-local modpath = '.local/land%s/%s.%s'
+local modpath = outprefix..'/%s.%s'
 
 local build = {
 
@@ -27,11 +27,8 @@ local build = {
       return path
     end,
 
+  outprefix = outprefix
 }
-
-
-
-
 
 
 function build.compile(mod, modconf, luaver, args, cfg)

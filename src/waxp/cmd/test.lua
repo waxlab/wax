@@ -11,11 +11,11 @@ local argspec = {
 local waxp = require 'waxp'
 local wax = require 'wax'
 local verbose
+local outprefix = waxp.build.outprefix
 
 
 
-local
-function parse_target(str)
+local function parse_target(str)
   local part, module = str:match '^(%a[%w%-]+)%.(.*)'
   if not part then part = str end
 
@@ -29,13 +29,12 @@ local testpath = waxp.workdir..'/test/?.lua;'
               .. waxp.workdir..'/test/?/init.lua'
 
 
-local
-function runtest(luaver, mod)
+local function runtest(luaver, mod)
   local lua = waxp.luabin(luaver)
   local file = assert(wax.searchpath(mod, testpath))
   local verb = verbose and 'VERBOSE=1' or ''
-  local testwrap = ('loadfile[[%ssrc/waxp/testwrap.lua]]()(%q)')
-        :format (waxp.selfdir, mod)
+  local testwrap = ('loadfile[[%ssrc/waxp/testwrap.lua]]()(%q, %q)')
+        :format (waxp.selfdir, mod, outprefix)
 
   local cmd = ('%s %q -e %q %q'):format(verb, lua, testwrap, file)
   if verbose then
@@ -48,8 +47,7 @@ function runtest(luaver, mod)
 end
 
 
-local
-function main()
+local function main()
   local args, help, hint = wax.args(argspec, arg, 2)
   if not args then
     print(hint)
@@ -76,7 +74,6 @@ function main()
   for _, luaver in ipairs(luatarget) do
     for _, mod in ipairs(target) do
       print('Building', luaver, mod)
-      local src = target[mod].src
       waxp.build.compile(mod, target[mod], luaver, args, cfg)
     end
     for _, mod in ipairs(target) do

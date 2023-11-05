@@ -1,10 +1,7 @@
 local luaver = _VERSION:match('[%d%.]+$')
-local prefix = '.local/land'..luaver
 local pkg = package
 
 
-local _path = prefix..'/?.lua;'..prefix..'/?/init.lua'
-local _cpath = prefix..'/?.so'
 local verbose = os.getenv 'VERBOSE' or nil
 
 local
@@ -16,7 +13,10 @@ end
 
 
 return
-function(testmod)
+function(testmod, outprefix)
+  outprefix = outprefix:format(luaver)
+  local _path  = outprefix..'/?.lua;'..outprefix..'/?/init.lua'
+  local _cpath = outprefix..'/?.so'
   local testpkg = testmod:match('^[^.]+')
   local default_path  = _path ..';'..pkg.path
   local default_cpath = _cpath..';'..pkg.cpath
