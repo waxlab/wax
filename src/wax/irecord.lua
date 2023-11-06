@@ -9,18 +9,18 @@ local function err(lvl, msg, ...)
 end
 
 
-local function oas_pairs(t)
+local function rec_pairs(t)
   local i,d=0,rawget(t, '__data')
   return function() i=i+1 return d[i], d[d[i]] end
 end
 
 
-local function oas_ipairs(t)
+local function rec_ipairs(t)
   return ipairs(rawget(t,'__data'))
 end
 
 
-local function oas_insert(t, k, v, i, l)
+local function rec_insert(t, k, v, i, l)
   local d = rawget(t, '__data')
   if k == nil then err(l, 'attempt to use nil as record key') end
   if type(k) == 'number' then err(l, 'only strings can be used as record key') end
@@ -31,15 +31,16 @@ local function oas_insert(t, k, v, i, l)
 end
 
 
-local function oas_index(t, k)
+local function rec_index(t, k)
   return rawget(t, '__data')[k]
 end
 
 
-local function oas_remove(t, k)
+local function rec_remove(t, k)
   local d = rawget(t, '__data')
-  if k == nil or type(k) == 'number' then
-    d[k]=nil
+  if k == nil then return end
+  if type(k) == 'number' then
+    d[d[k]] = nil
     return table_remove(d, k)
   else
     for i, ik in ipairs(d) do
@@ -51,35 +52,34 @@ local function oas_remove(t, k)
   end
 end
 
-local function oas_unwrap(t)
+local function rec_unwrap(t)
   return rawget(t,'__data')
 end
 
-
-local OrderedRecord = {
-  __name = 'OrderedRecord',
-  __pairs    = oas_pairs,
-  __newindex = oas_insert,
-  index      = oas_index,
-  ipairs     = oas_ipairs,
-  pairs      = oas_pairs,
-  insert     = oas_insert,
-  remove     = oas_remove,
-  unwrap     = oas_unwrap,
-}
-
-OrderedRecord.__index = OrderedRecord
-
-local function oas_new()
-  return setmetatable({__data={}}, OrderedRecord)
+local function rec_concat(t, ...)
+  return table.concat(t:unwrap(), ...)
 end
 
-return {
-  new    = oas_new,
-  index  = oas_index,
-  ipairs = oas_ipairs,
-  pairs  = oas_pairs,
-  insert = oas_insert,
-  remove = oas_remove,
-  unwrap = oas_unwrap,
+local function rec_length(t)
+  return #rawget(t,'__data')
+end
+
+local IndexedRecord = {
+  __name = 'IndexedRecord',
+  __pairs    = rec_pairs,
+  __newindex = rec_insert,
+  index      = rec_index,
+  ipairs     = rec_ipairs,
+  pairs      = rec_pairs,
+  insert     = rec_insert,
+  remove     = rec_remove,
+  concat     = rec_concat,
+  unwrap     = rec_unwrap,
+  len        = rec_length
 }
+
+IndexedRecord.__index = IndexedRecord
+
+return function ()
+  return setmetatable({__data={}}, IndexedRecord)
+end

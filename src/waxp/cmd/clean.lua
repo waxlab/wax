@@ -1,6 +1,5 @@
 local waxp = require 'waxp'
 
-print(waxp.build.outprefix)
 
 
 return {

@@ -1,6 +1,6 @@
 local xconf = {}
-local oas = require 'wax.ordassoc'
 local wax  = require 'wax'
+local irecord = wax.irecord
 
 -- Assert and throws error at level `lvl`
 -- Instead of return only the condition result, it returns all
@@ -25,7 +25,7 @@ local function buildenv(spec)
           conf[dtv] = fn(v1)
         end
     elseif np == 2 then
-      local data = oas.new()
+      local data = irecord()
       conf[dtv]=data:unwrap()
       parser[dtv] =
         function(a)
