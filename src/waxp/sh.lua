@@ -17,6 +17,23 @@ Create directories in path recursively. If ``pathisfile`` is true, subtracts
 the last portion (filename) to get only the dirname of ``path``.
 --]]
 function sh.mkdir(path, isfile)
+  local steps, ins, cat = {}, table.insert, table.concat
+  if isfile then
+    path = path:gsub('[^/]+$','')
+  end
+
+  if path:sub(1,1) == '/' then
+    ins(steps,'')
+  end
+
+  for s in path:gmatch('[^/]+') do
+    ins(steps, s)
+    s = cat(steps,'/')
+    if not sh.isdir(s) then
+      sh.exec('mkdir -p %q', cat(steps,'/'))
+    end
+  end
+
   return sh.exec('mkdir -p %q', isfile and path:gsub('/[^/]+$','') or path)
 end
 
@@ -26,6 +43,20 @@ $ waxp.sh.copy(from:string, to:string)
 function sh.copy(from, to)
   return sh.exec('cp -p %q %q', from, to)
 end
+
+function sh.exists(name)
+  local ok, err, code = os.rename(name, name)
+  if ok or code == 13 then
+    return true
+  end
+  return false, err, code
+end
+
+function sh.isdir(name)
+  name = name..'/'
+  return sh.exists(name)
+end
+
 
 
 --[[
@@ -144,10 +175,7 @@ $ waxp.sh.exec(command: string, ...: string)
 Execute command and if it has errors abort Lua script
 --]]
 function sh.exec(cmd, ...)
-  local cs = {...}
-  if #cs > 0 then
-    cmd = cmd:format(unpack(cs))
-  end
+  cmd = cmd:format(...)
 
   if DEBUG then print("EXEC "..cmd) end
   local proc = io.popen(cmd..';echo $?')
@@ -165,6 +193,7 @@ function sh.exec(cmd, ...)
           sh.printfoot ([[/!\ Exit ]]..line..[[ /!\]])
           os.exit(tonumber(line))
       end
+      proc:close()
       return
     end
   end
