@@ -26,10 +26,48 @@ local function isfile(filename, lvl)
   error(('File not found: %q'):format(filename), lvl and (lvl or 0)+1)
 end
 
+--[[
+  $ waxp.targetmodule(name: str) proj:str, mod:str, part:str
+
+  Parse the target module to work with
+--]]
+local function targetmodule(args)
+  local tgt, pkg, mod, luatgt, cfg
+  tgt = args[1]
+
+  if not tgt then
+    io.stderr:write('Missing target module name\n')
+    os.exit(1)
+  end
+  pkg, mod = tgt:match '^(%a[%w%-]+)%.(.*)$'
+  pkg = pkg and pkg:match '^(%a%w+)' or tgt
+  mod = mod and tgt or pkg
+
+  local cfg, err = require 'waxp.etc'.project(pkg)
+
+  if not cfg then
+    io.stderr:write('Config error: '..err..'\n')
+    os.exit(1)
+  end
+
+  luatgt = args.luaver or cfg.luaver
+
+  return pkg, mod, luatgt, cfg
+end
 
 local waxp = {
   isluaver = isluaver,
-  isfile = isfile
+  isfile = isfile,
+  targetmodule = targetmodule,
+  buildargs = {
+    { 'luaver',  'l', '+', desc = 'Use specific Lua version on tests'},
+    { 'debug',   nil, '-', desc = 'Enable more verbosity on tests',
+                           default=false },
+    { 'incdir',  'I', '+', desc = 'Add directory to compiler include path' },
+    { 'libdir',  'L', '+', desc = 'Add directory to the library link path' },
+    { 'help',    nil, '-', desc = 'Show this help' },
+    { 'verbose', 'V', '-', desc = 'More verbosity' },
+  }
 }
 
 
