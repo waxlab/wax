@@ -725,13 +725,90 @@ do
 --| You are encouraged to develop yourself your test strategy if needed
 --| before call `fs.glob()`.
 end
+
+
+--|
+--| ## Regular files handling
+--|
+
+--$ fs.isfile(path: string) : boolean
+--| Check if path is a regular file and is reachable.
+do
+--| Note that "reachable" doesn't means "writable". If script has not access to
+--| path resolution, the function also returns an error string.
+--{
+  assert(fs.isfile(testfile))
+--}
+end
+
+--$ fs.unlink(path: string) : boolean [, string]
+--| Removes a file or link and returns true.
+--| When it is not possible, returns false and a descriptive string.
+do
+--{
+  local tmpfile = os.tmpname()
+  assert(fs.unlink(tmpfile))
+--}
+end
+
+-- TODO: implement below functions
 os.exit(0)
+
+--|
+--| ## Named pipes handling
+--|
+--| Named pipes or FIFO's are special files used for comunications between
+--| applications.
+
+do
+--$ fs.makePipe(path: string) : boolean [, string]
+--| Create a new named pipe file (FIFO) and return true on success or false and
+--| a descriptive string on error.
+--{
+  local fifo = fs.mkpipe('/tmp/exfifo')
+  assert(fifo)
+--}
+
+--$ fs.ispipe(path: string) : boolean
+--{ Check if the file is a pipe (FIFO)
+  assert(fs.ispipe(fifo))
+--}
+  fs.unlink(fifo)
+end
+
+
+
+--|
+--| ## Others
+--|
+
+--$ fs.ischardev(path: string) : boolean
+--| Checks if the file is a character device.
+--| These are special files used to send data for devices like
+--| printer, screen, speakers, mouse, keyboard etc.
+do
+--{
+  assert(fs.ischardev("/dev/tty"))
+--}
+end
+
+--$ fs.isblockdev(path: string) : boolean
+--| Checks if the file is a block device.
+--| These are special files used to manage physical data storage
+--| like USB, SD, HDD etc.
+do
+--{
+  assert(fs.isblockdev("/dev/sda"))
+--}
+
+
+end
 
 --|
 --| ## Symbolic links handling
 --|
 
-  --$ fs.islink(path: string) : boolean
+--$ fs.islink(path: string) : boolean
 --| checks if the path exists and is a link
 do
 --{
@@ -771,77 +848,5 @@ do
 --}
 end
 
---|
---| ## Regular files handling
---|
-
---$ fs.isfile(path: string) : boolean
---| Check if path is a regular file and is reachable.
-do
---| Note that "reachable" doesn't means "writable". If script has not access to
---| path resolution, the function also returns an error string.
---{
-  assert(fs.isfile(testfile))
---}
-end
-
---$ fs.unlink(path: string) : boolean [, string]
---| Removes a file or link and returns true.
---| When it is not possible, returns false and a descriptive string.
-do
---{
-  assert(fs.unlink())
---}
-end
-
---|
---| ## Named pipes handling
---|
---| Named pipes or FIFO's are special files used for comunications between
---| applications.
-
---$ fs.ispipe(path: string) : boolean
-do
---{ Check if the file is a pipe (FIFO)
-  assert(fs.ispipe("/pipe"))
---}
-end
-
---$ fs.makePipe(path: string) : boolean [, string]
---| Create a new named pipe file (FIFO) and return true on success or false and
---| a descriptive string on error.
-do
---{
-  assert(fs.makepipe())
---}
-end
-
-
---|
---| ## Others
---|
-
---$ fs.ischardev(path: string) : boolean
---| Checks if the file is a character device.
---| These are special files used to send data for devices like
---| printer, screen, speakers, mouse, keyboard etc.
-do
---{
-  assert(fs.ischardev("/dev/tty"))
---}
-end
-
---$ fs.isblockdev(path: string) : boolean
---| Checks if the file is a block device.
---| These are special files used to manage physical data storage
---| like USB, SD, HDD etc.
-do
---{
-  assert(fs.isblockdev("/dev/sda"))
---}
-
-
 --$ fs.listex()
 --| Deprecated. Use `fs.glob()` instead.
-end
-

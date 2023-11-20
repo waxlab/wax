@@ -1,21 +1,21 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 -- Copyright 2022-2023 - Thadeu de Paula and contributors
 
---| # wax.os
---| Operating system related library.
+--| # wax.proc
+--| Process management library.
 --|
---| This library contains functions related to specific OS actions that
---| are not related to user handling or filesystem.
+--| This library contains functions related to process management, like get or
+--| set environment variables, fork and replace process.
 
 local wax = require 'wax'
 
---$ os.setenv(name:string, value:string) : bool[, errorstr:string]
+--$ wax.proc.setenv(name:string, value:string) : bool[, errorstr:string]
 --| Sets environment variable `name` with the `value`.
 --| It returns true in case of success or false and a error string otherwise
 do
 
 --{
-  local setenv = wax.os.setenv
+  local setenv = wax.proc.setenv
   local envvar = "SomeVarName"
   setenv( envvar, "Testing Value" )
   assert(os.getenv(envvar) == "Testing Value")
@@ -29,11 +29,13 @@ end
 ------ ATENTION: THIS SHOULD BE THE LAST TEST OF SCRIPT -------
 ---------------------------------------------------------------
 
---$ os.exec(command:string [, argv: string list]) : errorstr
---| Replaces the current process by the `command`.
+--$ wax.proc.replace(command:string [, argv: string list]) : errorstr
+--| Replaces the current process by the `command` using the Unix `exec`.
 --|
---| When you call `wax.os.exec()` the current program will be replaced by the
---| `command` you specified (so you cant retrieve any return of this function).
+--| When you call `wax.process.replace()` the current program will be replaced
+--| by the `command` you specified (so you can't retrieve any return for this
+--| function).
+--|
 --| If the specified `command` cannot be started, the function returns a
 --| descriptive error string.
 --|
@@ -46,11 +48,11 @@ do
   subproc:close()
 
   -- When process is replaced the pid's should be the same
-  wax.os.exec('bash', {"-c", ('[ "$$" == %q ]'):format(pid)})
+  wax.proc.replace('bash', {"-c", ('[ "$$" == %q ]'):format(pid)})
 
   -- This block only run if the process couldn't be replaced
   print "Couldn't replace process"
-  os.exit(1) -- Will not trigger this error unless wax.os.exec has an error
+  os.exit(1) -- Won't trigger error unless wax.process.replace had trouble.
 --}
 end
 

@@ -17,27 +17,27 @@ Copyright 2022-2023 - Thadeu de Paula and contributors
 
 
 int
-luaopen_wax_os(lua_State *L);
+luaopen_wax_proc(lua_State *L);
 
 Lua
-wax_os_exec(lua_State *L),
-wax_os_setenv(lua_State *L);
+wax_proc_replace(lua_State *L),
+wax_proc_setenv(lua_State *L);
 
 LuaReg module[] = {
-  {"exec",   wax_os_exec  },
-  {"setenv", wax_os_setenv},
-  { NULL,    NULL         }
+  {"replace", wax_proc_replace},
+  {"setenv",  wax_proc_setenv },
+  { NULL,     NULL            }
 };
 
 /* //// IMPLEMENTATION //// */
 
-int luaopen_wax_os(lua_State *L) {
+int luaopen_wax_proc(lua_State *L) {
   wLua_export(L, module);
   return 1;
 }
 
 Lua
-wax_os_exec(lua_State *L) {
+wax_proc_replace(lua_State *L) {
   char **argv;
   size_t idx = 0;
   wLua_assert(L, (argv = carray_new(*argv,2)) != NULL, strerror(errno));
@@ -59,7 +59,7 @@ wax_os_exec(lua_State *L) {
 }
 
 Lua
-wax_os_setenv(lua_State *L) {
+wax_proc_setenv(lua_State *L) {
   const char
     *name = luaL_checkstring(L,1),
     *value = luaL_checkstring(L,2);

@@ -11,7 +11,7 @@ module 'wax.xconf'     { src = 'src/wax/xconf.lua'    }
 module 'wax.html'      { src = 'src/wax/html.lua'     }
 module 'wax.csv'       { src = 'src/wax/csv.c'        }
 module 'wax.fs'        { src = 'src/wax/fs.c'         }
-module 'wax.os'        { src = 'src/wax/os.c'         }
+module 'wax.proc'      { src = 'src/wax/proc.c'       }
 
 module 'wax.sql' {
   src = 'src/wax/sql.c',
