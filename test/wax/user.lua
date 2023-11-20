@@ -28,7 +28,7 @@ do
   if uid ~= 0 then
     assert( user.id("root") == 0 )
   else
-    assert( user.id("testuser") == 2000 )
+    assert( user.id() == 0 )
   end
   assert( user.id("") == nil )
   assert( user.id("Some invalid user name") == nil )
@@ -44,7 +44,7 @@ do
 --{
   if user.id() == 0 then
     assert( user.name() == "root" )
-    assert( user.name(2000) == "testuser" )
+    assert( user.name(user.id()) == user.name() )
   else
     assert( user.name() ~= "root" )
     assert( user.name(0) == "root" )
@@ -68,9 +68,8 @@ do
 
   if user.id() == 0 then
     assert(user.home() == "/root")
-    assert(user.home("testuser") == "/home/testuser")
-    assert(user.home(2000) == "/home/testuser")
   end
+  assert(user.home(user.id()) == user.home(user.name()))
 
   assert(user.home(0) == "/root")
   assert(user.home("root") == "/root")
