@@ -66,6 +66,18 @@ function build.install(pkg, luaver, pfx)
   sh.mkdir(to, true)
   sh.exec('mv %q %q', from ,to)
   io.stdout:write( ('\n\n%q was installed into %q\n\n'):format(pkg, to) )
+
+  io.stdout:write(([[
+  Add the following lines on your system shell to make the module found:
+
+  export LUA_PATH_{{cst}}="{{pfx}}/lua{{ver}}/?.lua;{{pfx}}/lua{{ver}}/?/init.lua;;"
+  export LUA_CPATH_{{cst}}="{{pfx}}/lua{{ver}}/?.so;{{pfx}}/lua{{ver}}/?/init.so;;"
+  ]]):gsub('{{(%w+)}}', {
+    ver = luaver,
+    cst = luaver:gsub('%.','_'),
+    pfx = pfx
+  }))
+
 end
 
 return require 'wax.lazy'('waxp.build', build)
