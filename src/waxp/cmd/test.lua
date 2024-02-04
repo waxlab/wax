@@ -9,7 +9,7 @@ local testpath = waxp.workdir..'/test/?.lua;'
 
 
 local function runtest(luaver, mod)
-  local lua = waxp.luabin(luaver)
+  local lua = assert(waxp.luabin(luaver), 'Lua version '..luaver..' not found!')
   local file = assert(wax.searchpath(mod, testpath))
   local verb = verbose and 'VERBOSE=1' or ''
   local testwrap = ('loadfile[[%ssrc/waxp/testwrap.lua]]()(%q, %q)')

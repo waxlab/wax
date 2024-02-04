@@ -12,6 +12,7 @@ module 'wax.html'      { src = 'src/wax/html.lua'     }
 module 'wax.csv'       { src = 'src/wax/csv.c'        }
 module 'wax.fs'        { src = 'src/wax/fs.c'         }
 module 'wax.proc'      { src = 'src/wax/proc.c'       }
+module 'wax.async'     { src = 'src/wax/async.c'      }
 
 module 'wax.sql' {
   src = 'src/wax/sql.c',
