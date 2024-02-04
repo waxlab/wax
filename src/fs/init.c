@@ -158,9 +158,15 @@ luaopen_wax_fs_initc(lua_State *L) {
 Lua
 wax_fs_getcwdname(lua_State *L) {
   char path[PATH_MAX];
-  const char *arg1 = luaL_checkstring(L,1);
-  memcpy(path, arg1, strlen(arg1)+1);
+  const char *a1 = luaL_checkstring(L,1);
+  size_t a1s = strlen(a1);
+  if (a1s > PATH_MAX) {
+    lua_pushnil(L);
+    lua_pushstring(L, strerror(ENAMETOOLONG));
+    return 2;
+  }
 
+  memcpy(path, a1, a1s+1);
   lua_pushstring(L, dirname(path));
   return 1;
 }
@@ -168,9 +174,15 @@ wax_fs_getcwdname(lua_State *L) {
 Lua
 wax_fs_basename(lua_State *L) {
   char path[PATH_MAX];
-  const char *arg1 = luaL_checkstring(L,1);
-  memcpy(path, arg1, strlen(arg1)+1);
+  const char *a1 = luaL_checkstring(L,1);
+  size_t a1s = strlen(a1);
+  if (a1s > PATH_MAX) {
+    lua_pushnil(L);
+    lua_pushstring(L, strerror(ENAMETOOLONG));
+    return 2;
+  }
 
+  memcpy(path, a1, a1s+1);
   lua_pushstring(L, basename(path));
   return 1;
 }

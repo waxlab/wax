@@ -144,7 +144,8 @@ do
     else
       flags = env('CFLAGS', debug)
       flags = flags:gsub('%-O%d+',''):gsub('%-fPIC','')
-           .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always'
+           .. ' -Wall -Wextra -O3 -fPIC -fdiagnostics-color=always '
+           .. ' -fmax-errors=10 '
     end
     return flags
   end
